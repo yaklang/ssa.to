@@ -9,7 +9,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: 'SSA.to',
-    tagline: 'SSA.to is a SSA Guide and Research Platform',
+    tagline: 'Static-Single-Assignment Bringing Clarity to Code',
     favicon: 'img/favicon.ico',
 
     // Set the production url of your site here
