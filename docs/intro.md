@@ -2,46 +2,48 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# 欢迎使用 SyntaxFlow 
 
-Let's discover **Docusaurus in less than 5 minutes**.
+SyntaxFlow 是一个 Yaklang 出品的编译器级的高级静态分析语言。你可以使用 SyntaxFlow 分析被 Yaklang SSA 编译器编译后的程序（IrCode in Database）。
 
-## Getting Started
+# !!DANGEROUS NOTICE
 
-Get started by **creating a new site**.
+**SyntaxFlow 技术目前仅供技术交流使用，商业合作与授权二次开发请与 Yak Project 联系**
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+**研发过程不代表最终品质呈现，如果想体验最新的技术与实现，请查阅 yaklang 项目源码** 
 
-### What you'll need
+# 支持特性
 
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+SyntaxFlow 支持各种静态分析中遇到的难题，并且在解决他们的过程中，可以抹除语言 AST 的特性，抹除赋值，编译分支与循环成为基本块和 Phi 的结构。
 
-## Generate a new site
+## SyntaxFlow 基础特性
 
-Generate a new Docusaurus site using the **classic template**.
+1. 代码容错：可以针对不完整的代码进行审计；
+1. 支持精确搜索，模糊搜索，指定方法搜索；
+1. 支持 SSA 格式下的数据流分析；
+1. 支持 Phi 指令处理 IF For 循环等控制流程；
+1. 支持 OOP 编译成 SSA 格式后的搜索；
+1. 支持 Java 注解的追踪与 SSA 实例化，以适应各类注解入口的框架代码；
+1. 支持 Use-Def 链的运算符（向上递归寻找定义，向下递归寻找引用）
 
-The classic template will automatically be added to your project after you run the command:
+## SyntaxFlow 高级特性
 
-```bash
-npm init docusaurus@latest my-website classic
-```
+1. 通用语言架构：支持 Yaklang / Java / PHP(Alpha*) / JavaScript(ES) Alpha*;
+1. 自动跨过程，OOP 对象追踪，OOP 内方法跨过程，上下文敏感与函数栈敏感特性，可以支持复杂数据流分析；
+1. 编译产物符号化，构建 Sqlite 格式的标准化符号和 IrCode 表，支持中间表达的可视化。
+1. 支持跨过程与数据流可视化（根据 SF 分析过程自动生成），支持数据 Dot 格式的分析步骤图和数据流图
+![自动生成的分析过程回溯图：XXE 漏洞分析过程](./images/graphviz.svg)
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+# SyntaxFlow 相关资料：
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+[SyntaxFlow 案例仓库](https://github.com/yaklang/syntaxflow)
 
-## Start your site
+# 社群
 
-Run the development server:
+SyntaxFlow使用案例和教程将定期更新， 关注微信公众号获取消息提醒。
+![微信公众号](./images/gzh.gif)
 
-```bash
-cd my-website
-npm run start
-```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+欢迎加入SyntaxFlow交流群 
+![微信SyntaxFlow交流群](./images/weixin.png)
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
