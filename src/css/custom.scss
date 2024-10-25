@@ -1,0 +1,65 @@
+/* Global CSS settings with a deep purple palette */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #5a179a;
+  /* Deep purple for the primary color */
+  --ifm-color-primary-dark: #51158b;
+  /* Darker deep purple */
+  --ifm-color-primary-darker: #4d1483;
+  /* Even darker deep purple */
+  --ifm-color-primary-darkest: #3f106c;
+  /* Almost black purple */
+  --ifm-color-primary-light: #6319a9;
+  /* Lighter deep purple */
+  --ifm-color-primary-lighter: #681ab1;
+  /* Even lighter deep purple */
+  --ifm-color-primary-lightest: #751ec8;
+  /* Very light deep purple */
+  --ifm-container-width-xl: 1200px;
+  --ifm-list-left-padding: 24px;
+  --ifm-code-font-size: 95%;
+  --ifm-footer-background-color: #fff;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  --yakit-header-color: #31343f;
+  --yakit-border-color: #eaecf3;
+  --yakit-disable-text-color: #ccd2de;
+  --yakit-background-color: #f0f1f3;
+  --yakit-helper-text-color: #b4bbca;
+  --yakit-card-background-color: #f8f8f8;
+  --yakit-body-text-color: #85899e;
+
+  --yakit-primary-1: #f6f0ff;
+  --yakit-primary-2: #ebe0ff;
+  --yakit-primary-3: #ceb8ff;
+  --yakit-primary-4: #af8fff;
+  --yakit-primary-5: #8862f8;
+  --yakit-primary-6: #6749d1;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar {
+  /*滚动条整体样式*/
+  width: 8px;
+  /*高宽分别对应横竖滚动条的尺寸*/
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  /*滚动条里面小方块*/
+  border-radius: 10px;
+  box-shadow: inset 0 0 5px rgba(193, 193, 193);
+  background: #c1c1c1;
+}
+
+::-webkit-scrollbar-track {
+  /*滚动条里面轨道*/
+  background: transparent;
+}
+
+

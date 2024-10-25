@@ -1,0 +1,6 @@
+.copyright {
+  border-top: 1px solid var(--ifm-color-gray-200);
+  text-align: center;
+  padding: 8px 0;
+  color: var(--ifm-color-gray-600);
+}

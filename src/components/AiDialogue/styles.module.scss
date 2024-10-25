@@ -1,0 +1,125 @@
+.aiDialogue {
+  position: relative;
+  height: 100%;
+  &-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--yakit-border-color);
+    &-left {
+      display: flex;
+      align-items: center;
+
+      gap: 8px;
+      .aiDialogue-header-text {
+        font-size: 14px;
+        font-weight: 600;
+      }
+    }
+    &-right {
+      display: flex;
+      align-items: center;
+      .aiDialogue-header-icon {
+        cursor: pointer;
+        color: #868c97;
+        svg {
+          width: 20px;
+        }
+        &:active {
+          color: var(--yakit-primary-5);
+        }
+      }
+    }
+  }
+  &-answer {
+    padding: 8px 0;
+    &-item {
+      padding: 20px 16px;
+      &-header {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+        .aiDialogue-answer-niuniu {
+          width: 32px;
+          height: 32px;
+          text-align: center;
+          border-radius: 50%;
+          background-color: #ff7b00;
+          line-height: 32px;
+        }
+        .aiDialogue-answer-time {
+          color: #9ca3b1;
+          font-size: 12px;
+        }
+      }
+      &-extra {
+        margin-bottom: 8px;
+        padding-left: 40px;
+      }
+      &-answer-cont {
+        padding-left: 40px;
+      }
+    }
+  }
+  .history-drawer {
+    padding: 20px 16px 24px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    :global {
+      .ant-drawer-header {
+        padding: 0;
+        padding-bottom: 8px;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+      }
+      .ant-drawer-body {
+        padding: 0;
+        padding-top: 8px;
+      }
+    }
+    .history-close-icon {
+      color: #868c97;
+      svg {
+        width: 24px;
+      }
+      &:active {
+        color: var(--yakit-primary-5);
+      }
+    }
+    .history-list {
+      &-item {
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 4px;
+
+        gap: 8px;
+        &:hover {
+          background: #f8f9fa;
+        }
+        &-chat-icon {
+          color: #c0c6d1;
+          svg {
+            width: 24px;
+          }
+        }
+        .history-list-info {
+          flex: 1;
+          .history-list-item-title {
+            font-size: 12px;
+            font-weight: 600;
+          }
+          .history-list-item-time {
+            color: #9ca3b1;
+            font-size: 12px;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+.footer {
+  border-top: 1px solid var(--ifm-color-gray-200);
+  padding: 0;
+  padding-top: 16px;
+  background-color: var(--ifm-background-surface-color);
+}
