@@ -82,7 +82,13 @@ function PreCode(props: { children?: React.ReactNode }) {
 
   useEffect(() => {
     if (ref.current) {
-      setCopyStr(ref.current.innerText);
+      const observer = new MutationObserver(() => {
+        if (ref.current) {
+          const codeContent = ref.current.textContent;
+          setCopyStr(codeContent || "");
+        }
+      });
+      observer.observe(ref.current, { childList: true, subtree: true });
     }
   }, [ref.current]);
 

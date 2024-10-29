@@ -15,7 +15,12 @@ import {
 } from "antd";
 import clsx from "clsx";
 import { useResizeDetector } from "react-resize-detector";
-import { useDebounceEffect, useDebounceFn, useMemoizedFn } from "ahooks";
+import {
+  useCreation,
+  useDebounceEffect,
+  useDebounceFn,
+  useMemoizedFn,
+} from "ahooks";
 import { NetWorkApi } from "@site/src/services/axiosInstance";
 import {
   OutlineExclamationIcon,
@@ -25,7 +30,7 @@ import {
   OutlineSearchIcon,
   OutlineStopIcon,
 } from "@site/src/assets/icons/outline";
-import { ResizeBox } from "@site/src/components/ResizeBox";
+import { ResizeBox, ResizeBoxProps } from "@site/src/components/ResizeBox";
 import SsaEditor from "@site/src/components/SsaEditor/index.module";
 import {
   ColumnsTypeProps,
@@ -41,6 +46,7 @@ const { TextArea } = Input;
 import { AiDialogue } from "@site/src/components/AiDialogue";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import styles from "./styles.module.scss";
+import moment from "moment";
 
 interface SupportLangRes {
   language: string[];
@@ -350,6 +356,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
               value={temp}
               options={tempList}
               onChange={onTempChange}
+              allowClear
             />
             {lessThenCriticalWidth ? (
               <Tooltip title={<>可将文件拖入框内，或直接粘贴代码</>}>
@@ -688,6 +695,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
                     extra: {
                       index: record.index,
                       title: record.title,
+                      time: moment().format("YYYY-MM-DD HH:mm:ss"),
                     },
                   });
                 }}
@@ -895,23 +903,27 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
   }
 );
 
-interface AiDialogueReq {
+export interface AiDialogueReq {
   lang: string;
   var_name: string;
   result_id: number;
 }
-interface AiDialogueExtraInfo {
+export interface AiDialogueExtraInfo {
   index: string;
   title: string;
+  time: string;
 }
 interface CodeAnalysisProps {}
 const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
+  const { siteConfig } = useDocusaurusContext();
   const [showAiDialogue, setShowAiDialogue] = useState<boolean>(false);
   const [aiDialogueFullScreen, setAiDialogueFullScreen] =
     useState<boolean>(false);
   const clickFullScreenRef = useRef<boolean>(false); // 是否点击全屏
   const [showFullScreenBtn, setShowFullScreenBtn] = useState<boolean>(true); // 是否显示全屏按钮
   const [aiDialogueQuery, setAiDialogueQuery] = useState<AiDialogueReq>();
+  const [aiDialogueExtraInfo, setAiDialogueExtraInfo] =
+    useState<AiDialogueExtraInfo>();
 
   const onFullScreen = useMemoizedFn(() => {
     if (!aiDialogueFullScreen) {
@@ -927,6 +939,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
     setShowFullScreenBtn(true);
     setAiDialogueFullScreen(false);
     setAiDialogueQuery(undefined);
+    setAiDialogueExtraInfo(undefined);
     setShowAiDialogue(false);
   });
 
@@ -948,6 +961,28 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
       }
     }
   }, [codeAnalysisWidth]);
+
+  const extraResizeBoxProps = useCreation(() => {
+    return {
+      firstRatio: aiDialogueFullScreen ? "0%" : showAiDialogue ? "70%" : "100%",
+      firstNodeStyle: {
+        padding: 0,
+        display: aiDialogueFullScreen ? "none" : "block",
+      },
+      secondRatio: aiDialogueFullScreen
+        ? "100%"
+        : !showAiDialogue
+        ? "0%"
+        : "30%",
+      secondNodeStyle: {
+        display: aiDialogueFullScreen
+          ? "block"
+          : !showAiDialogue
+          ? "none"
+          : "block",
+      },
+    };
+  }, [aiDialogueFullScreen, showAiDialogue]);
 
   return (
     <div className={styles["codeAnalysis"]} ref={codeAnalysisRef}>
@@ -977,6 +1012,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
               <CodeAnalysisInit
                 onAiDialogueClick={(info) => {
                   setAiDialogueQuery(info.query);
+                  setAiDialogueExtraInfo(info.extra);
                   if (codeAnalysisWidth <= 997) {
                     setShowFullScreenBtn(false);
                     setAiDialogueFullScreen(true);
@@ -986,29 +1022,21 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
               />
             </Layout>
           }
-          firstRatio={
-            aiDialogueFullScreen ? "0px" : !showAiDialogue ? "100%" : "70%"
-          }
-          firstMinSize={
-            aiDialogueFullScreen ? "0px" : !showAiDialogue ? "100%" : "500px"
-          }
-          firstNodeStyle={{ padding: 0 }}
+          firstMinSize={500}
           secondNode={
-            <AiDialogue<AiDialogueReq | undefined>
+            <AiDialogue
               title="AI 研判"
+              wsUrl={siteConfig.customFields?.wsUrl as string}
               sendQuery={aiDialogueQuery}
+              extraInfo={aiDialogueExtraInfo}
               showFullScreenBtn={showFullScreenBtn}
               fullScreen={aiDialogueFullScreen}
               onFullScreen={onFullScreen}
               onClose={onAiDialogueClose}
             ></AiDialogue>
           }
-          secondRatio={
-            aiDialogueFullScreen ? "100%" : !showAiDialogue ? "0px" : "30%"
-          }
-          secondMinSize={
-            aiDialogueFullScreen ? "100%" : !showAiDialogue ? "0px" : "300px"
-          }
+          secondMinSize={330}
+          {...extraResizeBoxProps}
         ></ResizeBox>
       </ConfigProvider>
     </div>
