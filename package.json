@@ -18,6 +18,7 @@
     "@docusaurus/preset-classic": "3.1.1",
     "@docusaurus/tsconfig": "^3.5.2",
     "@mdx-js/react": "^3.0.0",
+    "@viz-js/viz": "^3.9.0",
     "ahooks": "^3.8.1",
     "antd": "^5.21.3",
     "axios": "^1.7.7",

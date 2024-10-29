@@ -495,3 +495,259 @@ const DocumentDuplicateSvg = () => (
 export const DocumentDuplicateSvgIcon = (props) => {
   return <Icon component={DocumentDuplicateSvg} {...props} />;
 };
+
+const OutlineChevronup = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M5 15L12 8L19 15"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+/**
+ * @description  Icon/Outline/Outlinechevron-up
+ */
+export const OutlineChevronupIcon = (props) => {
+  return <Icon component={OutlineChevronup} {...props} />;
+};
+
+const OutlineChevrondown = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M19 9L12 16L5 9"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+/**
+ * @description  Icon/Outline/Outlinechevron-down
+ */
+export const OutlineChevrondownIcon = (props) => {
+  return <Icon component={OutlineChevrondown} {...props} />;
+};
+
+const OutlineChevronright = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M9 5L16 12L9 19'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinechevron-right
+*/
+export const OutlineChevronrightIcon = (props) => {
+  return <Icon component={OutlineChevronright} {...props} />
+}
+
+const OutlineLightbulb = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M9.66347 17H14.3364M11.9999 3V4M18.3639 5.63604L17.6568 6.34315M21 11.9999H20M4 11.9999H3M6.34309 6.34315L5.63599 5.63604M8.46441 15.5356C6.51179 13.5829 6.51179 10.4171 8.46441 8.46449C10.417 6.51187 13.5829 6.51187 15.5355 8.46449C17.4881 10.4171 17.4881 13.5829 15.5355 15.5356L14.9884 16.0827C14.3555 16.7155 13.9999 17.5739 13.9999 18.469V19C13.9999 20.1046 13.1045 21 11.9999 21C10.8954 21 9.99995 20.1046 9.99995 19V18.469C9.99995 17.5739 9.6444 16.7155 9.01151 16.0827L8.46441 15.5356Z'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinelight-bulb
+*/
+export const OutlineLightbulbIcon = (props) => {
+  return <Icon component={OutlineLightbulb} {...props} />
+}
+
+const OutlineBug = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <mask
+          id='mask0_1_3136'
+          style={{maskType: "alpha"}}
+          maskUnits='userSpaceOnUse'
+          x='0'
+          y='0'
+          width='24'
+          height='24'
+      >
+          <rect width='24' height='24' fill='#D9D9D9' />
+      </mask>
+      <g mask='url(#mask0_1_3136)'>
+          <path
+              d='M6.00012 10C6.00012 8.34315 7.34327 7 9.00012 7H15.0001C16.657 7 18.0001 8.34315 18.0001 10V15C18.0001 18.3137 15.3138 21 12.0001 21C8.68642 21 6.00012 18.3137 6.00012 15V10Z'
+              stroke='currentColor'
+              strokeWidth='1.5'
+          />
+          <path d='M12 21V7' stroke='currentColor' strokeWidth='1.5' />
+          <path d='M2 13H5' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+          <path d='M19 13H22' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+          <path
+              d='M15 6C15 4.34315 13.6569 3 12 3C10.3431 3 9 4.34315 9 6'
+              stroke='currentColor'
+              strokeWidth='1.5'
+              strokeLinecap='round'
+          />
+          <path d='M21 6C21 7.65685 19.6569 9 18 9' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+          <path d='M3 21C3 19.3431 4.34315 18 6 18' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+          <path d='M3 6C3 7.65685 4.34315 9 6 9' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round' />
+          <path
+              d='M21 21C21 19.3431 19.6569 18 18 18'
+              stroke='currentColor'
+              strokeWidth='1.5'
+              strokeLinecap='round'
+          />
+      </g>
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinebug
+*/
+export const OutlineBugIcon = (props) => {
+  return <Icon component={OutlineBug} {...props} />
+}
+
+
+const SolidXcircle = () => (
+  <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          fillRule='evenodd'
+          clipRule='evenodd'
+          d='M10 18C14.4183 18 18 14.4183 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10C2 14.4183 5.58172 18 10 18ZM8.70711 7.29289C8.31658 6.90237 7.68342 6.90237 7.29289 7.29289C6.90237 7.68342 6.90237 8.31658 7.29289 8.70711L8.58579 10L7.29289 11.2929C6.90237 11.6834 6.90237 12.3166 7.29289 12.7071C7.68342 13.0976 8.31658 13.0976 8.70711 12.7071L10 11.4142L11.2929 12.7071C11.6834 13.0976 12.3166 13.0976 12.7071 12.7071C13.0976 12.3166 13.0976 11.6834 12.7071 11.2929L11.4142 10L12.7071 8.70711C13.0976 8.31658 13.0976 7.68342 12.7071 7.29289C12.3166 6.90237 11.6834 6.90237 11.2929 7.29289L10 8.58579L8.70711 7.29289Z'
+          fill='currentColor'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Solid/Solidx-circle
+*/
+export const SolidXcircleIcon = (props) => {
+  return <Icon component={SolidXcircle} {...props} />
+}
+
+const SolidExclamation = () => (
+  <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          fillRule='evenodd'
+          clipRule='evenodd'
+          d='M8.25694 3.09882C9.02154 1.73952 10.9786 1.73952 11.7432 3.09882L17.3235 13.0194C18.0735 14.3526 17.11 15.9999 15.5804 15.9999H4.41978C2.89013 15.9999 1.9267 14.3526 2.67663 13.0194L8.25694 3.09882ZM11 13C11 13.5523 10.5523 14 10 14C9.44772 14 9 13.5523 9 13C9 12.4477 9.44772 12 10 12C10.5523 12 11 12.4477 11 13ZM10 5C9.44772 5 9 5.44772 9 6V9C9 9.55228 9.44772 10 10 10C10.5523 10 11 9.55228 11 9V6C11 5.44772 10.5523 5 10 5Z'
+          fill='currentColor'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Solid/Solidexclamation
+*/
+export const SolidExclamationIcon = (props) => {
+  return <Icon component={SolidExclamation} {...props} />
+}
+
+const SolidInformationcircle = () => (
+  <svg width='20' height='20' viewBox='0 0 20 20' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          fillRule='evenodd'
+          clipRule='evenodd'
+          d='M18 10C18 14.4183 14.4183 18 10 18C5.58172 18 2 14.4183 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10ZM11 6C11 6.55228 10.5523 7 10 7C9.44772 7 9 6.55228 9 6C9 5.44772 9.44772 5 10 5C10.5523 5 11 5.44772 11 6ZM9 9C8.44772 9 8 9.44772 8 10C8 10.5523 8.44772 11 9 11V14C9 14.5523 9.44772 15 10 15H11C11.5523 15 12 14.5523 12 14C12 13.4477 11.5523 13 11 13V10C11 9.44772 10.5523 9 10 9H9Z'
+          fill='currentColor'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Solid/Solidinformation-circle
+*/
+export const SolidInformationcircleIcon = (props) => {
+  return <Icon component={SolidInformationcircle} {...props} />
+}
+
+const OutlineDeprecated = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M23 12H1M20.1818 12C20.1818 16.4183 16.5187 20 12 20C7.48131 20 3.81818 16.4183 3.81818 12C3.81818 7.58172 7.48131 4 12 4C16.5187 4 20.1818 7.58172 20.1818 12Z'
+          stroke='currentColor'
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/弃用
+*/
+export const OutlineDeprecatedIcon = (props) => {
+  return <Icon component={OutlineDeprecated} {...props} />
+}
+
+const OutlineCollection = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M19 11H5M19 11C20.1046 11 21 11.8954 21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V13C3 11.8954 3.89543 11 5 11M19 11V9C19 7.89543 18.1046 7 17 7M5 11V9C5 7.89543 5.89543 7 7 7M7 7V5C7 3.89543 7.89543 3 9 3H15C16.1046 3 17 3.89543 17 5V7M7 7H17'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinecollection
+*/
+export const OutlineCollectionIcon = (props) => {
+  return <Icon component={OutlineCollection} {...props} />
+}
+
+
+const OutlineZoomin = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M21 21L15 15M10 7V10M10 10V13M10 10H13M10 10H7M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinezoom-in
+*/
+export const OutlineZoominIcon = (props) => {
+  return <Icon component={OutlineZoomin} {...props} />
+}
+
+const OutlineZoomout = () => (
+  <svg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'>
+      <path
+          d='M21 21L15 15M13 10H7M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z'
+          stroke='currentColor'
+          strokeWidth='1.5'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+      />
+  </svg>
+)
+/**
+* @description  Icon/Outline/Outlinezoom-out
+*/
+export const OutlineZoomoutIcon = (props) => {
+  return <Icon component={OutlineZoomout} {...props} />
+}
