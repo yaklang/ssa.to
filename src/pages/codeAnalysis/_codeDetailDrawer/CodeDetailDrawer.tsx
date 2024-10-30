@@ -55,6 +55,7 @@ import { YakitEmpty } from "@site/src/components/YakitEmpty/YakitEmpty";
 import { RightAuditDetail } from "@site/src/components/RightAuditDetail/RightAuditDetail";
 import { loadAuditFromYakURLRaw } from "@site/src/components/RightAuditDetail/utils";
 import moment from "moment";
+import { useResizeDetector } from "react-resize-detector";
 const { Panel } = Collapse;
 
 export interface CodeDetailDrawerProps {
@@ -70,6 +71,11 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
     props;
   const [tabActive, setTabActive] = useState<"risk" | "audit">("risk");
   const [currentInfo, setCurrentInfo] = useState<Risk>(info);
+  const {
+    width: codeWidth = 0,
+    height: codeHeight = 0,
+    ref: codeRef,
+  } = useResizeDetector({ refreshMode: "throttle", refreshRate: 30 });
 
   const isPreOrNext = useMemo(() => {
     const currentIndex: number = list.findIndex(
@@ -132,8 +138,8 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
         position: "absolute",
       }}
     >
-      <div className={styles["code-detail"]}>
-        {drawerContainer && drawerContainer.clientWidth < 500 ? (
+      <div className={styles["code-detail"]} ref={codeRef}>
+        {codeWidth < 500 ? (
           <div className={classNames(styles["header-mobile"])}>
             <div className={styles["header"]}>
               <div className={styles["title"]}>
@@ -257,7 +263,7 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
         ) : (
           <YakitCodeScanAuditDetails
             rowData={currentInfo}
-            wrapperWidth={drawerContainer?.clientWidth}
+            wrapperWidth={codeWidth}
           />
         )}
       </div>
