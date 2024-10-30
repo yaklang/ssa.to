@@ -108,12 +108,12 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
     onAiDialogueClick({
       query: {
         lang: lang,
-        result_id: info.result_id,
-        var_name: info.var_name,
+        result_id: currentInfo.result_id,
+        var_name: currentInfo.var_name,
       },
       extra: {
-        index: info.index,
-        title: info.title,
+        index: currentInfo.index,
+        title: currentInfo.title,
         time: moment().format("YYYY-MM-DD HH:mm:ss"),
       },
     });
