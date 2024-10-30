@@ -74,11 +74,12 @@ export interface Risk {
   program_name: string;
 }
 
+export interface AiDialogueInfo {
+  query: AiDialogueReq;
+  extra: AiDialogueExtraInfo;
+}
 interface CodeAnalysisInitProps {
-  onAiDialogueClick: (info: {
-    query: AiDialogueReq;
-    extra: AiDialogueExtraInfo;
-  }) => void;
+  onAiDialogueClick: (info: AiDialogueInfo) => void;
 }
 const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
   (props) => {
@@ -532,10 +533,7 @@ interface CodeAnalysisResultProps {
   analysisLog: AnalysisLog[];
   isConnected: boolean;
   riskTableData: Risk[];
-  onAiDialogueClick: (info: {
-    query: AiDialogueReq;
-    extra: AiDialogueExtraInfo;
-  }) => void;
+  onAiDialogueClick: (info: AiDialogueInfo) => void;
   drawerContainer: HTMLDivElement | null;
 }
 const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
@@ -926,6 +924,8 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
                 onClose={() => {
                   setDetailInfo(undefined);
                 }}
+                lang={lang}
+                onAiDialogueClick={onAiDialogueClick}
               />
             )}
           </div>
@@ -1016,6 +1016,16 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
     };
   }, [aiDialogueFullScreen, showAiDialogue]);
 
+  const onAiDialogueClick = useMemoizedFn((info: AiDialogueInfo) => {
+    setAiDialogueQuery(info.query);
+    setAiDialogueExtraInfo(info.extra);
+    if (codeAnalysisWidth <= 997) {
+      setShowFullScreenBtn(false);
+      setAiDialogueFullScreen(true);
+    }
+    setShowAiDialogue(true);
+  });
+
   return (
     <div className={styles["codeAnalysis"]} ref={codeAnalysisRef}>
       <ConfigProvider
@@ -1041,17 +1051,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
               description="Advanced Analysis Techniques"
               noFooter={true}
             >
-              <CodeAnalysisInit
-                onAiDialogueClick={(info) => {
-                  setAiDialogueQuery(info.query);
-                  setAiDialogueExtraInfo(info.extra);
-                  if (codeAnalysisWidth <= 997) {
-                    setShowFullScreenBtn(false);
-                    setAiDialogueFullScreen(true);
-                  }
-                  setShowAiDialogue(true);
-                }}
-              />
+              <CodeAnalysisInit onAiDialogueClick={onAiDialogueClick} />
             </Layout>
           }
           firstMinSize={500}

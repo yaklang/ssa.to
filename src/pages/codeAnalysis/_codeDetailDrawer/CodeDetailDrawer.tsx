@@ -31,7 +31,7 @@ import {
 import styles from "./CodeDetailDrawer.module.scss";
 import classNames from "classnames";
 import { CustomTag } from "@site/src/components/CustomTag";
-import { Risk } from "..";
+import { AiDialogueInfo, Risk } from "..";
 import {
   OutlineChevrondownIcon,
   OutlineChevronrightIcon,
@@ -55,6 +55,7 @@ import { AuditNodeProps, AuditTree } from "@site/src/components/AuditTree";
 import { YakitEmpty } from "@site/src/components/YakitEmpty/YakitEmpty";
 import { RightAuditDetail } from "@site/src/components/RightAuditDetail/RightAuditDetail";
 import { loadAuditFromYakURLRaw } from "@site/src/components/RightAuditDetail/utils";
+import moment from "moment";
 const { Panel } = Collapse;
 
 export interface CodeDetailDrawerProps {
@@ -62,9 +63,11 @@ export interface CodeDetailDrawerProps {
   info: Risk;
   list: Risk[];
   drawerContainer: HTMLDivElement | null;
+  lang: string
+  onAiDialogueClick: (info: AiDialogueInfo) => void;
 }
 export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
-  const { onClose, info, list, drawerContainer } = props;
+  const { onClose, info, list, drawerContainer, lang, onAiDialogueClick } = props;
   const [tabActive, setTabActive] = useState<"risk" | "audit">("risk");
   const [currentInfo, setCurrentInfo] = useState<Risk>(info);
 
@@ -141,6 +144,18 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
               style={{ color: "var(--yakit-primary-5)" }}
               onClick={(e) => {
                 e.stopPropagation();
+                onAiDialogueClick({
+                  query: {
+                    lang: lang,
+                    result_id: info.result_id,
+                    var_name: info.var_name,
+                  },
+                  extra: {
+                    index: info.index,
+                    title: info.title,
+                    time: moment().format("YYYY-MM-DD HH:mm:ss"),
+                  },
+                })
               }}
             >
               AI 研判
