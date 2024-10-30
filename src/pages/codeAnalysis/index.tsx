@@ -47,6 +47,7 @@ import { AiDialogue } from "@site/src/components/AiDialogue";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import styles from "./styles.module.scss";
 import moment from "moment";
+import { CodeDetailDrawer } from "./_codeDetailDrawer/CodeDetailDrawer";
 
 interface SupportLangRes {
   language: string[];
@@ -61,7 +62,7 @@ interface AnalysisLog {
   msg: string;
   error: boolean;
 }
-interface Risk {
+export interface Risk {
   index: string;
   result_id: number;
   var_name: string;
@@ -71,6 +72,7 @@ interface Risk {
   rule_name: string;
   timestamp: string;
   risk_hash: string;
+  program_name: string
 }
 
 interface CodeAnalysisInitProps {
@@ -552,6 +554,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
     const [falseNegativeVisible, setFalseNegativeVisible] =
       useState<boolean>(false);
     const [ruleName, setRuleName] = useState<string>("");
+    const [detailInfo,setDetailInfo] = useState<Risk>()
     const onFalseNegative = () => {
       NetWorkApi<FalseNegativeReq, FalseNegativeRes>({
         method: "post",
@@ -705,6 +708,9 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               <div
                 className={styles["table-btn"]}
                 style={{ color: "var(--yakit-primary-5)" }}
+                onClick={()=>{
+                  setDetailInfo(record)
+                }}
               >
                 详情
               </div>
@@ -896,6 +902,9 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
                 autoSize={{ minRows: 3, maxRows: 5 }}
               />
             </Modal>
+            {detailInfo&& <CodeDetailDrawer info={detailInfo} list={listTable} onClose={()=>{
+              setDetailInfo(undefined)
+            }}/>}
           </div>
         )}
       </div>
