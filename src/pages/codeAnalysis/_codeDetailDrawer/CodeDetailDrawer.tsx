@@ -136,6 +136,7 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
       height={"80%"}
       rootStyle={{
         position: "absolute",
+        zIndex: 10
       }}
     >
       <div className={styles["code-detail"]} ref={codeRef}>
