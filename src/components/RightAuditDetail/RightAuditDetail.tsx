@@ -466,10 +466,11 @@ interface RightSideBarProps {
   auditRightParams: AuditEmiterYakUrlProps | undefined;
   isShowAuditDetail: boolean;
   setShowAuditDetail: (v: boolean) => void;
+  wrapClassName?: string;
 }
 
 export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
-  const { auditRightParams, isShowAuditDetail, setShowAuditDetail } = props;
+  const { auditRightParams, isShowAuditDetail, setShowAuditDetail,wrapClassName } = props;
   const [graph, setGraph] = useState<string>();
   const [graphLine, setGraphLine] = useState<string[][]>();
   const [message, setMessage] = useState<string>("");
@@ -532,7 +533,7 @@ export const RightAuditDetail: React.FC<RightSideBarProps> = (props) => {
   });
 
   return (
-    <div className={classNames(styles["right-audit-detail"])}>
+    <div className={classNames(styles["right-audit-detail"],wrapClassName)}>
       <div className={styles["header"]}>
         <div className={styles["relative-box"]}>
           <div className={styles["absolute-box"]}>
