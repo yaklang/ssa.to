@@ -1071,7 +1071,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
               onClose={onAiDialogueClose}
             ></AiDialogue>
           }
-          secondMinSize={330}
+          secondMinSize={350}
           {...extraResizeBoxProps}
         ></ResizeBox>
       </ConfigProvider>

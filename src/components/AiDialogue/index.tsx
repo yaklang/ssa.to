@@ -342,7 +342,9 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
                 • {item.info.index}
               </CustomTag>
               <CustomTag color="blue" closable={false}>
-                {item.info.title}
+                {item.info.title.length > 40
+                  ? `${item.info.title.slice(0, 40)}...`
+                  : item.info.title}
               </CustomTag>
             </div>
             <div className={styles["aiDialogue-answer-item-answer-cont"]}>
@@ -414,6 +416,7 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
                       "text--truncate",
                       styles["history-list-item-title"]
                     )}
+                    title={item.info.title}
                   >
                     [{item.info.index}] {item.info.title}
                   </div>
