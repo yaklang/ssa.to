@@ -30,7 +30,7 @@ import {
   OutlineSearchIcon,
   OutlineStopIcon,
 } from "@site/src/assets/icons/outline";
-import { ResizeBox, ResizeBoxProps } from "@site/src/components/ResizeBox";
+import { ResizeBox } from "@site/src/components/ResizeBox";
 import SsaEditor from "@site/src/components/SsaEditor/index.module";
 import {
   ColumnsTypeProps,
@@ -45,10 +45,9 @@ import { CustomTagColor } from "@site/src/components/CustomTag/CustomTagType";
 const { TextArea } = Input;
 import { AiDialogue } from "@site/src/components/AiDialogue";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
-import styles from "./styles.module.scss";
 import moment from "moment";
 import { CodeDetailDrawer } from "./_codeDetailDrawer/CodeDetailDrawer";
-
+import styles from "./styles.module.scss";
 interface SupportLangRes {
   language: string[];
 }
@@ -72,7 +71,7 @@ export interface Risk {
   rule_name: string;
   timestamp: string;
   risk_hash: string;
-  program_name: string
+  program_name: string;
 }
 
 interface CodeAnalysisInitProps {
@@ -235,6 +234,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     const riskTableDataRef = useRef<Risk[]>([]);
     const [riskTableData, setRiskTableData] = useState<Risk[]>([]);
     const timeRef = useRef<any>(undefined);
+    const boxRef = useRef<HTMLDivElement>(null);
 
     const resetAnalysisData = () => {
       setOnlyShowEditor(true);
@@ -343,7 +343,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     }, [isConnected]);
 
     return (
-      <div className={styles["codeAnalysis-init-wrapper"]}>
+      <div className={styles["codeAnalysis-init-wrapper"]} ref={boxRef}>
         <div
           className={clsx(styles["codeAnalysis-init-header"])}
           ref={headerRef}
@@ -468,6 +468,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
                 isConnected={isConnected}
                 riskTableData={riskTableData}
                 onAiDialogueClick={onAiDialogueClick}
+                drawerContainer={boxRef.current}
               />
             }
             secondRatio={onlyShowEditor ? "0px" : "40%"}
@@ -535,6 +536,7 @@ interface CodeAnalysisResultProps {
     query: AiDialogueReq;
     extra: AiDialogueExtraInfo;
   }) => void;
+  drawerContainer: HTMLDivElement | null;
 }
 const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
   (props) => {
@@ -547,6 +549,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
       isConnected,
       riskTableData = [],
       onAiDialogueClick,
+      drawerContainer,
     } = props;
 
     const [tabActive, setTabActive] = useState<"analysising" | "result">(
@@ -567,7 +570,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
     const [falseNegativeVisible, setFalseNegativeVisible] =
       useState<boolean>(false);
     const [ruleName, setRuleName] = useState<string>("");
-    const [detailInfo,setDetailInfo] = useState<Risk>()
+    const [detailInfo, setDetailInfo] = useState<Risk>();
     const onFalseNegative = () => {
       NetWorkApi<FalseNegativeReq, FalseNegativeRes>({
         method: "post",
@@ -721,8 +724,8 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               <div
                 className={styles["table-btn"]}
                 style={{ color: "var(--yakit-primary-5)" }}
-                onClick={()=>{
-                  setDetailInfo(record)
+                onClick={() => {
+                  setDetailInfo(record);
                 }}
               >
                 详情
@@ -915,9 +918,16 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
                 autoSize={{ minRows: 3, maxRows: 5 }}
               />
             </Modal>
-            {detailInfo&& <CodeDetailDrawer info={detailInfo} list={listTable} onClose={()=>{
-              setDetailInfo(undefined)
-            }}/>}
+            {detailInfo && (
+              <CodeDetailDrawer
+                drawerContainer={drawerContainer}
+                info={detailInfo}
+                list={listTable}
+                onClose={() => {
+                  setDetailInfo(undefined);
+                }}
+              />
+            )}
           </div>
         )}
       </div>

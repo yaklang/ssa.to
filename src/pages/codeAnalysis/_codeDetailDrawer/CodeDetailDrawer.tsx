@@ -61,9 +61,10 @@ export interface CodeDetailDrawerProps {
   onClose: () => void;
   info: Risk;
   list: Risk[];
+  drawerContainer: HTMLDivElement | null;
 }
 export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
-  const { onClose, info, list } = props;
+  const { onClose, info, list, drawerContainer } = props;
   const [tabActive, setTabActive] = useState<"risk" | "audit">("risk");
   const [currentInfo, setCurrentInfo] = useState<Risk>(info);
 
@@ -108,8 +109,11 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
       closable={false}
       onClose={onCloseDetailDrawer}
       open={true}
-      // getContainer={false}
+      getContainer={drawerContainer === null ? undefined : drawerContainer}
       height={"80%"}
+      rootStyle={{
+        position: "absolute",
+      }}
     >
       <div className={styles["code-detail"]}>
         <div className={styles["header"]}>
@@ -325,7 +329,7 @@ export const YakitCodeScanRiskDetails: React.FC<YakitCodeScanRiskDetailsProps> =
               });
               arr.push(obj);
             });
-            
+
           setYakURLData(arr);
           setIsShowCollapse(true);
         } else {
@@ -491,14 +495,14 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> =
               {resource_name}
             </div>
             {/* <Tooltip title={`${code_range.url}:${code_range.start_line}`}> */}
-              <div
-                className={classNames(
-                  styles["detail"],
-                  styles["yakit-content-single-ellipsis"]
-                )}
-              >
-                Ln:{code_range.start_line},Col:{code_range.start_column}
-              </div>
+            <div
+              className={classNames(
+                styles["detail"],
+                styles["yakit-content-single-ellipsis"]
+              )}
+            >
+              Ln:{code_range.start_line},Col:{code_range.start_column}
+            </div>
             {/* </Tooltip> */}
           </div>
         </div>
@@ -508,7 +512,7 @@ export const AuditResultCollapse: React.FC<AuditResultCollapseProps> =
     const renderItem = (info: YakURLDataItemProps) => {
       return <div className={styles["ir-code-box"]}>{info.source}</div>;
     };
-    
+
     return (
       <div className={styles["audit-result-collapse"]}>
         <CollapseList
