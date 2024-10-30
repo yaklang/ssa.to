@@ -912,7 +912,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
                 style={{ marginTop: 15 }}
                 value={ruleName}
                 onChange={(e) => setRuleName(e.target.value)}
-                placeholder="请简单描述漏报的漏洞..."
+                placeholder="请填写一个规则名..."
                 autoSize={{ minRows: 3, maxRows: 5 }}
               />
             </Modal>

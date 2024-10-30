@@ -32,6 +32,9 @@
   align-items: center;
 
   gap: 8px;
+  a {
+    text-decoration: none;
+  }
   .more-btn {
     height: 48px;
     border-radius: 50px;
@@ -41,9 +44,9 @@
   }
   .start-for-free {
     width: 150px;
+    cursor: pointer;
     color: var(--ifm-color-black);
     background-color: var(--ifm-color-white);
-    cursor: pointer;
   }
   .know-more {
     display: flex;
@@ -61,7 +64,6 @@
     }
   }
 }
-
 .feature-wrapper {
   background-image: url(../../static/img/color-bg.png);
   background-repeat: no-repeat;
@@ -133,7 +135,6 @@ html[data-theme="dark"],
 .feature-desc {
   color: #c0c6d1;
 }
-
 .animation-btn {
   z-index: 2;
   overflow: hidden;
@@ -196,7 +197,6 @@ html[data-theme="dark"],
 .animation-btn-white {
   --light-color: #ffffff;
 }
-
 @keyframes button_light_effect {
   0% {
     transform: translate(-50%, -100%) rotate(-180deg);
@@ -205,7 +205,6 @@ html[data-theme="dark"],
     transform: translate(-50%, -100%) rotate(180deg);
   }
 }
-
 @media (min-width: 1920px) {
   .heroBanner {
     .title-text_1 {
@@ -226,7 +225,6 @@ html[data-theme="dark"],
     }
   }
 }
-
 @media (max-width: 997px) {
   .feature-wrapper {
     background-position: center bottom;

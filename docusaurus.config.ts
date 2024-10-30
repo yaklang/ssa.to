@@ -10,6 +10,7 @@ const envFile =
     ? ".env.production"
     : ".env.development";
 require("dotenv").config({ path: envFile });
+console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
 
 const config: Config = {
   customFields: {
@@ -74,7 +75,7 @@ const config: Config = {
       "docusaurus-plugin-proxy",
       {
         context: ["/api"],
-        target: process.env.REACT_APP_API_BASE_URL || "http://localhost:3000",
+        target: process.env.REACT_APP_API_BASE_URL,
         changeOrigin: true,
         pathRewrite: { "^/api": "" },
       },
