@@ -42,6 +42,11 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        .ai-stop-icon {
+          svg {
+            width: 18px;
+          }
+        }
         &-left {
           display: flex;
           align-items: center;

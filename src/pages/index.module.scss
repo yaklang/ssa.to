@@ -99,7 +99,6 @@
         bottom: 7px;
         left: 0;
         overflow: hidden;
-        cursor: pointer;
         border-radius: 14px;
         &:hover {
           background-color: rgba($color: #000000, $alpha: 0.6);
@@ -114,6 +113,7 @@
           display: none;
           width: 200px;
           height: 60px;
+          cursor: pointer;
           transform: translate(-50%, -50%);
           text-align: center;
           color: var(--ifm-color-white);
@@ -124,7 +124,7 @@
       }
       .codeAnalysisRightBottom {
         position: absolute;
-        right: -118px;
+        right: 0;
         bottom: -118px;
         width: 236px;
       }

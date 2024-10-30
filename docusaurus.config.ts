@@ -10,7 +10,9 @@ const envFile =
     ? ".env.production"
     : ".env.development";
 require("dotenv").config({ path: envFile });
+console.log(process.env.NODE_ENV);
 console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
+console.log("Ws Base URL:", process.env.REACT_APP_WS_URL);
 
 const config: Config = {
   customFields: {

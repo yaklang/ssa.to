@@ -12,6 +12,7 @@ import {
   Select,
   Space,
   Tooltip,
+  Typography,
 } from "antd";
 import clsx from "clsx";
 import { useResizeDetector } from "react-resize-detector";
@@ -43,6 +44,7 @@ import { SolidExclamationIcon } from "@site/src/assets/icons/solid";
 import { useCampare } from "@site/src/hook/useCompare/useCompare";
 import { CustomTagColor } from "@site/src/components/CustomTag/CustomTagType";
 const { TextArea } = Input;
+const { Text } = Typography;
 import { AiDialogue } from "@site/src/components/AiDialogue";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import moment from "moment";
@@ -194,10 +196,18 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       if (!files) return;
       if (files.length > 0) {
         const file = files[0];
+
+        const maxBytes = 1 * 1024 * 1024;
+        if (file.size > maxBytes) {
+          message.warning("文件超出1M限制，请重新上传");
+          return;
+        }
+        
         const suffix = file.name.split(".")[1];
         if (langList.findIndex((item) => item.value === suffix) !== -1) {
           onLangChange(suffix);
         }
+
         const reader = new FileReader();
         reader.onload = (e) => {
           const content = e.target?.result;
@@ -213,9 +223,15 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       () => {
         const byteSize = new Blob([code]).size;
         setByteSize(byteSize);
+
         const oneMB = 1024 * 1024;
         if (byteSize > oneMB) {
           message.warning("文件超出1M限制，请重新上传");
+          let encodedText = new TextEncoder().encode(code);
+          // 截取前 1MB 的内容
+          encodedText = encodedText.slice(0, oneMB);
+          const text = new TextDecoder().decode(encodedText); // 将截取的字节内容转回字符串
+          setCode(text);
         }
       },
       [code],
@@ -342,7 +358,9 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
           }
         }, 150);
       } else if (progressRef.current === 0) {
-        stopAnalysis();
+        setTimeout(() => {
+          stopAnalysis();
+        }, 300);
       }
     }, [isConnected]);
 
@@ -460,7 +478,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
                 />
               </div>
             }
-            firstRatio={onlyShowEditor ? "100%" : "60%"}
+            firstRatio={onlyShowEditor ? "100%" : "30%"}
             firstMinSize={onlyShowEditor ? "100%" : "50px"}
             firstNodeStyle={{ padding: 0 }}
             secondNode={
@@ -476,7 +494,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
                 drawerContainer={boxRef.current}
               />
             }
-            secondRatio={onlyShowEditor ? "0px" : "40%"}
+            secondRatio={onlyShowEditor ? "0px" : "70%"}
             secondMinSize={onlyShowEditor ? "0px" : "50px"}
           ></ResizeBox>
         </div>
@@ -819,7 +837,9 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               onChange={(e) => setTabActive(e.target.value)}
             >
               <Radio.Button value="analysising">审计日志</Radio.Button>
-              <Radio.Button value="result">审计结果（{listTable.length}）</Radio.Button>
+              <Radio.Button value="result">
+                审计结果（{listTable.length}）
+              </Radio.Button>
             </Radio.Group>
           </span>
         </div>
@@ -841,18 +861,21 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               审计日志：
             </div>
             {analysisLog.map((item, index) => (
-              <div
-                className={clsx(
-                  "text--truncate",
-                  styles["codeAnalysisResult-log-item"],
-                  {
-                    [styles["log-error"]]: item.error,
-                  }
-                )}
+              <Text
+                className={clsx(styles["codeAnalysisResult-log-item"], {
+                  [styles["log-error"]]: item.error,
+                })}
                 key={index}
+                ellipsis={{
+                  tooltip: (
+                    <div style={{ maxHeight: 300, overflowY: "auto" }}>
+                      {item.msg}
+                    </div>
+                  ),
+                }}
               >
                 {item.msg}
-              </div>
+              </Text>
             ))}
           </div>
         ) : (
@@ -913,11 +936,13 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               cancelText="取消"
             >
               <TextArea
-                style={{ marginTop: 15 }}
+                style={{ marginTop: 15, marginBottom: 20 }}
                 value={ruleName}
                 onChange={(e) => setRuleName(e.target.value)}
-                placeholder="请填写一个规则名..."
+                placeholder="请简单描述漏报的漏洞..."
                 autoSize={{ minRows: 3, maxRows: 5 }}
+                maxLength={500}
+                showCount
               />
             </Modal>
             {detailInfo && (
@@ -1058,7 +1083,7 @@ const CodeAnalysis: React.FC<CodeAnalysisProps> = (props) => {
               <CodeAnalysisInit onAiDialogueClick={onAiDialogueClick} />
             </Layout>
           }
-          firstMinSize={500}
+          firstMinSize={550}
           secondNode={
             <AiDialogue
               title="AI 研判"

@@ -48,13 +48,13 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
   } = props;
 
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isConnected, setIsConnected] = useState(false);
   const messageQueueRef = useRef<string[]>([]);
   const [answerList, setAnswerList] = useState<Answer[]>([]);
   const timeIntervalRef = useRef<any>(null);
   const [refresh, setRefresh] = useState<boolean>(false); // 刷新
   const aiDialogueAnswerRef = useRef<HTMLDivElement>(null);
-  const endOfMessagesRef = useRef<HTMLDivElement>(null); // 用于触发滚动到底部的元素
   const scrollTimeoutRef = useRef<any>(null);
   const isAtBottomRef = useRef<boolean>(false); // 是否滚动到底部
   const itemRefs = useRef<HTMLDivElement | null[]>([]); // 数组存储每个 item 的 ref
@@ -97,9 +97,7 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
       }
       // 自动滚动到最后
       if (isAtBottomRef.current && !historyOpen) {
-        endOfMessagesRef.current?.scrollIntoView({
-          behavior: "smooth",
-        });
+        scrollToIndex(answerList.length - 1 < 0 ? 0 : answerList.length - 1);
       }
       // 启动定时器
       timeIntervalRef.current = setInterval(processMessages, 150);
@@ -122,9 +120,9 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
 
         // 自动滚动到最后
         if (isAtBottomRef.current && !historyOpen) {
-          endOfMessagesRef.current?.scrollIntoView({
-            behavior: "smooth",
-          });
+          scrollToIndex(
+            updatedList.length - 1 < 0 ? 0 : updatedList.length - 1
+          );
         }
         return updatedList;
       });
@@ -160,6 +158,7 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
         }
 
         const socket = new WebSocket(`${wsUrl}/ai_analysis`);
+        setLoading(true);
         socket.onopen = () => {
           setIsConnected(true);
           socket.send(JSON.stringify(sendQuery));
@@ -207,6 +206,7 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
 
   const stopAnalysis = useMemoizedFn(() => {
     if (ws) {
+      setLoading(false);
       ws.close();
       setWs(null);
       setIsConnected(false);
@@ -250,7 +250,7 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
     if (targetElement) {
       targetElement.scrollIntoView({
         behavior: "smooth",
-        block: "start",
+        block: "nearest",
       });
     }
   };
@@ -320,31 +320,28 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
                   {item.info.time}
                 </div>
               </div>
-              {(isConnected || timeIntervalRef.current) &&
-                index + 1 === answerList.length && (
-                  <Button
-                    type="primary"
-                    danger
-                    onClick={() => {
-                      stopAnalysis();
-                      updateAnswerList("Cancelled on client");
-                    }}
-                    icon={<OutlineStopIcon />}
-                    iconPosition="end"
-                    style={{ padding: "4px 8px", fontSize: 12 }}
-                  >
-                    停止
-                  </Button>
-                )}
+              {loading && index + 1 === answerList.length && (
+                <Button
+                  type="primary"
+                  danger
+                  onClick={() => {
+                    stopAnalysis();
+                    updateAnswerList("Cancelled on client");
+                  }}
+                  icon={<OutlineStopIcon className={styles['ai-stop-icon']} />}
+                  iconPosition="end"
+                  style={{ padding: "0px 6px", fontSize: 12, height: 30 }}
+                >
+                  停止
+                </Button>
+              )}
             </div>
             <div className={styles["aiDialogue-answer-item-extra"]}>
               <CustomTag color="purple" closable={false}>
                 • {item.info.index}
               </CustomTag>
               <CustomTag color="blue" closable={false}>
-                {item.info.title.length > 40
-                  ? `${item.info.title.slice(0, 40)}...`
-                  : item.info.title}
+                {item.info.title}
               </CustomTag>
             </div>
             <div className={styles["aiDialogue-answer-item-answer-cont"]}>
@@ -375,7 +372,6 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
             </div>
           </div>
         ))}
-        <div ref={endOfMessagesRef} />
       </div>
       {historyOpen && (
         <Drawer
