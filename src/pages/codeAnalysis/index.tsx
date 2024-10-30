@@ -224,6 +224,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     }, [code, byteSize, lang]);
     const [onlyShowEditor, setOnlyShowEditor] = useState<boolean>(true);
     const [ws, setWs] = useState<WebSocket | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
     const [isConnected, setIsConnected] = useState(false);
     const analysisLogRef = useRef<AnalysisLog[]>([]);
     const [analysisLog, setAnalysisLog] = useState<AnalysisLog[]>([]);
@@ -234,6 +235,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     const timeRef = useRef<any>(undefined);
 
     const resetAnalysisData = () => {
+      setOnlyShowEditor(true);
       analysisLogRef.current = [];
       setAnalysisLog([]);
       progressRef.current = 0;
@@ -244,13 +246,18 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     const { siteConfig } = useDocusaurusContext();
     const startAnalysis = useMemoizedFn(() => {
       if (!startFlag) return;
+
       const wsUrl = siteConfig.customFields?.wsUrl as string | undefined;
       if (!wsUrl) {
         console.error("WebSocket URL 未定义");
         return;
       }
+
+      stopAnalysis();
       resetAnalysisData();
+
       const socket = new WebSocket(`${wsUrl}/scan`);
+      setLoading(true);
       socket.onopen = () => {
         setIsConnected(true);
         setOnlyShowEditor(false);
@@ -275,7 +282,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
             riskTableDataRef.current.push(res.risk[0]);
           }
         } catch (error) {
-          console.error(error);
+          stopAnalysis();
         }
       };
 
@@ -286,6 +293,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       socket.onerror = (error) => {
         console.error(error);
         setIsConnected(false);
+        stopAnalysis();
       };
 
       setWs(socket); // 将 WebSocket 实例保存到状态中
@@ -293,27 +301,19 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
 
     const stopAnalysis = useMemoizedFn(() => {
       if (ws) {
+        setLoading(false);
         ws.close();
         setWs(null);
+      }
+      if (timeRef.current) {
+        clearInterval(timeRef.current);
+        timeRef.current = null;
       }
     });
 
     useEffect(() => {
       return () => {
-        if (ws) {
-          ws.close();
-          if (timeRef.current) {
-            clearInterval(timeRef.current);
-          }
-        }
-      };
-    }, [ws]);
-
-    useEffect(() => {
-      return () => {
-        if (timeRef.current) {
-          clearInterval(timeRef.current);
-        }
+        stopAnalysis();
       };
     }, []);
 
@@ -331,7 +331,12 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
               index: index < 9 ? `0${index + 1}` : `${index + 1}`,
             }))
           );
-        }, 100);
+          if (progressRef.current === 100) {
+            stopAnalysis();
+          }
+        }, 150);
+      } else if (progressRef.current === 0) {
+        stopAnalysis();
       }
     }, [isConnected]);
 
@@ -397,7 +402,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
               )}
               /1M
             </div>
-            {isConnected ? (
+            {loading ? (
               <Button
                 type="primary"
                 danger
@@ -453,6 +458,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
             firstNodeStyle={{ padding: 0 }}
             secondNode={
               <CodeAnalysisResult
+                onlyShowEditor={onlyShowEditor}
                 lang={lang}
                 code={code}
                 progress={progress}
@@ -516,6 +522,7 @@ interface FalsePositiveRes {
   link: string;
 }
 interface CodeAnalysisResultProps {
+  onlyShowEditor: boolean;
   lang: string;
   code: string;
   progress: number;
@@ -530,6 +537,7 @@ interface CodeAnalysisResultProps {
 const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
   (props) => {
     const {
+      onlyShowEditor,
       lang = "",
       code = "",
       progress = 0,
@@ -542,6 +550,11 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
     const [tabActive, setTabActive] = useState<"analysising" | "result">(
       "analysising"
     );
+    useEffect(() => {
+      if (onlyShowEditor) {
+        setTabActive("analysising");
+      }
+    }, [onlyShowEditor]);
     const [keyWords, setKeyWords] = useState<string>("");
     const [tableQuery, setTableQuery] = useState<TableQuery>({
       keyWords: "",
