@@ -101,6 +101,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       { value: string; label: string }[]
     >([]);
     const [temp, setTemp] = useState<string>("");
+    const [refresh, setRefresh] = useState<boolean>(false);
     const [tempList, setTempList] = useState<
       { value: string; label: string }[]
     >([]);
@@ -132,12 +133,12 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       })
         .then((res) => {
           setTemp("");
-          setTempList(
-            res.template.map((temp: string) => ({
-              value: temp,
-              label: temp,
-            }))
-          );
+          const template = res.template.map((temp: string) => ({
+            value: temp,
+            label: temp,
+          }));
+          setRefresh((prev) => !prev);
+          setTempList(template);
         })
         .catch((error) => message.error(error));
     });
@@ -362,9 +363,10 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
               onChange={onLangChange}
             />
             <Select
+              key={refresh + ""}
               style={{ flex: 1, maxWidth: 250, minWidth: 100 }}
               value={temp}
-              options={tempList}
+              options={[...tempList]}
               onChange={onTempChange}
               allowClear
             />
