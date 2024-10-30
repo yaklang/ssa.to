@@ -155,14 +155,16 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
 
     const onTempChange = useMemoizedFn((value) => {
       setTemp(value);
-      NetWorkApi<any, CodeRes>({
-        method: "get",
-        url: `/template/${lang}/${value}`,
-      })
-        .then((res) => {
-          setCode(res.content);
+      if (value) {
+        NetWorkApi<any, CodeRes>({
+          method: "get",
+          url: `/template/${lang}/${value}`,
         })
-        .catch((error) => message.error(error));
+          .then((res) => {
+            setCode(res.content);
+          })
+          .catch((error) => message.error(error));
+      }
     });
 
     const onClickUpload = () => {
