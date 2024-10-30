@@ -819,7 +819,7 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
               onChange={(e) => setTabActive(e.target.value)}
             >
               <Radio.Button value="analysising">审计日志</Radio.Button>
-              <Radio.Button value="result">审计结果</Radio.Button>
+              <Radio.Button value="result">审计结果（{listTable.length}）</Radio.Button>
             </Radio.Group>
           </span>
         </div>
