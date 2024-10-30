@@ -26,7 +26,6 @@ import {
   useGetState,
   useMap,
   useMemoizedFn,
-  useSize,
 } from "ahooks";
 import styles from "./CodeDetailDrawer.module.scss";
 import classNames from "classnames";
@@ -63,15 +62,14 @@ export interface CodeDetailDrawerProps {
   info: Risk;
   list: Risk[];
   drawerContainer: HTMLDivElement | null;
-  lang: string
+  lang: string;
   onAiDialogueClick: (info: AiDialogueInfo) => void;
 }
 export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
-  const { onClose, info, list, drawerContainer, lang, onAiDialogueClick } = props;
+  const { onClose, info, list, drawerContainer, lang, onAiDialogueClick } =
+    props;
   const [tabActive, setTabActive] = useState<"risk" | "audit">("risk");
   const [currentInfo, setCurrentInfo] = useState<Risk>(info);
-
-  useEffect(() => {}, [currentInfo]);
 
   const isPreOrNext = useMemo(() => {
     const currentIndex: number = list.findIndex(
@@ -105,6 +103,22 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
     onClose();
   });
 
+  const onAiDialogue = useMemoizedFn((e) => {
+    e.stopPropagation();
+    onAiDialogueClick({
+      query: {
+        lang: lang,
+        result_id: info.result_id,
+        var_name: info.var_name,
+      },
+      extra: {
+        index: info.index,
+        title: info.title,
+        time: moment().format("YYYY-MM-DD HH:mm:ss"),
+      },
+    });
+  });
+
   return (
     <Drawer
       className={styles["code-detail-drawer"]}
@@ -119,77 +133,132 @@ export const CodeDetailDrawer: React.FC<CodeDetailDrawerProps> = (props) => {
       }}
     >
       <div className={styles["code-detail"]}>
-        <div className={styles["header"]}>
-          <div className={styles["title"]}>
-            <Radio.Group
-              style={{ marginRight: 12 }}
-              size="small"
-              buttonStyle="solid"
-              value={tabActive}
-              onChange={(e) => setTabActive(e.target.value)}
-            >
-              <Radio.Button value="risk">漏洞详情</Radio.Button>
-              <Radio.Button value="audit">审计详情</Radio.Button>
-            </Radio.Group>
-            <CustomTag color="purple" closable={false}>
-              • {currentInfo.index}
-            </CustomTag>
-            <CustomTag color="blue" closable={false}>
-              {currentInfo.title}
-            </CustomTag>
-          </div>
-          <div className={styles["extra"]}>
-            <div
-              className={styles["table-btn"]}
-              style={{ color: "var(--yakit-primary-5)" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onAiDialogueClick({
-                  query: {
-                    lang: lang,
-                    result_id: info.result_id,
-                    var_name: info.var_name,
-                  },
-                  extra: {
-                    index: info.index,
-                    title: info.title,
-                    time: moment().format("YYYY-MM-DD HH:mm:ss"),
-                  },
-                })
-              }}
-            >
-              AI 研判
+        {drawerContainer && drawerContainer.clientWidth < 500 ? (
+          <div className={classNames(styles["header-mobile"])}>
+            <div className={styles["header"]}>
+              <div className={styles["title"]}>
+                <Radio.Group
+                  style={{ marginRight: 12 }}
+                  size="small"
+                  buttonStyle="solid"
+                  value={tabActive}
+                  onChange={(e) => setTabActive(e.target.value)}
+                >
+                  <Radio.Button value="risk">漏洞详情</Radio.Button>
+                  <Radio.Button value="audit">审计详情</Radio.Button>
+                </Radio.Group>
+              </div>
+              <div className={styles["extra"]}>
+                <div
+                  className={styles["table-btn"]}
+                  style={{ color: "var(--yakit-primary-5)" }}
+                  onClick={onAiDialogue}
+                >
+                  AI 研判
+                </div>
+                <Divider type="vertical" style={{ margin: 0, height: 16 }} />
+                {isPreOrNext.pre && (
+                  <Tooltip title={"切换上一条"}>
+                    <div
+                      className={classNames(styles["drawer-icon"])}
+                      onClick={onPreFun}
+                    >
+                      <OutlineChevronupIcon />
+                    </div>
+                  </Tooltip>
+                )}
+                {isPreOrNext.next && (
+                  <Tooltip title={"切换下一条"}>
+                    <div
+                      className={classNames(styles["drawer-icon"])}
+                      onClick={onNextFun}
+                    >
+                      <OutlineChevrondownIcon />
+                    </div>
+                  </Tooltip>
+                )}
+                <div className={styles["drawer-icon"]} onClick={onClose}>
+                  <OutlineXIcon />
+                </div>
+              </div>
             </div>
-            <Divider type="vertical" style={{ margin: 0, height: 16 }} />
-            {isPreOrNext.pre && (
-              <Tooltip title={"切换上一条"}>
-                <div
-                  className={classNames(styles["drawer-icon"])}
-                  onClick={onPreFun}
-                >
-                  <OutlineChevronupIcon />
-                </div>
-              </Tooltip>
-            )}
-            {isPreOrNext.next && (
-              <Tooltip title={"切换下一条"}>
-                <div
-                  className={classNames(styles["drawer-icon"])}
-                  onClick={onNextFun}
-                >
-                  <OutlineChevrondownIcon />
-                </div>
-              </Tooltip>
-            )}
-            <div className={styles["drawer-icon"]} onClick={onClose}>
-              <OutlineXIcon />
+            <div className={styles["header-detail"]}>
+              <CustomTag color="purple" closable={false}>
+                • {currentInfo.index}
+              </CustomTag>
+              <CustomTag color="blue" closable={false}>
+                {currentInfo.title.length > 20
+                  ? `${currentInfo.title.slice(0, 20)}...`
+                  : currentInfo.title}
+              </CustomTag>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className={styles["header-pc"]}>
+            <div className={styles["header"]}>
+              <div className={styles["title"]}>
+                <Radio.Group
+                  style={{ marginRight: 12 }}
+                  size="small"
+                  buttonStyle="solid"
+                  value={tabActive}
+                  onChange={(e) => setTabActive(e.target.value)}
+                >
+                  <Radio.Button value="risk">漏洞详情</Radio.Button>
+                  <Radio.Button value="audit">审计详情</Radio.Button>
+                </Radio.Group>
+                <CustomTag color="purple" closable={false}>
+                  • {currentInfo.index}
+                </CustomTag>
+                <CustomTag color="blue" closable={false}>
+                  {currentInfo.title.length > 20
+                    ? `${currentInfo.title.slice(0, 20)}...`
+                    : currentInfo.title}
+                </CustomTag>
+              </div>
+              <div className={styles["extra"]}>
+                <div
+                  className={styles["table-btn"]}
+                  style={{ color: "var(--yakit-primary-5)" }}
+                  onClick={onAiDialogue}
+                >
+                  AI 研判
+                </div>
+                <Divider type="vertical" style={{ margin: 0, height: 16 }} />
+                {isPreOrNext.pre && (
+                  <Tooltip title={"切换上一条"}>
+                    <div
+                      className={classNames(styles["drawer-icon"])}
+                      onClick={onPreFun}
+                    >
+                      <OutlineChevronupIcon />
+                    </div>
+                  </Tooltip>
+                )}
+                {isPreOrNext.next && (
+                  <Tooltip title={"切换下一条"}>
+                    <div
+                      className={classNames(styles["drawer-icon"])}
+                      onClick={onNextFun}
+                    >
+                      <OutlineChevrondownIcon />
+                    </div>
+                  </Tooltip>
+                )}
+                <div className={styles["drawer-icon"]} onClick={onClose}>
+                  <OutlineXIcon />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {tabActive === "risk" ? (
           <YakitCodeScanRiskDetails info={currentInfo} />
         ) : (
-          <YakitCodeScanAuditDetails rowData={currentInfo} />
+          <YakitCodeScanAuditDetails
+            rowData={currentInfo}
+            wrapperWidth={drawerContainer?.clientWidth}
+          />
         )}
       </div>
     </Drawer>
@@ -636,12 +705,13 @@ export interface AuditNodeMapProps {
 
 export interface YakitCodeScanAuditDetailsProps {
   rowData: Risk;
+  wrapperWidth?: number;
 }
 const TopId = "top-message-code-scan";
 
 export const YakitCodeScanAuditDetails: React.FC<YakitCodeScanAuditDetailsProps> =
   React.memo((props) => {
-    const { rowData } = props;
+    const { rowData, wrapperWidth } = props;
 
     const [value, setValue] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
@@ -913,61 +983,117 @@ export const YakitCodeScanAuditDetails: React.FC<YakitCodeScanAuditDetailsProps>
         setShowAuditDetail(true);
       }
     });
-    return (
-      <ResizeBox
-        firstRatio="300px"
-        firstMinSize={300}
-        secondMinSize={180}
-        firstNodeStyle={{ padding: 0 }}
-        secondNodeStyle={{ padding: 0 }}
-        firstNode={
-          <div className={styles["audit-code-detail-drawer"]}>
-            <div className={styles["header"]}>
-              <div className={styles["title-box"]}>
-                <div className={styles["title"]}>{rowData.title}</div>
 
-                <div className={styles["advice-icon"]}>
-                  <OutlineLightbulbIcon />
+    return (
+      <>
+        {wrapperWidth && wrapperWidth < 500 ? (
+          <>
+            <div
+              style={{ height: "auto" }}
+              className={styles["audit-code-detail-drawer"]}
+            >
+              <div className={styles["header"]}>
+                <div className={styles["title-box"]}>
+                  <div className={styles["title"]}>{rowData.title}</div>
+
+                  <div className={styles["advice-icon"]}>
+                    <OutlineLightbulbIcon />
+                  </div>
                 </div>
-              </div>
-              {/* {rowData.Description && (
+                {/* {rowData.Description && (
                 <div className={styles["description"]}>
                   {rowData.Description}
                 </div>
               )} */}
-            </div>
-            {isShowEmpty ? (
-              <div className={styles["no-data"]}>暂无数据</div>
-            ) : (
-              <AuditTree
-                data={auditDetailTree}
-                expandedKeys={expandedKeys}
-                setExpandedKeys={setExpandedKeys}
-                onLoadData={onLoadData}
-                foucsedKey={foucsedKey}
-                setFoucsedKey={setFoucsedKey}
-                onJump={onJump}
-                onlyJump={true}
-                wrapClassName={styles["audit-tree-wrap"]}
-              />
-            )}
-          </div>
-        }
-        secondNode={
-          <>
-            {isShowAuditDetail ? (
-              <RightAuditDetail
-                auditRightParams={auditRightParams}
-                isShowAuditDetail={isShowAuditDetail}
-                setShowAuditDetail={setShowAuditDetail}
-              />
-            ) : (
-              <div className={styles["no-audit"]}>
-                <YakitEmpty title="暂无数据" description="请选择左边内容" />
               </div>
-            )}
+              {isShowEmpty ? (
+                <div className={styles["no-data"]}>暂无数据</div>
+              ) : (
+                <AuditTree
+                  data={auditDetailTree}
+                  expandedKeys={expandedKeys}
+                  setExpandedKeys={setExpandedKeys}
+                  onLoadData={onLoadData}
+                  foucsedKey={foucsedKey}
+                  setFoucsedKey={setFoucsedKey}
+                  onJump={onJump}
+                  onlyJump={true}
+                  wrapClassName={styles["audit-tree-wrap"]}
+                />
+              )}
+            </div>
+            <>
+              {isShowAuditDetail ? (
+                <RightAuditDetail
+                  auditRightParams={auditRightParams}
+                  isShowAuditDetail={isShowAuditDetail}
+                  setShowAuditDetail={setShowAuditDetail}
+                  wrapClassName={styles["right-audit-detail-wrap"]}
+                />
+              ) : (
+                <div className={styles["no-audit"]}>
+                  <YakitEmpty title="暂无数据" description="请选择左边内容" />
+                </div>
+              )}
+            </>
           </>
-        }
-      />
+        ) : (
+          <ResizeBox
+            firstRatio="300px"
+            firstMinSize={300}
+            secondMinSize={180}
+            firstNodeStyle={{ padding: 0 }}
+            secondNodeStyle={{ padding: 0 }}
+            firstNode={
+              <div className={styles["audit-code-detail-drawer"]}>
+                <div className={styles["header"]}>
+                  <div className={styles["title-box"]}>
+                    <div className={styles["title"]}>{rowData.title}</div>
+
+                    <div className={styles["advice-icon"]}>
+                      <OutlineLightbulbIcon />
+                    </div>
+                  </div>
+                  {/* {rowData.Description && (
+                <div className={styles["description"]}>
+                  {rowData.Description}
+                </div>
+              )} */}
+                </div>
+                {isShowEmpty ? (
+                  <div className={styles["no-data"]}>暂无数据</div>
+                ) : (
+                  <AuditTree
+                    data={auditDetailTree}
+                    expandedKeys={expandedKeys}
+                    setExpandedKeys={setExpandedKeys}
+                    onLoadData={onLoadData}
+                    foucsedKey={foucsedKey}
+                    setFoucsedKey={setFoucsedKey}
+                    onJump={onJump}
+                    onlyJump={true}
+                    wrapClassName={styles["audit-tree-wrap"]}
+                  />
+                )}
+              </div>
+            }
+            secondNode={
+              <>
+                {isShowAuditDetail ? (
+                  <RightAuditDetail
+                    auditRightParams={auditRightParams}
+                    isShowAuditDetail={isShowAuditDetail}
+                    setShowAuditDetail={setShowAuditDetail}
+                  />
+                ) : (
+                  <div className={styles["no-audit"]}>
+                    <YakitEmpty title="暂无数据" description="请选择左边内容" />
+                  </div>
+                )}
+              </>
+            }
+          />
+        )}
+      </>
     );
   });
