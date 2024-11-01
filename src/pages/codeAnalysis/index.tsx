@@ -179,6 +179,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const files = event.target.files;
       handleReadAsText(files);
+      event.target.value = "";
     };
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
