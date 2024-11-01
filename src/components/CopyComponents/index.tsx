@@ -20,19 +20,24 @@ export const CopyComponents: React.FC<CopyComponentsProps> = (props) => {
     e.stopPropagation();
     if (!props.copyText) return;
     setLoading(true);
-    navigator.clipboard
-      .writeText(props.copyText)
-      .then(() => {
-        setLoading(false);
-        setIsShowSure(true);
-        setTimeout(() => {
-          setIsShowSure(false);
-        }, 2000);
-        message.success("复制成功");
-      })
-      .catch((err) => {
-        console.error("Failed to copy text:", err);
-      });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(props.copyText)
+        .then(() => {
+          setLoading(false);
+          setIsShowSure(true);
+          setTimeout(() => {
+            setIsShowSure(false);
+          }, 2000);
+          message.success("复制成功");
+        })
+        .catch((err) => {
+          setLoading(false);
+          console.error("Failed to copy text:", err);
+        });
+    } else {
+      setLoading(false);
+    }
     if (props.onAfterCopy) props.onAfterCopy(e);
   });
   return (

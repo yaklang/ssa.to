@@ -108,7 +108,6 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       { value: string; label: string }[]
     >([]);
     const [code, setCode] = useState<string>("");
-    const [byteSize, setByteSize] = useState<number>(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -202,7 +201,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
           message.warning("文件超出1M限制，请重新上传");
           return;
         }
-        
+
         const suffix = file.name.split(".")[1];
         if (langList.findIndex((item) => item.value === suffix) !== -1) {
           onLangChange(suffix);
@@ -219,14 +218,33 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
       }
     };
 
+    const byteSize = useMemo(() => {
+      return new Blob([code]).size;
+    }, [code]);
+
+    useEffect(() => {
+      const pasteArea = document.getElementById("pasteArea");
+      pasteArea?.addEventListener("paste", (event) => {
+        const clipboardData = event.clipboardData;
+        const pastedText = clipboardData?.getData("text") || ""; // 获取文本内容
+        // 可以在这里限制内容的大小，比如只允许1MB以内
+        if (new Blob([pastedText]).size > 1024 * 1024) {
+          event.preventDefault(); // 阻止粘贴
+          message.warning("复制内容超过1M，已将超出部分截断");
+          let encodedText = new TextEncoder().encode(pastedText);
+          // 截取前 1MB 的内容
+          encodedText = encodedText.slice(0, 1024 * 1024);
+          const text = new TextDecoder().decode(encodedText); // 将截取的字节内容转回字符串
+          setCode(text);
+        }
+      });
+    }, []);
+
     useDebounceEffect(
       () => {
-        const byteSize = new Blob([code]).size;
-        setByteSize(byteSize);
-
         const oneMB = 1024 * 1024;
         if (byteSize > oneMB) {
-          message.warning("复制内容超过1M，已将超出部分截断");
+          message.warning("写入内容超过1M，已将超出部分截断");
           let encodedText = new TextEncoder().encode(code);
           // 截取前 1MB 的内容
           encodedText = encodedText.slice(0, oneMB);
@@ -467,6 +485,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
             lineDirection="top"
             firstNode={
               <div
+                id="pasteArea"
                 style={{ height: "100%" }}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
