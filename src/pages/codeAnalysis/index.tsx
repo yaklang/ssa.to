@@ -565,6 +565,7 @@ interface FalsePositiveReq {
 }
 interface FalsePositiveRes {
   link: string;
+  body: string;
 }
 interface CodeAnalysisResultProps {
   onlyShowEditor: boolean;
@@ -633,7 +634,17 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
         data: params,
       })
         .then((res) => {
-          window.open(res.link, "_block");
+          navigator?.clipboard
+            .writeText(res.body)
+            .then(() => {
+              message.success("误报内容复制成功，请在github issue中粘贴即可");
+              setTimeout(() => {
+                window.open(res.link, "_block");
+              }, 1000);
+            })
+            .catch((err) => {
+              message.error("复制失败");
+            });
         })
         .catch((error) => message.error(error));
     };

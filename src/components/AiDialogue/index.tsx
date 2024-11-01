@@ -131,6 +131,9 @@ export const AiDialogue: React.FC<AiDialogueProps> = React.memo((props) => {
       clearInterval(timeIntervalRef.current);
       timeIntervalRef.current = null;
       setRefresh((prev) => !prev);
+      if (!isConnected) {
+        setLoading(false);
+      }
     }
   });
 
