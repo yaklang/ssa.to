@@ -1,0 +1,247 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+.heroBanner {
+  position: relative;
+  overflow: hidden;
+  padding: 85px 0;
+  text-align: center;
+  color: var(--ifm-color-white);
+  background-color: var(--ifm-color-primary);
+  .title-text_1 {
+    font-size: 56px;
+    line-height: 64px;
+  }
+  .title-text_2 {
+    font-size: 88px;
+    line-height: 96px;
+  }
+  .title-text_3 {
+    font-size: 56px;
+    line-height: 64px;
+  }
+  .title_subtitle {
+    font-size: 18px;
+    line-height: 32px;
+  }
+}
+.more-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 8px;
+  a {
+    text-decoration: none;
+  }
+  .more-btn {
+    height: 48px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 48px;
+  }
+  .start-for-free {
+    width: 150px;
+    cursor: pointer;
+    color: var(--ifm-color-black);
+    background-color: var(--ifm-color-white);
+  }
+  .know-more {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 160px;
+    color: var(--ifm-color-white);
+    border: 1px solid var(--yakit-primary-5);
+
+    gap: 4px;
+    .right-icon {
+      svg {
+        width: 16px;
+      }
+    }
+  }
+}
+.feature-wrapper {
+  background-image: url(../../static/img/color-bg.png);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+  .feature {
+    padding: 48px 0;
+    .feature-title {
+      text-align: center;
+      color: var(--ifm-color-emphasis-1000);
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .feature-desc {
+      color: #868c97;
+      font-size: 14px;
+      line-height: 20px;
+    }
+  }
+  .code-analysis {
+    margin-bottom: 96px;
+    .code-analysis-title {
+      margin-bottom: 24px;
+      text-align: center;
+      color: var(--ifm-color-emphasis-1000);
+    }
+    .code-analysis-cont {
+      position: relative;
+      .start-for-free-wrapper {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 7px;
+        left: 0;
+        overflow: hidden;
+        border-radius: 14px;
+        &:hover {
+          background-color: rgba($color: #000000, $alpha: 0.6);
+          .start-for-free {
+            display: block;
+          }
+        }
+        .start-for-free {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          display: none;
+          width: 200px;
+          height: 60px;
+          cursor: pointer;
+          transform: translate(-50%, -50%);
+          text-align: center;
+          color: var(--ifm-color-white);
+          border: 3px solid #a6a0c0;
+          font-size: 20px;
+          line-height: 60px;
+        }
+      }
+      .codeAnalysisRightBottom {
+        position: absolute;
+        right: 0;
+        bottom: -118px;
+        width: 236px;
+      }
+    }
+  }
+}
+html[data-theme="dark"],
+.feature-desc {
+  color: #c0c6d1;
+}
+.animation-btn {
+  z-index: 2;
+  overflow: hidden;
+  transition: 0.3s;
+  border: none;
+  border-radius: 50px;
+  background-color: var(--yakit-primary-5);
+
+  appearance: none;
+}
+.animation-btn::before {
+  position: absolute;
+  z-index: -3;
+  top: 50%;
+  left: 50%;
+  width: 210px;
+  height: 210px;
+  content: "";
+  transform: translate(-50%, -100%);
+  transform-origin: bottom center;
+  animation: button_light_effect 5s linear infinite;
+  border-radius: 100%;
+  background: rgb(2, 0, 36);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 14%,
+    transparent 35%,
+    var(--light-color) 80%,
+    var(--light-color) 100%
+  );
+}
+.animation-btn-white::before {
+  animation-delay: 0.1s;
+}
+.animation-btn::after {
+  position: absolute;
+  z-index: -3;
+  top: 50%;
+  left: 50%;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  content: "";
+  transition: 1s;
+  transform: translate(-50%, -50%);
+  border-radius: 50px;
+  background-color: var(--yakit-primary-5);
+}
+.animation-btn:hover {
+  transform: scale(1.2);
+}
+.animation-btn:hover,
+.animation-btn:hover::after {
+  cursor: pointer;
+  background-color: var(--yakit-primary-5);
+}
+.animation-btn:hover::before {
+  animation-duration: 0.5s;
+}
+.animation-btn-white {
+  --light-color: #ffffff;
+}
+@keyframes button_light_effect {
+  0% {
+    transform: translate(-50%, -100%) rotate(-180deg);
+  }
+  100% {
+    transform: translate(-50%, -100%) rotate(180deg);
+  }
+}
+@media (min-width: 1920px) {
+  .heroBanner {
+    .title-text_1 {
+      font-size: 84px;
+      line-height: 96px;
+    }
+    .title-text_2 {
+      font-size: 132px;
+      line-height: 144px;
+    }
+    .title-text_3 {
+      font-size: 84px;
+      line-height: 96px;
+    }
+    .title_subtitle {
+      font-size: 27px;
+      line-height: 48px;
+    }
+  }
+}
+@media (max-width: 997px) {
+  .feature-wrapper {
+    background-position: center bottom;
+    .feature-item:not(:first-of-type) {
+      margin-top: 50px;
+    }
+    .feature-desc {
+      margin-left: 8%;
+    }
+    .code-analysis {
+      .code-analysis-cont {
+        .codeAnalysisRightBottom {
+          right: 0px;
+          bottom: -60px;
+          width: 120px;
+        }
+      }
+    }
+  }
+}

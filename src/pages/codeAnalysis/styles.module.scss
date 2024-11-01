@@ -1,0 +1,133 @@
+.codeAnalysis {
+  height: 100vh;
+}
+.codeAnalysis-init-wrapper {
+  position: relative;
+  height: 100%;
+  .codeAnalysis-init-header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 12px 20px;
+    padding-top: 0;
+    border-bottom: 1px solid var(--yakit-border-color);
+    background-color: #f8f9fa;
+    &-left {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      padding-top: 12px;
+
+      gap: 8px;
+      .codeAnalysis-init-header-title {
+        white-space: nowrap;
+        font-size: 16px;
+        font-weight: 600;
+      }
+      .codeAnalysis-init-header-info {
+        white-space: nowrap;
+        color: #868c97;
+        font-size: 14px;
+        .fileInput {
+          display: none;
+        }
+        .click-upload {
+          cursor: pointer;
+          color: var(--yakit-primary-5);
+        }
+      }
+      .question-icon {
+        cursor: pointer;
+        color: #cdd1db;
+        svg {
+          width: 20px;
+        }
+      }
+    }
+    &-right {
+      display: flex;
+      align-items: center;
+      padding-top: 12px;
+
+      gap: 8px;
+      .code-size {
+        text-align: right;
+        white-space: nowrap;
+        color: #868c97;
+        font-size: 14px;
+      }
+      .codeAnalysis-start-icon {
+        svg {
+          width: 20px;
+        }
+      }
+    }
+  }
+}
+.codeAnalysisResult-wrapper {
+  height: 100%;
+  .codeAnalysisResult-header-wrapper {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    padding-top: 8px;
+    border-bottom: 1px solid var(--yakit-border-color);
+    .codeAnalysisResult-title {
+      margin-right: 16px;
+      white-space: nowrap;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+  .codeAnalysisResult-log {
+    overflow-y: auto;
+    height: calc(100% - 60px);
+    padding: 12px 20px;
+    &-item {
+      color: #868c97;
+      font-size: 14px;
+    }
+    .log-error {
+      color: #ff0000;
+    }
+  }
+  .codeAnalysisResult-table-wrapper {
+    overflow-y: auto;
+    height: calc(100% - 70px);
+    padding: 12px 20px 24px;
+    .codeAnalysisResult-table-header {
+      display: flex;
+      justify-content: end;
+      align-items: center;
+      margin-bottom: 12px;
+
+      gap: 8px;
+      .searchIcon {
+        svg {
+          width: 18px;
+        }
+      }
+    }
+    .exclamationIcon {
+      svg {
+        width: 16px;
+      }
+    }
+    .table-action {
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      .table-btn {
+        padding: 0 12px;
+        cursor: pointer;
+        color: var(--yakit-body-text-color);
+        border-right: 1px solid var(--yakit-border-color);
+        font-size: 12px;
+        font-weight: 500;
+        &:first-child {
+          padding-left: 0;
+        }
+      }
+    }
+  }
+}

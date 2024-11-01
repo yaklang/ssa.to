@@ -5,7 +5,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
-    "build": "docusaurus build",
+    "build": "cross-env NODE_ENV=production docusaurus build",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -16,15 +16,42 @@
   "dependencies": {
     "@docusaurus/core": "3.1.1",
     "@docusaurus/preset-classic": "3.1.1",
+    "@docusaurus/tsconfig": "^3.5.2",
     "@mdx-js/react": "^3.0.0",
+    "@viz-js/viz": "^3.9.0",
+    "ahooks": "^3.8.1",
+    "antd": "^5.21.3",
+    "axios": "^1.7.7",
     "clsx": "^2.0.0",
+    "cross-env": "^7.0.3",
+    "docusaurus-plugin-proxy": "^0.7.5",
+    "docusaurus-plugin-sass": "^0.2.5",
+    "dotenv": "^16.4.5",
+    "mermaid": "^11.3.0",
+    "moment": "^2.30.1",
+    "monaco-editor": "^0.52.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dom": "^18.0.0",
+    "react-hotkeys-hook": "^4.5.1",
+    "react-markdown": "^9.0.1",
+    "react-monaco-editor": "^0.56.2",
+    "react-resize-detector": "^11.0.1",
+    "rehype-highlight": "^7.0.1",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-math": "^6.0.0",
+    "sass": "^1.79.5"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.1.1",
-    "@docusaurus/types": "3.1.1"
+    "@docusaurus/module-type-aliases": "^3.5.2",
+    "@docusaurus/types": "^3.5.2",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "typescript": "^5.6.3"
   },
   "browserslist": {
     "production": [
