@@ -1,0 +1,56 @@
+# 新Github-Ci
+name: Yarn Build CI
+
+on:
+  push:
+    # branches:
+    #   - "master"
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Use Node.js 
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # 打包
+      - name: build
+        run: yarn install
+      - run: yarn run build
+
+      # 静态文件压缩
+      - name: pack out file
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: tar -zcvf out.tgz build
+        
+
+      - name: Upload out ssh
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: easingthemes/ssh-deploy@v2.1.6
+        with:
+          REMOTE_USER: 'root'
+          REMOTE_HOST: '${{ secrets.ONLINE_HOST }}' #测试服务器地址
+          SSH_PRIVATE_KEY: ${{ secrets.ONLINE_PRIV_KEY }}
+          ARGS: "-avzr --delete"
+          SOURCE: "out.tgz"
+          TARGET: '/root/yaklang-io/' #服务器中，代码部署的位置
+
+      - name: Deploy
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+        uses: appleboy/ssh-action@master # 使用ssh链接服务器
+        with:
+          host: ${{ secrets.ONLINE_HOST }}
+          username: 'root'
+          key: ${{ secrets.ONLINE_PRIV_KEY }}
+          script: |
+            cd /root/yaklang-io/
+            tar zxvf out.tgz
+            rm -rf out.tgz
+

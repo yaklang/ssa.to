@@ -226,7 +226,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
 
         const oneMB = 1024 * 1024;
         if (byteSize > oneMB) {
-          message.warning("文件超出1M限制，请重新上传");
+          message.warning("复制内容超过1M，已将超出部分截断");
           let encodedText = new TextEncoder().encode(code);
           // 截取前 1MB 的内容
           encodedText = encodedText.slice(0, oneMB);

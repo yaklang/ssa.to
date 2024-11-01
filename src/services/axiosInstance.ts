@@ -6,7 +6,7 @@ import axios, {
 } from "axios";
 
 const instance: AxiosInstance = axios.create({
-  baseURL: "/api",
+  baseURL: process.env.NODE_ENV === "production" ? process.env.REACT_APP_API_BASE_URL : "/api",
   timeout: 30 * 1000, // 请求超时时间
 });
 
