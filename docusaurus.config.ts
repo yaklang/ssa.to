@@ -16,7 +16,7 @@ console.log("Ws Base URL:", process.env.REACT_APP_WS_URL);
 
 const config: Config = {
   customFields: {
-    wsUrl: process.env.REACT_APP_WS_URL,
+    wsUrl: "wss://codescan.ssa.to",
   },
   title: "SSA.to",
   tagline: "Static-Single-Assignment Bringing Clarity to Code",
