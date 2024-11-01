@@ -679,7 +679,6 @@ const CodeAnalysisResult: React.FC<CodeAnalysisResultProps> = React.memo(
           return (
             <CustomTag
               color={title?.tag as CustomTagColor}
-              style={{ marginTop: 6 }}
               closable={false}
               icon={
                 <OutlineExclamationIcon className={styles["exclamationIcon"]} />
