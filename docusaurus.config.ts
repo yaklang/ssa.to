@@ -117,6 +117,11 @@ const config: Config = {
                 },
                 {to: "/blog", label: "Blog", position: "left"},
                 {
+                    to: "/codeAnalysis", 
+                    label: "Code Analysis",
+                    position: "left",
+                },
+                {
                     href: "https://github.com/yaklang/ssa.to",
                     label: "GitHub",
                     position: "right",
@@ -142,6 +147,11 @@ const config: Config = {
                 {
                     title: "Community",
                     items: [
+                        {
+                            label: "Wechat", 
+                            to: "docs/community#%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4",
+                            // http://localhost:3000/docs/community#%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4
+                        }
                         // {
                         //     label: 'Stack Overflow',
                         //     href: 'https://stackoverflow.com/questions/tagged/docusaurus',

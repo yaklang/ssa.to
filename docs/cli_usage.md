@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 ---
-# SyntaxFlow 快速使用 (cli版本)
+# 命令行使用
 
 ## 0x00 先决条件
 
