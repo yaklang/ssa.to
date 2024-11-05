@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://ssa.to/en/blog</id>
+    <title>SSA.to Blog</title>
+    <updated>2024-08-23T02:49:09.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://ssa.to/en/blog"/>
+    <subtitle>SSA.to Blog</subtitle>
+    <icon>https://ssa.to/en/img/favicon.ico</icon>
+    <entry>
+        <title type="html"><![CDATA[SyntaxFlow Blog]]></title>
+        <id>https://ssa.to/en/blog/wellcome</id>
+        <link href="https://ssa.to/en/blog/wellcome"/>
+        <updated>2024-08-23T02:49:09.000Z</updated>
+        <summary type="html"><![CDATA[将会周期更新代码变动和代码重构思路。]]></summary>
+        <content type="html"><![CDATA[<p>将会周期更新代码变动和代码重构思路。</p>]]></content>
+    </entry>
+</feed>

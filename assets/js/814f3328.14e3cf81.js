@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkssa_to=self.webpackChunkssa_to||[]).push([[7472],{55513:e=>{e.exports=JSON.parse('{"title":"Recent posts","items":[{"title":"SyntaxFlow Blog","permalink":"/blog/wellcome","unlisted":false,"date":"2024-08-23T02:49:09.000Z"}]}')}}]);

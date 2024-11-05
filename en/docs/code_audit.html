@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-code_audit" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.5.2">
+<title data-rh="true">代码审计 | SSA.to</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://ssa.to/en/img/docusaurus-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://ssa.to/en/img/docusaurus-social-card.jpg"><meta data-rh="true" property="og:url" content="https://ssa.to/en/docs/code_audit"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" property="og:locale:alternate" content="zh"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="代码审计 | SSA.to"><meta data-rh="true" name="description" content="编译项目"><meta data-rh="true" property="og:description" content="编译项目"><link data-rh="true" rel="icon" href="/en/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://ssa.to/en/docs/code_audit"><link data-rh="true" rel="alternate" href="https://ssa.to/docs/code_audit" hreflang="zh"><link data-rh="true" rel="alternate" href="https://ssa.to/en/docs/code_audit" hreflang="en"><link data-rh="true" rel="alternate" href="https://ssa.to/docs/code_audit" hreflang="x-default"><link rel="alternate" type="application/rss+xml" href="/en/blog/rss.xml" title="SSA.to RSS Feed">
+<link rel="alternate" type="application/atom+xml" href="/en/blog/atom.xml" title="SSA.to Atom Feed"><link rel="stylesheet" href="/en/assets/css/styles.10a4c11e.css">
+<script src="/en/assets/js/runtime~main.9fe69a04.js" defer="defer"></script>
+<script src="/en/assets/js/main.40f3f997.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<script>!function(){function t(t){document.documentElement.setAttribute("data-theme",t)}var e=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();t(null!==e?e:"light")}(),function(){try{const n=new URLSearchParams(window.location.search).entries();for(var[t,e]of n)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="navbar navbar--fixed-top"><div class="navbar__inner"><div class="navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/en/"><div class="navbar__logo"><img src="/en/img/logo.svg" alt="My Site Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/en/img/logo-dark.svg" alt="My Site Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div><b class="navbar__title text--truncate">SSA.to</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/en/docs/intro">Tutorial</a><a class="navbar__item navbar__link" href="/en/blog">Blog</a><a class="navbar__item navbar__link" href="/en/codeAnalysis">Code Analysis</a></div><div class="navbar__items navbar__items--right"><a href="https://github.com/yaklang/ssa.to" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a><div class="navbar__item dropdown dropdown--hoverable dropdown--right"><a href="#" aria-haspopup="true" aria-expanded="false" role="button" class="navbar__link"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" class="iconLanguage_nlXk"><path fill="currentColor" d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"></path></svg>English</a><ul class="dropdown__menu"><li><a href="/docs/code_audit" target="_self" rel="noopener noreferrer" class="dropdown__link" lang="zh">中文</a></li><li><a href="/en/docs/code_audit" target="_self" rel="noopener noreferrer" class="dropdown__link dropdown__link--active" lang="en">English</a></li></ul></div><div class="navbarSearchContainer_dCNk"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="main-wrapper mainWrapper_eExm"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/en/docs/intro">欢迎使用 SyntaxFlow</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/en/docs/cli_usage">命令行使用</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/en/docs/code_scan">代码扫描</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" href="/en/docs/code_audit">代码审计</a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-1 menu__list-item"><a class="menu__link" href="/en/docs/community">社区</a></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs" itemscope="" itemtype="https://schema.org/BreadcrumbList"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/en/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li itemscope="" itemprop="itemListElement" itemtype="https://schema.org/ListItem" class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link" itemprop="name">代码审计</span><meta itemprop="position" content="1"></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>代码审计</h1></header>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="编译项目">编译项目<a href="#编译项目" class="hash-link" aria-label="Direct link to 编译项目" title="Direct link to 编译项目">​</a></h2>
+<p>SyntaxFlow代码查询需要先进行项目编译。</p>
+<p>在前端的YakRunner界面，主界面或选项栏可以直接点击“编译项目”功能。</p>
+<blockquote>
+<p>可见图中红色方框圈起的选项</p>
+</blockquote>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-3fb7790dab65a0b8bd994d10fe7dc796-491f723e2f2ec525472e8915e4792172.png" width="1080" height="849" class="img_ev3q"></p>
+<p>编译项目的选项如下：必选项为项目名、语言和项目路径。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-126998d5d37439ecface5a9275ff501b-48fc869866e26dabfda47e328129f46d.png" width="591" height="824" class="img_ev3q"></p>
+<p>其他额外信息、数据库路径、项目入口文件等都非必填。</p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="已编译项目列表">已编译项目列表<a href="#已编译项目列表" class="hash-link" aria-label="Direct link to 已编译项目列表" title="Direct link to 已编译项目列表">​</a></h3>
+<p>在最近编译项目中，可以快速打开已编译项目。</p>
+<p>选择查看全部将会打开已编译项目列表。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-111d42f08def7a234af4acbae7bfe567-40296d1b40244644f379536e462ff9ef.png" width="412" height="397" class="img_ev3q"></p>
+<p>将会显示已编译项目的名称、路径、编译时间和相关操作。可以进行该项目的打开以及项目删除。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-f3510a10f84d47b5e29bd57917c7b7f9-b1f066d75586502aef0cd4fea595bc84.png" width="1080" height="179" class="img_ev3q"></p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="打开已编译项目">打开已编译项目<a href="#打开已编译项目" class="hash-link" aria-label="Direct link to 打开已编译项目" title="Direct link to 打开已编译项目">​</a></h3>
+<p>打开已编译的项目，将会显示文件资源管理器页面，同时会显示 &quot;Yakit技术预览版&quot;的水印。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-02bb3103f99c9d00b31a1d6c69565998-7c6c3fd50e2f30e1d75a850ec63d2a3d.png" width="1080" height="527" class="img_ev3q"></p>
+<p>可以检查文件内容，但这些已经编译的项目文件内容是只读的。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-9b3cc5357d974a2ad5b22f33ed00e8d3-4f2cb2aa1d417ee8f9fce91f2b7ee216.png" width="1080" height="653" class="img_ev3q"></p>
+<h2 class="anchor anchorWithStickyNavbar_LWe7" id="输入syntaxflow语句查询">输入SyntaxFlow语句查询<a href="#输入syntaxflow语句查询" class="hash-link" aria-label="Direct link to 输入SyntaxFlow语句查询" title="Direct link to 输入SyntaxFlow语句查询">​</a></h2>
+<p>在左侧侧边栏中可以看到代码审计选项， 点开以后可以发现编写SyntaxFlow查询语句的窗口：</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-291f31b4a7d6011c448a1977e56b7fdf-94439767f7041cee5756cc2a3a256d17.png" width="590" height="479" class="img_ev3q"></p>
+<p>在这里我们编写一段代码：</p>
+<ul>
+<li>
+<p>查找所有的*Mapping<br>
+<!-- -->注解，并找到其实例，然后通过()<br>
+<!-- -->得到参数，并过滤去掉this参数，然后将结果保存在Params<br>
+<!-- -->里面。</p>
+</li>
+<li>
+<p>或者说：查找所有被*Mapping<br>
+<!-- -->修饰的方法的参数。</p>
+</li>
+</ul>
+<p>然后我们可以看到结果是保存的变量： </p>
+<ul>
+<li>Param: 是保存的$param<br>
+<!-- -->变量， 其中有54个值，表示被*Mapping<br>
+<!-- -->修饰的方法的参数。</li>
+</ul>
+<p>每一次查询都会得到一个变量列表，如同上文所示，在SyntaxFlow规则中定名的变量都会在结果中列出。</p>
+<p>点开变量名将会展示该变量内保存的所有结果：将会标注其IR表示以及源码位置：</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-c1c3a27909c84c4f152bc5dbf02af209-7032bd3aef836c5d45e0997630d89cb9.png" width="575" height="700" class="img_ev3q"></p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="查询结果信息">查询结果信息<a href="#查询结果信息" class="hash-link" aria-label="Direct link to 查询结果信息" title="Direct link to 查询结果信息">​</a></h3>
+<p>点击查看其中的某一项结果，YakRunner将会展开以下结构：</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-34b088420dd42b2c2c76f67ce53b3b5a-7eb102c062feac478b592ab5f3164f31.png" width="1080" height="526" class="img_ev3q"></p>
+<ul>
+<li>编辑器将会跳转到该结果 对应的源码位置：</li>
+</ul>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-c6f2a40839c9b8dafc7916ba2104abbe-7e62d00d269088f6c7b423caec89cd59.png" width="1080" height="338" class="img_ev3q"></p>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="审计结果分析路径">审计结果：分析路径<a href="#审计结果分析路径" class="hash-link" aria-label="Direct link to 审计结果：分析路径" title="Direct link to 审计结果：分析路径">​</a></h3>
+<p>  在右侧上半部分审计结果将会展示获得该结果的所有分析路径。</p>
+<p>  默认展开路径信息。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-c29ae9538b60790a138b6e9495b31150-d4bdd6c7939364c5654e8e5bd6ece8e5.png" width="877" height="220" class="img_ev3q"></p>
+<ul>
+<li>可以继续点击获得每一个路径节点对应的源码信息。</li>
+</ul>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-79754b545a76a5bd8d7d6a840c272923-f0b1b33cbe343f0ca289947fca51cbc9.png" width="882" height="661" class="img_ev3q"></p>
+<ul>
+<li>
+<p>点击右侧信息也可以直接在编辑器跳转。</p>
+</li>
+<li>
+<p>点击右上角为关闭详细信息或对路径进行折叠。</p>
+</li>
+</ul>
+<h3 class="anchor anchorWithStickyNavbar_LWe7" id="审计结果分析图">审计结果：分析图<a href="#审计结果分析图" class="hash-link" aria-label="Direct link to 审计结果：分析图" title="Direct link to 审计结果：分析图">​</a></h3>
+<p>右侧下半部分将会展示分析过程的图：</p>
+<p>紫色节点代表当前结果，其他的普通节点代表分析过程中的节点。</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-55554567faae39c5fbb06faec62d1054-f531a6fe9a43f70738943acbb55f894e.png" width="859" height="611" class="img_ev3q"></p>
+<p>普通节点可以点击并且显示节点信息，点击文件路径可以在编辑器跳转：</p>
+<p><img decoding="async" loading="lazy" src="/en/assets/images/wechat2md-237c520463ebdf5d7d4c3772f2021fbb-6c92e6974e519171dc2216f2b21f3683.png" width="861" height="603" class="img_ev3q"></p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col"><a href="https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/code_audit.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="pagination-nav docusaurus-mt-lg" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/en/docs/code_scan"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">代码扫描</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/en/docs/community"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">社区</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#编译项目" class="table-of-contents__link toc-highlight">编译项目</a><ul><li><a href="#已编译项目列表" class="table-of-contents__link toc-highlight">已编译项目列表</a></li><li><a href="#打开已编译项目" class="table-of-contents__link toc-highlight">打开已编译项目</a></li></ul></li><li><a href="#输入syntaxflow语句查询" class="table-of-contents__link toc-highlight">输入SyntaxFlow语句查询</a><ul><li><a href="#查询结果信息" class="table-of-contents__link toc-highlight">查询结果信息</a></li><li><a href="#审计结果  分析路径" class="table-of-contents__link toc-highlight">审计结果：分析路径</a></li><li><a href="#审计结果分析图" class="table-of-contents__link toc-highlight">审计结果：分析图</a></li></ul></li></ul></div></div></div></div></main></div></div></div><footer class="footer footer_jryj"><div class="container container-fluid"><div class="row footer__links"><div class="col footer__col"><div class="footer__title">Docs</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/en/docs/intro">Tutorial</a></li></ul></div><div class="col footer__col"><div class="footer__title">Community</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/en/docs/community#%E5%BE%AE%E4%BF%A1%E4%BA%A4%E6%B5%81%E7%BE%A4">Wechat</a></li></ul></div><div class="col footer__col"><div class="footer__title">More</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/en/blog">Blog</a></li><li class="footer__item"><a href="https://github.com/yaklang/ssa.to" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub<svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24" class="iconExternalLink_nPIU"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg></a></li></ul></div></div><div class="footer__bottom text--center"></div></div><div class="footer__copyright copyright_C_OK">Copyright © 2024 ssa.to, Powered by yaklang.io</div></footer></div>
+</body>
+</html>
