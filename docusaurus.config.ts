@@ -146,10 +146,6 @@ const config: Config = {
                     title: "More",
                     items: [
                         {
-                            label: "Articles",
-                            to: "/articles",
-                        },
-                        {
                             label: "GitHub",
                             href: "https://github.com/yaklang/ssa.to",
                         },
