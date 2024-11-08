@@ -97,7 +97,7 @@ const config: Config = {
                 { to: "/cookbook", label: "SyntaxFlow 扫描规则编写指南", position: "left" },
                 {
                     to: "/codeAnalysis",
-                    label: "Code Analysis", 
+                    label: "Code Analysis NOW!", 
                     position: "left",
                 },
                 {
