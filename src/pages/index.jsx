@@ -56,14 +56,27 @@ function HomepageHeader() {
 
 const FeatureList = [
     {
-        title: isZh => isZh ? "多语言支持" : "Multiple Languages Supported",
+        title: isZh => isZh ? "多语言多框架技术支持" : "Multiple Languages Supported",
         img: require("@site/static/img/MultipleLanguagesSupported.png").default,
         description: isZh => isZh ? (
             <>
-                编译系统支持多种编程语言，包括 Yaklang、
-                JavaScript(ES)、Java、PHP 等。
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#6366f1', marginRight: '8px'}}>🔧</span>
+                    <span>编译系统支持<strong style={{color: '#4f46e5'}}>多种编程语言</strong>及其生态系统：</span>
+                </div>
+                <div style={{marginLeft: '24px', color: '#4b5563'}}>
+                    <span style={{color: '#ef4444'}}>Java <i className="devicon-java-plain colored"></i></span> 系列
+                    <span style={{color: '#6b7280'}}>(包含 Freemarker、SpEL、EL、JSP 等子语言)</span>、
+                    <span style={{color: '#3b82f6'}}>Golang <i className="devicon-go-original-wordmark colored"></i></span>、
+                    <span style={{color: '#8b5cf6'}}>PHP <i className="devicon-php-plain colored"></i></span>、
+                    <span style={{color: '#f59e0b'}}>JavaScript/EcmaScript <i className="devicon-javascript-plain colored"></i></span> 等，
+                    兼容各语言的主流版本。
+                </div>
                 <br/>
-                支持标准的 eBNF g4 语法文件。
+                <div style={{display: 'flex', alignItems: 'center'}}>
+                    <span style={{color: '#10b981', marginRight: '8px'}}>✨</span>
+                    <span>深度支持 <strong style={{color: '#059669'}}>SpringBoot <i className="devicon-spring-plain colored"></i></strong> 等常见 Java 开发框架，基于标准 eBNF g4 语法文件构建。</span>
+                </div>
             </>
         ) : (
             <>
@@ -79,50 +92,66 @@ const FeatureList = [
         img: require("@site/static/img/AdvancedAnalysisTechniques.png").default,
         description: isZh => isZh ? (
             <>
-                在 SSA 形式下，我们支持多种先进的分析技术：
-                <ul>
-                    <li>上下文敏感的跨函数分析</li>
-                    <li>数据流分析</li>
-                    <li>控制流分析</li>
-                    <li>使用-定义链：自底向上和自顶向下分析</li>
-                    <li>调用栈上下文分析等</li>
-                </ul>
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#6366f1', marginRight: '8px'}}>🔍</span>
+                    <span>基于<strong style={{color: '#4f46e5'}}>静态单赋值(SSA)</strong>形式，实现了一系列先进分析技术：</span>
+                </div>
+                <div style={{marginLeft: '24px', color: '#4b5563'}}>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#3b82f6'}}>• 双向数据流分析</span>：基于 Phi 函数，支持自顶向下和自底向上的完整分析链路</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#8b5cf6'}}>• 全局分析能力</span>：支持跨包/跨文件分析，具备路径敏感的遍历优化</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#ef4444'}}>• 深度关联分析</span>：数据流与控制流图(CFG)的深度结合</div>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', marginTop: '8px'}}>
+                    <span style={{color: '#10b981', marginRight: '8px'}}>✨</span>
+                    <span>提供<strong style={{color: '#059669'}}>面向对象程序的闭包分析</strong>与上下文敏感的过程间分析</span>
+                </div>
             </>
         ) : (
             <>
-                In the SSA formal, we support a variety of advanced analysis techniques:
-                <ul>
-                    <li>Context Sensitive Cross-Function Analysis</li>
-                    <li>Data-Flow Analysis</li>
-                    <li>Control-Flow Analysis</li>
-                    <li>Use-Def Chain: Bottom-Up and Top-Down Analysis</li>
-                    <li>Call Stack Context Analysis and more.</li>
-                </ul>
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#6366f1', marginRight: '8px'}}>🔍</span>
+                    <span>Based on <strong style={{color: '#4f46e5'}}>Static Single Assignment (SSA)</strong>, we provide advanced analysis techniques:</span>
+                </div>
+                <div style={{marginLeft: '24px', color: '#4b5563'}}>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#3b82f6'}}>• Bidirectional Data Flow Analysis</span>: Complete analysis chain based on Phi functions</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#8b5cf6'}}>• Global Analysis</span>: Cross-package/file analysis with path-sensitive optimization</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#ef4444'}}>• Deep Correlation Analysis</span>: Integration of data flow and control flow graphs (CFG)</div>
+                </div>
             </>
         ),
     },
     {
-        title: isZh => isZh ? "IR 数据库与分析规则" : "IR-Database and Analysis Rule",
+        title: isZh => isZh ? "IR 数据库与分析规则" : "IR Database & Analysis Rules",
         img: require("@site/static/img/IR-DatabaseandAnalysisRule.png").default,
-        description: (isZh => isZh ? (
+        description: isZh => isZh ? (
             <>
-                SSA 形式提供了强大的 IR 数据库和可视化工具，{" "}
-                <br/>
-                帮助您理解代码结构并分析代码质量。
-                <br/>
-                使用 SyntaxFlow 定义您自己的代码分析规则。
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#6366f1', marginRight: '8px'}}>💾</span>
+                    <span>采用 <strong style={{color: '#4f46e5'}}>SQLite 结构化存储</strong>，支持懒加载与懒存储机制：</span>
+                </div>
+                <div style={{marginLeft: '24px', color: '#4b5563'}}>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#3b82f6'}}>• 高性能数据库</span>：优化的存储结构确保分析性能</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#8b5cf6'}}>• SyntaxFlow 分析语言</span>：直接对 IR 编译产物进行扫描</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#ef4444'}}>• 规则编写系统</span>：将分析经验转化为可复用规则</div>
+                </div>
+                <div style={{display: 'flex', alignItems: 'center', marginTop: '8px'}}>
+                    <span style={{color: '#10b981', marginRight: '8px'}}>📚</span>
+                    <span>查看 <a href="/cookbook" style={{color: '#059669'}}>技术文档</a> 了解详细使用方法</span>
+                </div>
             </>
         ) : (
             <>
-                SSA formal provides a powerful IR-Database and Visualization tool,{" "}
-                <br/>
-                which can help you to understand the code structure and analyze the code
-                quality.
-                <br/>
-                use SyntaxFlow to define your own
-                code analysis rules.
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+                    <span style={{color: '#6366f1', marginRight: '8px'}}>💾</span>
+                    <span>Using <strong style={{color: '#4f46e5'}}>SQLite structured storage</strong> with lazy loading mechanism:</span>
+                </div>
+                <div style={{marginLeft: '24px', color: '#4b5563'}}>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#3b82f6'}}>• High-performance Database</span>: Optimized storage for analysis</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#8b5cf6'}}>• SyntaxFlow Language</span>: Direct IR compilation analysis</div>
+                    <div style={{marginBottom: '4px'}}><span style={{color: '#ef4444'}}>• Rule Writing System</span>: Convert analysis experience into reusable rules</div>
+                </div>
             </>
-        )),
+        ),
     },
 ];
 
