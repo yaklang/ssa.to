@@ -145,49 +145,64 @@ function Feature({img, title, description}) {
 // create a table
 function SyntaxFlowTable() {
     const [data, setData] = useState([]);
+    const [currentVersion, setCurrentVersion] = useState("");
     const [version, setVersion] = useState("");
     const [activeTab, setActiveTab] = useState("java");
     const [languages, setLanguages] = useState([]);
     const [tabs, setTabs] = useState([]);
 
     useEffect(() => {
-        axios.get("https://aliyun-oss.yaklang.com/yak/latest/syntaxflow-meta.json").then(res => {
-            try {
-                setVersion(res.data.version)
-                const rules = res.data.rules.sort((a, b) => b.score - a.score)
+        // 首先获取版本信息
+        axios.get("https://aliyun-oss.yaklang.com/yak/latest/version.txt")
+            .then(res => {
+                const version = res.data.trim();
+                setCurrentVersion(version);
                 
-                // 提取所有语言
-                const langs = new Set();
-                rules.forEach(rule => {
-                    const lang = rule.rule.split("-")[0];
-                    if(lang && lang !== "sca") {
-                        langs.add(lang);
+                // 尝试使用具体版本加载数据
+                return axios.get(`https://aliyun-oss.yaklang.com/yak/${version}/syntaxflow-meta.json`)
+                    .catch(() => {
+                        // 如果加载失败,回退到latest
+                        console.log("Failed to load specific version, falling back to latest");
+                        return axios.get("https://aliyun-oss.yaklang.com/yak/latest/syntaxflow-meta.json");
+                    });
+            })
+            .then(res => {
+                try {
+                    setVersion(res.data.version);
+                    const rules = res.data.rules.sort((a, b) => b.score - a.score);
+                    
+                    // 提取所有语言
+                    const langs = new Set();
+                    rules.forEach(rule => {
+                        const lang = rule.rule.split("-")[0];
+                        if(lang && lang !== "sca") {
+                            langs.add(lang);
+                        }
+                    });
+                    setLanguages(Array.from(langs));
+                    
+                    // 生成tabs
+                    const newTabs = [
+                        { key: "sca", label: "SCA 规则（版本检查）" },
+                        ...Array.from(langs).map(lang => ({
+                            key: lang,
+                            label: `${lang.toUpperCase()} 语言规则`
+                        }))
+                    ];
+                    setTabs(newTabs);
+                    setData(rules);
+                    
+                    // 如果当前activeTab不在新的tabs中，设置为第一个tab
+                    if(!newTabs.find(tab => tab.key === activeTab)) {
+                        setActiveTab(newTabs[0].key);
                     }
-                });
-                setLanguages(Array.from(langs));
-                
-                // 生成tabs
-                const newTabs = [
-                    { key: "sca", label: "SCA 规则（版本检查）" },
-                    ...Array.from(langs).map(lang => ({
-                        key: lang,
-                        label: `${lang.toUpperCase()} 语言规则`
-                    }))
-                ];
-                setTabs(newTabs);
-                setData(rules);
-                
-                // 如果当前activeTab不在新的tabs中，设置为第一个tab
-                if(!newTabs.find(tab => tab.key === activeTab)) {
-                    setActiveTab(newTabs[0].key);
+                } catch (err) {
+                    console.error(err);
                 }
-                
-            } catch (err) {
-                console.error(err)
-            }
-        }).catch(err => {
-            console.error(err)
-        })
+            })
+            .catch(err => {
+                console.error(err);
+            });
     }, [])
 
     const getFilteredData = (tabKey) => {
@@ -219,6 +234,19 @@ function SyntaxFlowTable() {
                     whiteSpace: 'nowrap',
                     justifyContent: 'center'
                 }}>
+                    <div
+                        style={{
+                            padding: '6px 14px',
+                            color: '#8862F8',
+                            fontSize: '13px',
+                            display: 'inline-block',
+                            margin: '0 8px',
+                            fontWeight: 500,
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        {version || ' - '}
+                    </div>
                     {tabs.map(tab => (
                         <div
                             key={tab.key}
@@ -353,7 +381,7 @@ function HomepageFeatures() {
             </div>
             <div className={styles["code-analysis"]}>
                 <h2 className={styles["code-analysis-title"]}>
-                    SyntaxFlow 已支持的规则列表
+                    SyntaxFlow 已支持的（部分）规则列表
                 </h2>
                 <SyntaxFlowTable/>
             </div>
