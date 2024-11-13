@@ -179,6 +179,7 @@ function SyntaxFlowTable() {
     const [activeTab, setActiveTab] = useState("java");
     const [languages, setLanguages] = useState([]);
     const [tabs, setTabs] = useState([]);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         // 首先获取版本信息
@@ -235,7 +236,9 @@ function SyntaxFlowTable() {
     }, [])
 
     const getFilteredData = (tabKey) => {
-        if(tabKey === "sca") {
+        if(tabKey === "version") {
+            return data;
+        } else if(tabKey === "sca") {
             return data.filter(item => item.rule.includes("-sca-"));
         } else {
             return data.filter(item => 
@@ -254,7 +257,7 @@ function SyntaxFlowTable() {
                 width: '100%',
                 maxWidth: '1200px',
                 borderBottom: '1px solid #eee',
-                marginBottom: '20px'
+                marginBottom: '2px'
             }}>
                 <div style={{
                     display: 'flex',
@@ -265,16 +268,34 @@ function SyntaxFlowTable() {
                 }}>
                     <div
                         style={{
-                            padding: '6px 14px',
-                            color: '#8862F8',
-                            fontSize: '13px',
+                            padding: '8px 16px',
+                            cursor: 'pointer', 
+                            backgroundColor: activeTab === 'version' ? '#EDE9FE' : 'transparent',
+                            color: activeTab === 'version' ? '#6D28D9' : '#666',
+                            fontWeight: activeTab === 'version' ? 600 : 400,
+                            fontSize: '14px',
+                            transition: 'all 0.2s',
                             display: 'inline-block',
-                            margin: '0 8px',
-                            fontWeight: 500,
-                            transition: 'all 0.2s ease'
+                            margin: '0 4px', 
+                            borderRadius: '8px',
+                            boxShadow: activeTab === 'version' ? '0 2px 4px rgba(139, 92, 246, 0.1)' : 'none',
+                            animation: activeTab === 'version' ? 'none' : 'bounce 1s ease infinite'
                         }}
+                        onClick={() => setActiveTab('version')}
                     >
-                        {version || ' - '}
+                        <span>
+                            {version || ' - '}
+                            <span style={{
+                                backgroundColor: '#6D28D9',
+                                color: '#fff',
+                                padding: '2px 6px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                marginLeft: '6px'
+                            }}>
+                                {data.length}
+                            </span>
+                        </span>
                     </div>
                     {tabs.map(tab => (
                         <div
@@ -294,7 +315,17 @@ function SyntaxFlowTable() {
                             }}
                             onClick={() => setActiveTab(tab.key)}
                         >
-                            {tab.label}
+                            <span>{tab.label}</span>
+                            <span style={{
+                                backgroundColor: activeTab === tab.key ? '#6D28D9' : '#E5E7EB',
+                                color: activeTab === tab.key ? '#fff' : '#666',
+                                padding: '2px 6px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                marginLeft: '6px'
+                            }}>
+                                {getFilteredData(tab.key).length}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -306,6 +337,42 @@ function SyntaxFlowTable() {
                     borderCollapse: 'collapse',
                     tableLayout: 'fixed'
                 }}>
+                    <div style={{
+                        padding: '12px 0',
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        width: '100%',
+                        maxWidth: '1200px'
+                    }}>
+                        <input
+                            type="search"
+                            placeholder="搜索规则名称、功能..."
+                            style={{
+                                width: '100%',
+                                padding: '8px 12px',
+                                border: '2px solid transparent',
+                                borderImage: 'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 10%, #C4B5FD 30%, transparent 100%)',
+                                borderImageSlice: 1,
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                color: '#374151',
+                                outline: 'none',
+                                transition: 'all 0.2s',
+                                background: 'linear-gradient(90deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 60%, rgba(255,255,255,0) 100%)',
+                                '&:focus': {
+                                    borderImage: 'linear-gradient(90deg, #7C3AED 0%, #8B5CF6 30%, #A78BFA 60%, transparent 100%)',
+                                    borderImageSlice: 1,
+                                    boxShadow: '0 0 0 2px rgba(139, 92, 246, 0.1)'
+                                }
+                            }}
+                            onChange={(e) => {
+                                // 这里需要添加搜索逻辑
+                                const searchValue = e.target.value.toLowerCase();
+                                // 假设有一个 setSearchTerm 状态更新函数
+                                setSearch(searchValue);
+                            }}
+                        />
+                    </div>
                     <thead>
                         <tr>
                             <th style={{
@@ -351,48 +418,125 @@ function SyntaxFlowTable() {
                         </tr>
                     </thead>
                     <tbody>
-                        {getFilteredData(activeTab).map((item, index) => (
-                            <tr key={index} style={{
-                                backgroundColor: index % 2 === 0 ? 'white' : '#F5F3FF'
-                            }}>
-                                <td style={{
-                                    width: '320px',
-                                    maxWidth: '320px',
-                                    padding: '12px',
-                                    borderBottom: '1px solid #ddd',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    cursor: 'pointer'
-                                }} title={item.rule}>{item.rule}</td>
-                                <td style={{
-                                    width: '550px',
-                                    maxWidth: '550px',
-                                    padding: '12px',
-                                    borderBottom: '1px solid #ddd',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    cursor: 'pointer'
-                                }} title={item.detail}>{item.detail}</td>
-                                <td style={{
-                                    padding: '12px',
-                                    borderBottom: '1px solid #ddd',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis'
-                                }}>{item.is_lib ? "是" : "否"}</td>
-                                <td style={{
-                                    padding: '12px',
-                                    borderBottom: '1px solid #ddd',
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    color: item.score > 8 ? '#DC2626' : 'inherit',
-                                    fontWeight: item.score > 8 ? 'bold' : 'normal'
-                                }}>{item.score}</td>
-                            </tr>
-                        ))}
+                        {(() => {
+                            const [expandedRow, setExpandedRow] = useState(null);
+                            const [hoveredRow, setHoveredRow] = useState(null);
+
+                            return getFilteredData(activeTab)
+                                .filter(item => 
+                                    item.rule.toLowerCase().includes(search) ||
+                                    item.detail.toLowerCase().includes(search)
+                                )
+                                .map((item, index) => (
+                                <>
+                                    <tr 
+                                        key={index} 
+                                        onClick={() => setExpandedRow(expandedRow === index ? null : index)}
+                                        onMouseEnter={() => setHoveredRow(index)}
+                                        onMouseLeave={() => setHoveredRow(null)}
+                                        style={{
+                                            backgroundColor: hoveredRow === index ? '#DDD6FE' : 
+                                                           index % 2 === 0 ? 'white' : '#F5F3FF',
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.3s'
+                                        }}
+                                    >
+                                        <td style={{
+                                            width: '320px',
+                                            maxWidth: '320px',
+                                            padding: '12px',
+                                            borderBottom: '1px solid #ddd',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }} title={item.rule}>{item.rule}</td>
+                                        <td style={{
+                                            width: '550px',
+                                            maxWidth: '550px',
+                                            padding: '12px',
+                                            borderBottom: '1px solid #ddd',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }} title={item.detail}>{item.detail}</td>
+                                        <td style={{
+                                            padding: '12px',
+                                            borderBottom: '1px solid #ddd',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}>{item.is_lib ? "是" : "否"}</td>
+                                        <td style={{
+                                            padding: '12px',
+                                            borderBottom: '1px solid #ddd',
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            color: item.score > 8 ? '#DC2626' : 'inherit',
+                                            fontWeight: item.score > 8 ? 'bold' : 'normal'
+                                        }}>{item.score}</td>
+                                    </tr>
+                                    {expandedRow === index && (
+                                        <tr>
+                                            <td colSpan={4} style={{
+                                                padding: expandedRow === index ? '20px' : '0px',
+                                                backgroundColor: '#F5F3FF',
+                                                borderBottom: '1px solid #ddd',
+                                                transition: 'all 0.3s ease-in-out',
+                                                maxHeight: expandedRow === index ? '500px' : '0px',
+                                                overflow: 'hidden'
+                                            }}>
+                                                <div style={{
+                                                    whiteSpace: 'normal',
+                                                    opacity: expandedRow === index ? 1 : 0,
+                                                    transform: `translateY(${expandedRow === index ? '0' : '-20px'})`,
+                                                    transition: 'all 0.3s ease-in-out'
+                                                }}>
+                                                    <h4 style={{margin: '0 0 10px 0', color: '#6B46C1'}}>详细信息:</h4>
+                                                    <div className="code-block-wrapper" style={{position: 'relative'}}>
+                                                        <button 
+                                                            onClick={() => navigator.clipboard.writeText(item.detail)}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                right: '10px',
+                                                                top: '10px',
+                                                                padding: '4px 8px',
+                                                                background: '#8B5CF6',
+                                                                color: 'white',
+                                                                border: 'none',
+                                                                borderRadius: '4px',
+                                                                cursor: 'pointer',
+                                                                boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)',
+                                                                transition: 'all 0.2s ease',
+                                                                ':hover': {
+                                                                    background: '#7C3AED',
+                                                                    transform: 'translateY(-1px)',
+                                                                    boxShadow: '0 4px 6px rgba(139, 92, 246, 0.4)'
+                                                                }
+                                                            }}
+                                                        >
+                                                            复制
+                                                        </button>
+                                                        <pre style={{
+                                                            background: '#2E1065',
+                                                            padding: '20px',
+                                                            borderRadius: '8px',
+                                                            color: '#E9D5FF',
+                                                            overflow: 'auto',
+                                                            margin: 0,
+                                                            boxShadow: '0 4px 6px rgba(139, 92, 246, 0.15)',
+                                                            border: '1px solid #7C3AED'
+                                                        }}>
+                                                            <code>{item?.code || item?.detail || '暂无内容'}</code>
+                                                        </pre>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </>
+                            ))
+                        })()}
                     </tbody>
                 </table>
             </div>
