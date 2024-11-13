@@ -425,7 +425,8 @@ function SyntaxFlowTable() {
                             return getFilteredData(activeTab)
                                 .filter(item => 
                                     item.rule.toLowerCase().includes(search) ||
-                                    item.detail.toLowerCase().includes(search)
+                                    item.detail.toLowerCase().includes(search) ||
+                                    (item.code && item.code.toLowerCase().includes(search))
                                 )
                                 .map((item, index) => (
                                 <>
@@ -492,42 +493,84 @@ function SyntaxFlowTable() {
                                                     transform: `translateY(${expandedRow === index ? '0' : '-20px'})`,
                                                     transition: 'all 0.3s ease-in-out'
                                                 }}>
-                                                    <h4 style={{margin: '0 0 10px 0', color: '#6B46C1'}}>详细信息:</h4>
-                                                    <div className="code-block-wrapper" style={{position: 'relative'}}>
-                                                        <button 
-                                                            onClick={() => navigator.clipboard.writeText(item.detail)}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                right: '10px',
-                                                                top: '10px',
-                                                                padding: '4px 8px',
-                                                                background: '#8B5CF6',
-                                                                color: 'white',
-                                                                border: 'none',
-                                                                borderRadius: '4px',
-                                                                cursor: 'pointer',
-                                                                boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)',
-                                                                transition: 'all 0.2s ease',
-                                                                ':hover': {
-                                                                    background: '#7C3AED',
-                                                                    transform: 'translateY(-1px)',
-                                                                    boxShadow: '0 4px 6px rgba(139, 92, 246, 0.4)'
-                                                                }
-                                                            }}
-                                                        >
-                                                            复制
-                                                        </button>
-                                                        <pre style={{
-                                                            background: '#2E1065',
-                                                            padding: '20px',
-                                                            borderRadius: '8px',
-                                                            color: '#E9D5FF',
-                                                            overflow: 'auto',
-                                                            margin: 0,
-                                                            boxShadow: '0 4px 6px rgba(139, 92, 246, 0.15)',
-                                                            border: '1px solid #7C3AED'
+                                                    <div style={{display: 'flex', alignItems: 'center', marginBottom: '10px'}}>
+                                                        <h4 style={{margin: 0, color: '#6B46C1'}}>SyntaxFlow 规则代码</h4>
+                                                        <span style={{
+                                                            marginLeft: '8px',
+                                                            padding: '2px 8px',
+                                                            fontSize: '12px',
+                                                            backgroundColor: '#E9D5FF',
+                                                            color: '#7E22CE',
+                                                            borderRadius: '4px',
+                                                            fontWeight: 'bold'
                                                         }}>
-                                                            <code>{item?.code || item?.detail || '暂无内容'}</code>
+                                                            {item.language || (() => {
+                                                                const firstWord = item.rule.split('-')[0].toLowerCase();
+                                                                return languages.includes(firstWord) ? firstWord.toUpperCase() : 'Unknown';
+                                                            })()}
+                                                        </span>
+                                                    </div>
+                                                    <div className="code-block-wrapper" style={{position: 'relative'}}>
+                                                        <pre style={{
+                                                            background: '#F3E8FF',
+                                                            padding: '20px',
+                                                            paddingRight: '80px', // 为复制按钮留出空间
+                                                            borderRadius: '8px',
+                                                            color: '#581C87',
+                                                            overflow: 'auto',
+                                                            margin: '0',
+                                                            maxWidth: '880px',
+                                                            maxHeight: '880px',
+                                                            boxShadow: '0 4px 6px rgba(139, 92, 246, 0.15)',
+                                                            border: '1px solid #C084FC',
+                                                            wordWrap: 'break-word',
+                                                            whiteSpace: 'pre-wrap',
+                                                            position: 'relative' // 为复制按钮定位
+                                                        }}>
+                                                            <button 
+                                                                onClick={() => {
+                                                                    if(item?.code) {
+                                                                        navigator.clipboard.writeText(item.code)
+                                                                    }
+                                                                }}
+                                                                disabled={!item?.code}
+                                                                style={{
+                                                                    position: 'absolute',
+                                                                    right: '12px', 
+                                                                    top: '12px',
+                                                                    padding: '4px 12px',
+                                                                    background: item?.code ? 'rgba(139, 92, 246, 0.1)' : '#eee',
+                                                                    color: item?.code ? '#6D28D9' : '#999',
+                                                                    border: `1px solid ${item?.code ? 'rgba(139, 92, 246, 0.2)' : '#ddd'}`,
+                                                                    borderRadius: '6px',
+                                                                    cursor: item?.code ? 'pointer' : 'not-allowed',
+                                                                    fontSize: '13px',
+                                                                    transition: 'all 0.2s ease',
+                                                                    zIndex: 100
+                                                                }}
+                                                                onMouseOver={(e) => {
+                                                                    if(item?.code) {
+                                                                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)';
+                                                                        e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+                                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                                    }
+                                                                }}
+                                                                onMouseOut={(e) => {
+                                                                    if(item?.code) {
+                                                                        e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                                                                        e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.2)';
+                                                                        e.currentTarget.style.transform = 'none';
+                                                                    }
+                                                                }}
+                                                            >
+                                                                复制
+                                                            </button>
+                                                            <code style={{
+                                                                color: '#6D28D9',
+                                                                fontSize: '14px',
+                                                                lineHeight: '1.6',
+                                                                fontFamily: 'monospace'
+                                                            }}>{item?.code || item?.detail || '暂无内容'}</code>
                                                         </pre>
                                                     </div>
                                                 </div>
