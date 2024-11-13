@@ -1,0 +1,310 @@
+# `desc` 语句：准备并编写基础描述
+
+在学习编写 SyntaxFlow 规则之前，为了方便用户理解使用，我们使用 XXE 这个漏洞来进行教学，用户可以在手动实现对这个漏洞的分析检测过程中，掌握 SyntaxFlow 的编写技术。
+
+## 准备要审计的代码
+
+我们将存在 XXE 漏洞的 Java 代码保存为 `XXE.java`，并将其存放在相应的包中。
+
+```java
+package com.vuln.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+@RestController(value = "/xxe")
+public class XXEController {
+
+    @RequestMapping(value = "/one")
+    public String one(@RequestParam(value = "xml_str") String xmlStr) throws Exception {
+        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        InputStream stream = new ByteArrayInputStream(xmlStr.getBytes("UTF-8"));
+        org.w3c.dom.Document doc = documentBuilder.parse(stream);
+        doc.getDocumentElement().normalize();
+        return "Hello World";
+    }
+}
+```
+
+这段代码位于一个使用 Spring Framework 构建的 Web 应用中，定义了一个处理 XML 数据的控制器 `XXEController`。控制器中的 `one` 方法用来处理通过 HTTP 请求传递的 XML 字符串。以下是代码的具体行为和存在的安全问题：
+
+### 代码解释
+
+1. **`@RestController(value = "/xxe")`**  
+   注解定义了一个 RESTful 控制器，其所有请求的基础 URL 是 `/xxe`。
+
+2. **`@RequestMapping(value = "/one")`**  
+   注解表明，`one` 方法将处理对 `/xxe/one` 的 HTTP 请求。
+
+3. **方法 `one` 接收请求参数**  
+   方法 `one` 接收一个名为 `xml_str` 的请求参数，这个参数通过 `@RequestParam` 注解获得。这个参数预期包含 XML 格式的数据。
+
+4. **创建 `DocumentBuilder` 实例**  
+   `DocumentBuilderFactory.newInstance().newDocumentBuilder()` 创建了一个 `DocumentBuilder` 实例，用于解析 XML 数据。
+
+5. **创建 `InputStream`**  
+   `new ByteArrayInputStream(xmlStr.getBytes("UTF-8"))` 创建了一个 `InputStream`，它从传入的字符串 `xml_str` 中读取数据。
+
+6. **解析 XML 数据**  
+   `documentBuilder.parse(stream)` 解析这个流，尝试构建一个 DOM 树。
+
+7. **规范化文档结构**  
+   `doc.getDocumentElement().normalize()` 规范化文档结构，确保 DOM 树的结构正确。
+
+### 存在的 XXE 漏洞
+
+这段代码存在 XML 外部实体 (XXE) 漏洞，原因如下：
+
+1. **默认的解析器设置**  
+   `DocumentBuilderFactory` 的默认配置不禁用外部实体的处理。这意味着如果 XML 输入包含对外部实体的引用，解析器将尝试解析这些实体。
+
+2. **安全风险**  
+   攻击者可以利用 XML 输入中的外部实体，引导服务器解析恶意内容。例如，攻击者可能会引入指向敏感文件（如 `/etc/passwd`）的实体，导致敏感信息泄露。此外，恶意的外部实体还可以用来触发拒绝服务攻击（DoS）等。
+
+## 编译源码
+
+进入 `XXE.java` 所在的目录，执行以下命令即可编译：
+
+```shell
+yak ssa -t . --program xxe
+```
+
+编译完成后，你将会在输出中看到以下日志，看到 `finished compiling` 则说明编译完成了。
+
+```plaintext
+[INFO] 2024-06-26 11:52:38 [ssacli:132] start to compile file: .
+[INFO] 2024-06-26 11:52:38 [ssacli:148] compile save to database with program name: xxe
+[INFO] 2024-06-26 11:52:38 [ssa:42] init ssa database: /Users/v1ll4n/yakit-projects/default-yakssa.db
+[INFO] 2024-06-26 11:52:38 [language_parser:46] parse project in fs: *filesys.LocalFs, localpath: .
+[INFO] 2024-06-26 11:52:38 [language_parser:152] file[XXE.java] is supported by language [java], use this language
+[WARN] 2024-06-26 11:52:38 [visit_package:31] Dependencies Missed: Import package [org.springframework.web.bind.annotation.RequestMapping] but not found
+...
+...
+...
+[INFO] 2024-06-26 11:52:38 [language_parser:68] compile XXE.java cost: 194.70225ms
+[INFO] 2024-06-26 11:52:38 [language_parser:72] program include files: 2 will not be as the entry from project
+[WARN] 2024-06-26 11:52:38 [reducer:51] Compile error: parse file xxe.sf error: file[xxe.sf] is not supported by any language builder, skip this file
+[INFO] 2024-06-26 11:52:38 [ssacli:163] finished compiling..., results: 1
+```
+
+## 编写描述
+
+在大致了解了 SF 规则文件之后，我们可以开始构建自己的 SF 文件。首先，创建一个名为 `xxe.sf` 的文件，并在文件中写入以下内容：
+
+```sf
+desc(title: "审计因为未设置 setFeature 等安全策略造成的XXE漏洞")
+```
+
+显然，这段代码仅仅添加了一点文件描述信息，并不会产生实际的审计效果。然而，添加描述有助于在结果输出时包含对结果的解读信息，因此仍然是非常必要的。
+
+### SPEC：语句 `desc`
+
+```ebnf
+// descriptionStatement 将使用 stringLiteral 描述 filterExpr
+descriptionStatement: Desc ('(' descriptionItems? ')') | ('{' descriptionItems? '}');
+descriptionItems: descriptionItem (',' descriptionItem)*;
+descriptionItem
+    : stringLiteral
+    | stringLiteral ':' stringLiteral
+    ;
+```
+
+在 `SyntaxFlow` 规则文件中，`desc` 语句用于为规则提供描述性的文本，这有助于理解规则的目的和应用场景。此语句可以包含一条或多条描述项，这些项可以单独列出或配对（键和值）。下面是关于如何编写 `desc` 语句的详细教程，以及如何通过案例来实际应用这些语句。
+
+### 语法结构
+
+`desc` 语句可以采用以下两种形式之一：
+
+1. 使用圆括号 `()` 封装描述项。
+2. 使用花括号 `{}` 封装描述项。
+
+描述项可以是单个字符串字面量，也可以是一对键和值（均为字符串字面量），用冒号 `:` 分隔。
+
+### 语法定义
+
+- **DescriptionStatement**:
+  - `Desc` 关键词后跟括号内的描述项。括号可以是圆括号 `()` 或花括号 `{}`。
+  
+- **DescriptionItems**:
+  - 一个或多个 `descriptionItem`，通过逗号 `,` 分隔。
+  
+- **DescriptionItem**:
+  - 单个字符串字面量，或
+  - 一对字符串字面量，形式为 `key: value`。
+
+### 示例解释
+
+考虑以下 `desc` 语句示例：
+
+```sf
+desc(title: "审计因为未设置 setFeature 等安全策略造成的XXE漏洞")
+```
+
+这个例子中，`desc` 语句使用圆括号包含了一个键值对描述项：
+
+- **Key (`title`)**: 说明描述的类别或主题。
+- **Value (`"审计因为未设置 setFeature 等安全策略造成的XXE漏洞"`)**: 具体描述规则的目的，即审计由于未设置某些 XML 安全特性（如 `setFeature`）而可能导致的 XXE 漏洞。
+
+#### 编写教程
+
+编写有效的 `desc` 语句时，请遵循以下最佳实践：
+
+1. **明确目的**：确保描述清楚地阐述了规则的审计目的和背景。
+2. **使用键值对**：当需要明确区分多个方面的描述时，使用键值对格式可以增加清晰度。
+3. **简洁表达**：尽管描述需要完整，但也应避免冗长。精简的文本更易于理解和维护。
+
+### 应用案例
+
+假设你需要编写一个规则来审计使用了不安全配置的数据库连接。一个有效的 `desc` 语句可能是：
+
+```sf
+desc(
+  title: "审计数据库连接安全配置",
+  detail: "检查数据库连接是否使用了加密和正确配置的认证机制"
+)
+```
+
+在这个案例中，我们使用了两个描述项，`title` 和 `detail`，通过花括号 `{}` 分隔，以清晰地说明规则的目的和具体的审计焦点。这种结构化的描述方式不仅有助于规则的编写者，也方便其他开发者或安全分析师理解和使用该规则。
+
+### 优化描述
+
+根据上面的解释，我们可以优化我们的描述信息为：
+
+```sf
+desc(
+    "Title": "审计因为未设置 setFeature 等安全策略造成的XXE漏洞",
+    "Fix": "修复方案：需要用户设置 setFeature / setXIncludeAware / setExpandEntityReferences 等安全配置"
+)
+```
+
+当我们不进行任何审计操作时，直接执行这个语句将会输出描述信息：
+
+```shell
+❯ yak sf --program xxe xxe.sf
+[INFO] 2024-06-26 11:53:36 [ssacli:221] start to use SyntaxFlow rule: xxe.sf
+[INFO] 2024-06-26 11:53:36 [ssa:42] init ssa database: /Users/v1ll4n/yakit-projects/default-yakssa.db
+[INFO] 2024-06-26 11:53:36 [ssacli:272] syntax flow query result:
+rule md5 hash: 2b0aaa151a9f3c58a08487f38185ad47
+rule preview: desc(     "Title": "审计因为未设置 setF...tExpandEntityReferences 等安全配置" )
+description: {Title: "Title", Fix: "Fix"}
+```
+
+在输出中，你可以看到规则的描述信息被正确解析和显示，这为后续的审计和分析提供了清晰的上下文信息。
+
+## 编写审计语句
+
+审计规则是 SyntaxFlow 的核心，我们观察有漏洞的代码，发现漏洞集中在下面三行：
+
+```java
+DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+InputStream stream = new ByteArrayInputStream(xmlStr.getBytes("UTF-8"));
+org.w3c.dom.Document doc = documentBuilder.parse(stream);
+```
+
+在这三行中，我们发现，最重要的其实是 documentBuilder.parse(stream)。我们的审计可以先从这个地方开始。
+
+如何编写 SyntaxFlow 规则找到 documentBuilder 的 parse调用？当然用户可以直接在“规则文件结构中”找到 xxe.sf 的实现直接得到答案，但是编写规则的具体细节，仍然需要用户学习，接下来我们将抽丝剥茧，逐步由浅入深地为用户解读核心规则编写的步骤。
+
+### 从变量名或方法名开始审计
+
+import Link from '@docusaurus/Link';
+
+<div style={{ backgroundColor: '#f5f0ff', padding: '1rem', margin: '1rem 0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+  <div >
+    <h3>下一章节</h3>
+  </div>
+  <div>
+    <p>
+      在 <Link to="/syntaxflow-guide/statements/sf-search">搜索定位：搜索符号或方法名</Link> 章节中，我们将深入介绍 SyntaxFlow 的符号搜索功能。包括如何精确定位变量、方法调用，以及如何通过模式匹配分析代码结构。这些搜索技巧将帮助您更高效地进行代码审计和漏洞分析。
+    </p>
+  </div>
+</div>
+
+> 受限篇幅，本文后续内容仅供预览下一章节内容，完整的内容请参考后续章节。
+
+:::info
+
+在代码审计过程中，找到特定变量和方法的调用位置是识别潜在漏洞的关键步骤。如果我们以 `documentBuilder.parse(...)` 这个函数调用为例，用户需要定位到 `documentBuilder` 这个变量及其 `parse` 方法的调用位置。在 `SyntaxFlow` 中，可以通过词法与符号搜索功能高效地完成这一任务。
+
+
+在 `SyntaxFlow` 中，**词法与符号搜索**允许用户通过变量名、方法名或函数名直接定位代码中的特定位置。这一功能对于代码审计和安全分析尤为重要，因为它可以帮助用户快速、准确地定位到感兴趣的代码片段，从而高效地识别潜在的安全问题。
+
+#### 搜索特定的变量名
+
+如果你想找到代码中所有使用 `documentBuilder` 这个变量的地方，可以使用以下 `SyntaxFlow` 查询：
+
+```sf
+documentBuilder;
+```
+
+**解释：**
+- 这条规则会匹配代码中所有 `documentBuilder` 变量的实例。无论变量是在声明、赋值还是调用中出现，都会被匹配到。
+
+**示例：**
+
+假设有以下代码片段：
+
+```java
+DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+org.w3c.dom.Document doc = documentBuilder.parse(stream);
+```
+
+使用 `documentBuilder;` 查询将匹配到上述代码中的两个实例。
+
+#### 搜索方法调用
+
+要找到所有调用 `parse` 方法的位置，可以使用以下查询：
+
+```sf
+.parse;
+```
+
+**解释：**
+- 这条规则会匹配所有对 `parse` 方法的调用。点 `.` 表示方法调用，后面跟随的方法名。
+
+**示例：**
+
+继续上述代码片段：
+
+```java
+org.w3c.dom.Document doc = documentBuilder.parse(stream);
+```
+
+使用 `.parse;` 查询将匹配到这行代码中的 `parse(stream)` 方法调用。
+
+#### 组合使用变量名和方法名搜索
+
+在实际审计过程中，通常需要结合变量名和方法名进行更精确的搜索。例如，要查找 `documentBuilder` 变量上的 `parse` 方法调用，可以组合使用前面的查询：
+
+```sf
+documentBuilder.parse;
+```
+
+**解释：**
+- 这条规则将只匹配在 `documentBuilder` 变量上调用的 `parse` 方法，而不会匹配其他变量上的 `parse` 方法调用。
+
+**示例：**
+
+```java
+org.w3c.dom.Document doc = documentBuilder.parse(stream);
+```
+
+使用 `documentBuilder.parse;` 查询将准确匹配到这行代码中的 `parse(stream)` 方法调用。
+
+<div style={{ backgroundColor: '#f5f0ff', padding: '1rem', margin: '1rem 0', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', borderRadius: '8px' }}>
+  <div >
+    <h3>下一章节</h3>
+  </div>
+  <div>
+    <p>
+      在 <Link to="/syntaxflow-guide/statements/sf-search">搜索定位：搜索符号或方法名</Link> 章节中，我们将深入介绍 SyntaxFlow 的符号搜索功能。包括如何精确定位变量、方法调用，以及如何通过模式匹配分析代码结构。这些搜索技巧将帮助您更高效地进行代码审计和漏洞分析。
+    </p>
+  </div>
+</div>
+:::

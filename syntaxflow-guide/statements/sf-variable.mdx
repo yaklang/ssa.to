@@ -1,0 +1,190 @@
+# 变量：存储和追踪审计结果
+
+在进行代码审计和安全分析的过程中，审计中间结果的暂存是提升分析效率和准确性的重要手段。**SyntaxFlow** 提供了强大的功能，使得审计员能够将审计过程中捕获的中间结果存储为变量，方便后续的引用和进一步分析。本节将详细介绍如何在 **SyntaxFlow** 中审计中间变量的暂存，包括语法定义、使用方法、实际案例以及其重要性。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 审计中间结果暂存简介
+
+在复杂的代码审计过程中，审计员往往需要追踪和分析多个步骤中的中间结果。通过将这些中间结果暂存为变量，可以大大简化分析过程，提高审计规则的灵活性和可维护性。**SyntaxFlow** 提供了使用 `as` 关键字将审计结果存储为变量的功能，允许用户在审计表达式中引用这些变量进行进一步的分析和过滤。
+
+## 语法结构
+
+在 **SyntaxFlow** 中，审计中间结果的暂存基于以下两种基本的表达式：
+
+### RefFilterExpr
+
+```antlr
+filterStatement
+    : refVariable filterItem*  (As refVariable)? # RefFilterExpr
+    | filterExpr  (As refVariable)?              # PureFilterExpr
+    ;
+```
+
+- **形式**: `refVariable filterItem* (as refVariable)?`
+- **描述**: 这种形式允许从一个引用变量开始，经过一系列的过滤操作，最终可选地将结果再次存储到新的引用变量中。
+
+### PureFilterExpr
+
+```antlr
+filterStatement
+    : refVariable filterItem*  (As refVariable)? # RefFilterExpr
+    | filterExpr  (As refVariable)?              # PureFilterExpr
+    ;
+```
+
+- **形式**: `filterExpr (as refVariable)?`
+- **描述**: 这种形式直接从一个过滤表达式开始，并可选地将结果存储到一个引用变量中。
+
+## 使用 `as` 关键字
+
+`as` 关键字用于将某个过滤表达式或操作的结果存储到一个变量中，便于后续的引用和操作。这在处理复杂的数据流或多步骤的代码审计中尤为重要。
+
+### 语法定义
+
+```antlr
+filterStatement
+    : refVariable filterItem*  (As refVariable)? # RefFilterExpr
+    | filterExpr  (As refVariable)?              # PureFilterExpr
+    ;
+```
+
+- **`refVariable`**: 用于引用已存储的变量。
+- **`filterItem`**: 包含过滤操作，如函数调用、方法链等。
+- **`As refVariable`**: 可选部分，将当前表达式的结果存储到指定的变量中。
+
+## 示例说明
+
+### 示例 1：捕获函数调用参数
+
+假设我们需要追踪函数 `parse` 被调用时传递的参数，并希望进一步分析这些参数。
+
+**查询示例:**
+
+```syntaxflow
+.parse(* as $params);
+```
+
+**解释:**
+
+- `*`：匹配 `parse` 方法的所有参数。
+- `as $params`：将匹配到的参数存储到变量 `$params` 中，便于后续引用和分析。
+
+### 示例 2：追踪数据库查询语句
+
+假设需要审计数据库查询函数 `executeQuery` 的参数，以检测可能的 SQL 注入风险。
+
+**查询示例:**
+
+```syntaxflow
+.createStatement().executeQuery(* as $sql);
+```
+
+**解释:**
+
+- `.createStatement()`：定位创建数据库语句的调用。
+- `.executeQuery(* as $sql)`：捕获 `executeQuery` 方法的所有参数，并将其存储到变量 `$sql` 中。
+
+## 实战应用
+
+### 案例 1：审计敏感函数的多步骤调用
+
+**目标**：审计 `DocumentBuilderFactory` 的配置和使用，确保 XML 解析器的安全配置，以防止 XXE 攻击。
+
+**解析步骤**：
+
+1. **定位实例化过程**：
+    ```syntaxflow
+    DocumentBuilderFactory.newInstance() as $factory;
+    ```
+    将 `DocumentBuilderFactory.newInstance()` 的结果存储到变量 `$factory`。
+
+2. **配置解析器**：
+    ```syntaxflow
+    $factory.setFeature(* as $features);
+    ```
+    捕获 `setFeature` 方法的参数，并存储到 `$features` 中。
+
+3. **创建解析器并调用 `parse`**：
+    ```syntaxflow
+    $factory.newDocumentBuilder().parse(* as $source);
+    ```
+    捕获 `parse` 方法的参数，并存储到 `$source` 中，便于进一步分析是否存在安全隐患。
+
+**完整查询**：
+```syntaxflow
+DocumentBuilderFactory.newInstance() as $factory;
+$factory.setFeature(* as $features);
+$factory.newDocumentBuilder().parse(* as $source);
+```
+
+### 案例 2：分析数据流中的中间变量
+
+**目标**：追踪用户输入通过多个函数调用后的最终使用情况，以检测潜在的未经验证的输入处理。
+
+**解析步骤**：
+
+1. **捕获用户输入**：
+    ```syntaxflow
+    request.getParameter(* as $input);
+    ```
+    将用户输入参数存储到 `$input` 中。
+
+2. **数据处理**：
+    ```syntaxflow
+    sanitize($input) as $safeInput;
+    ```
+    对 `$input` 进行清理，并将结果存储到 `$safeInput`。
+
+3. **最终使用**：
+    ```syntaxflow
+    database.executeQuery($safeInput);
+    ```
+    使用已清理的 `$safeInput` 进行数据库查询。
+
+**完整查询**：
+```syntaxflow
+request.getParameter(* as $input);
+sanitize($input) as $safeInput;
+database.executeQuery($safeInput);
+```
+
+## 重要性与优势
+
+使用 `as` 关键字将中间结果存储为变量，为编写高效且易于管理的审计规则提供了以下几个优势：
+
+### 1. 模块化
+
+将复杂的审计任务分解成多个简单、模块化的步骤，每个步骤存储中间结果，便于独立分析和调试。
+
+### 2. 重用性
+
+存储的变量可以在多个不同的审计表达式中重复使用，避免了重复编写相同的过滤逻辑，提高了规则的可维护性。
+
+### 3. 清晰性
+
+通过明确标记和存储关键审计点的结果，使得审计过程更加透明和易于理解，方便其他审计员或开发者快速掌握审计规则的逻辑。
+
+### 4. 数据流追踪
+
+利用 **SyntaxFlow** 的 SSA（静态单赋值）架构，每个变量在生命周期内只被赋值一次，确保数据流追踪的准确性，即使在复杂的链式调用和多次赋值的情况下，也能有效地跟踪变量的变化和使用。
+
+## 最佳实践
+
+### 1. 使用有意义的变量名
+
+为存储的变量选择有意义的名称，如 `$params`、`$sql` 等，便于后续的引用和理解。
+
+### 2. 限制变量的作用域
+
+仅在必要的审计步骤中存储中间结果，避免过度使用变量导致规则复杂化。
+
+### 3. 结合正则表达式和通配符
+
+在定义过滤条件时，结合使用正则表达式和通配符以提高匹配的精确性和灵活性，同时将匹配结果存储到变量中以便进一步分析。
+
+### 4. 分步骤审计
+
+将复杂的审计任务分解为多个步骤，每一步都存储关键的中间结果，便于逐步分析和验证。

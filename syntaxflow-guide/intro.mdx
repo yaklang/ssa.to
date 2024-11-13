@@ -1,0 +1,113 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
+
+# SyntaxFlow 简介
+
+SyntaxFlow 是 Yaklang 出品的编译器级高级静态分析语言。基于 Yaklang SSA 数据库的专用查询语言，静态代码行为分析的专用 DSL，为代码分析提供强大支持。
+
+<Admonition type="info">
+  SyntaxFlow 致力于解决静态分析中的各类难题。通过抹除语言 AST 特性、赋值操作，将分支与循环编译为基本块和 Phi 结构，构建统一的分析模型。
+</Admonition>
+
+## 支持特性
+
+<div className="container">
+  <div className="row" style={{ gap: '1.5rem', margin: '1rem 0' }}>
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>基础分析能力</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>不完整代码容错处理</li>
+            <li>精确/模糊/方法定向搜索</li>
+            <li>SSA 格式数据流分析</li>
+            <li>Use-Def 链递归分析</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>控制流分析</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>Phi 指令处理控制流</li>
+            <li>分支与循环基本块转换</li>
+            <li>上下文敏感分析</li>
+            <li>函数栈敏感分析</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>面向对象分析</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>OOP 到 SSA 格式转换</li>
+            <li>对象跨过程追踪</li>
+            <li>Java 注解语义分析</li>
+            <li>框架代码入口识别</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>多语言架构</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>Yaklang/Java 生产级支持</li>
+            <li>PHP/JavaScript 实验支持</li>
+            <li>统一中间表示抽象</li>
+            <li>通用语言分析框架</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>过程间分析</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>复杂数据流追踪</li>
+            <li>跨过程调用分析</li>
+            <li>OOP 方法间分析</li>
+            <li>上下文敏感分析</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div className="col col--4 col--sm-12">
+      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div className="card__header">
+          <h3>分析结果展示</h3>
+        </div>
+        <div className="card__body">
+          <ul>
+            <li>Sqlite 符号表存储</li>
+            <li>IrCode 标准化表示</li>
+            <li>数据流 DOT 图导出</li>
+            <li>分析步骤可视化</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

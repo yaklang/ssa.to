@@ -1,0 +1,196 @@
+# 链式调用：递归检查成员和调用
+
+在现代编程中，链式调用（Chained Invocation）广泛应用于各类框架和库中，特别是在 Java 中的构造器和工厂方法中。**深度遍历链式调用**（Deep Chain Invocation Tracing）是一种递归检查链式调用的技术，允许分析工具或程序员快速追踪到某个特定方法调用，无论这个调用是直接发生还是通过多层链式方法调用间接发生的。这种技术在复杂代码审计和安全分析中具有重要意义，能够大幅提升审计效率和准确性。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 递归检查链式调用简介
+
+在复杂的代码库中，方法调用往往通过多层链式调用实现，直接定位特定方法变得相对困难。**深度遍历链式调用**技术通过递归检查链式调用，能够高效地追踪到目标方法，无需明确每一级调用的细节。这使得审计员能够专注于关键方法的安全性和正确性分析，而不必被中间层的实现细节所困扰。
+
+## 语法定义
+
+在 **SyntaxFlow** 中，递归检查链式调用通过特定的语法规则实现。以下是相关的语法定义：
+
+```antlr
+filterItem
+    : ...
+    | '...' lines? nameFilter                    # DeepChainFilter
+    ...
+    ;
+```
+
+- **'...'**：表示从当前位置开始，向下递归追踪，直到找到指定的方法或函数（通过 `nameFilter` 指定）。
+- **nameFilter**：指定目标方法或函数的名称。
+
+这种语法允许开发者以简洁的方式定义递归链式调用的匹配规则，减少了书写完整方法链的繁琐。
+
+## 示例说明
+
+通过具体的代码案例，结合语法进行说明，能够更直观地理解 **Deep Chain Invocation Tracing** 的应用。
+
+### 案例分析与语法应用
+
+假设我们有以下 Java 代码片段：
+
+```java
+DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+InputStream stream = new ByteArrayInputStream(xmlStr.getBytes("UTF-8"));
+org.w3c.dom.Document doc = documentBuilder.parse(stream);
+doc.getDocumentElement().normalize();
+```
+
+在这个例子中，`parse` 方法通过链式调用间接调用了多个方法。若希望快速定位 `parse()` 方法的调用，而不必详细书写完整的调用链，可以使用 **递归检查链式调用** 的语法。
+
+**目标**：定位 `parse()` 方法的所有调用位置。
+
+**传统方法**：
+
+```syntaxflow
+DocumentBuilderFactory.newInstance().newDocumentBuilder().parse();
+```
+
+这种方法需要完整地书写调用链，显得冗长且不够优雅。
+
+**递归链式调用方法**：
+
+```syntaxflow
+DocumentBuilderFactory...parse();
+```
+
+**解释**：
+
+- `DocumentBuilderFactory`：起始类名。
+- `...`：表示从 `DocumentBuilderFactory` 开始，递归追踪所有可能的链式调用，直到找到 `parse()` 方法。
+- `parse()`：目标方法名。
+
+通过这种方式，**SyntaxFlow** 将自动忽略中间的 `newInstance()` 和 `newDocumentBuilder()` 调用，直接定位到 `parse()` 方法，大大简化了规则的书写。
+
+## 实战应用
+
+### 案例 1：追踪 XML 解析器的配置和使用
+
+**目标**：审计 `DocumentBuilderFactory` 的配置和使用，确保 XML 解析器的安全配置，以防止 XXE 攻击。
+
+**解析步骤**：
+
+1. **定位实例化过程**：
+
+    ```syntaxflow
+    DocumentBuilderFactory...newInstance() as $factory;
+    ```
+
+    - 捕获 `DocumentBuilderFactory.newInstance()` 的调用，并将结果存储在变量 `$factory` 中。
+
+2. **配置解析器**：
+
+    ```syntaxflow
+    $factory.setFeature(* as $features);
+    ```
+
+    - 捕获 `setFeature` 方法的所有参数，并存储到 `$features` 中。
+
+3. **创建解析器并调用 `parse`**：
+
+    ```syntaxflow
+    $factory...parse(* as $source);
+    ```
+
+    - 通过递归检查链式调用，捕获 `parse` 方法的所有参数，并将其存储在 `$source` 中。
+
+**完整查询**：
+
+```syntaxflow
+DocumentBuilderFactory...newInstance() as $factory;
+$factory.setFeature(* as $features);
+$factory...parse(* as $source);
+```
+
+**解释**：
+
+- 通过递归检查链式调用，分别捕获工厂实例化、配置设置及解析调用的参数，方便后续的安全性分析。
+
+### 案例 2：审计数据库连接与查询执行
+
+**目标**：审计数据库连接的建立及查询的执行，防止 SQL 注入攻击。
+
+**解析步骤**：
+
+1. **追踪数据库连接的获取**：
+
+    ```syntaxflow
+    DriverManager...getConnection(* as $connection);
+    ```
+
+    - 捕获 `DriverManager.getConnection()` 方法的调用，并将连接对象存储在 `$connection` 中。
+
+2. **创建语句并执行查询**：
+
+    ```syntaxflow
+    $connection...executeQuery(* as $sql);
+    ```
+
+    - 通过递归检查链式调用，捕获 `executeQuery` 方法的所有参数，并将其存储在 `$sql` 中。
+
+**完整查询**：
+
+```syntaxflow
+DriverManager...getConnection(* as $connection);
+$connection...executeQuery(* as $sql);
+```
+
+**解释**：
+
+- 通过递归链式调用，快速定位数据库连接和查询执行的关键步骤，便于进行 SQL 注入风险分析。
+
+## 重要性与优势
+
+**深度遍历链式调用**在代码审计和安全分析中具有诸多优势：
+
+### 1. **简化规则编写**
+
+- 通过使用 `...` 符号，能够省略中间层的调用细节，简化审计规则的编写过程。
+
+### 2. **提升审计效率**
+
+- 递归检查链式调用能够快速定位目标方法，减少了手动追踪多层调用的时间和精力。
+
+### 3. **增强规则的可维护性**
+
+- 规则更加简洁明了，便于后续的维护和更新，尤其在面对复杂和动态变化的代码库时尤为重要。
+
+### 4. **提高审计覆盖率**
+
+- 递归检查确保了无论目标方法通过多少层链式调用被调用，都能被准确捕捉到，提升了审计的全面性。
+
+## 最佳实践
+
+为充分发挥 **递归检查链式调用** 的优势，建议遵循以下最佳实践：
+
+### 1. **明确目标方法**
+
+- 确保目标方法名准确无误，以避免误匹配和漏匹配。
+
+### 2. **合理使用变量**
+
+- 在需要进一步分析时，结合 `as` 关键字将匹配结果存储为变量，便于后续引用。
+
+### 3. **结合其他过滤条件**
+
+- 递归检查链式调用可以与其他过滤条件（如参数类型、返回值等）结合使用，提升规则的精准度。
+
+### 4. **模块化编写规则**
+
+- 将复杂的审计任务分解为多个模块，每个模块专注于特定的链式调用层级，提升规则的可读性和可维护性。
+
+### 5. **定期审查和更新规则**
+
+- 随着代码库的演进，定期审查和更新审计规则，确保其始终适用于最新的代码结构和调用模式。
+
+## 总结
+
+**深度遍历链式调用**通过递归检查链式调用，提供了一种高效、简洁的方式来定位和审计特定方法的调用。结合 **SyntaxFlow** 的强大功能，审计员能够轻松追踪复杂的链式调用，无需详细书写每一级的调用细节。这不仅简化了审计规则的编写过程，还显著提升了审计的效率和覆盖率。
+
+通过掌握和应用本节内容中的语法和最佳实践，您将能够在实际的代码审计和安全分析中更高效地利用 **SyntaxFlow**，快速定位关键方法调用，深入分析其安全性和正确性，确保代码的整体安全性与稳定性。

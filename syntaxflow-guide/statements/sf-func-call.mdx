@@ -1,0 +1,182 @@
+# 函数调用：审计调用和参数
+
+
+在代码审计和安全分析中，精准地识别和审查函数调用及其参数是至关重要的。**SyntaxFlow** 提供了强大的功能，使得这一任务变得高效和简便。本教程将详细介绍如何利用 **SyntaxFlow** 来查找和审计函数调用及其参数。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 函数调用审计简介
+
+**SyntaxFlow** 的函数调用审计功能允许用户精确地查找特定函数的调用位置，并对其参数进行详细的审查。这对于识别潜在的安全风险，如不当的数据处理或可能的漏洞利用，具有重要意义。通过以下内容，您将学习如何在 **SyntaxFlow** 中高效地进行函数调用及其参数的审计。
+
+## 语法定义
+
+在 **SyntaxFlow** 中，函数调用及参数的审计基于以下语法规则：
+
+```antlr
+filterItemFirst
+    : nameFilter                                 # NamedFilter
+    | '.' lines? nameFilter                      # FieldCallFilter
+    ;
+
+filterItem
+    : filterItemFirst                            #First
+    | '(' lines? actualParam? ')'                # FunctionCallFilter
+    ;
+
+actualParam
+    : singleParam    lines?                   # AllParam
+    | actualParamFilter+ singleParam? lines?  # EveryParam
+    ;
+
+actualParamFilter: singleParam ',' | ',';
+
+singleParam: ( '#>' | '#{' (recursiveConfig)? '}' )? filterStatement ;
+```
+
+这些规则定义了如何匹配函数调用及其参数，使得用户能够灵活地编写查询以满足不同的审计需求。
+
+## 具体案例解析
+
+### 1. 搜索函数调用
+
+要找到所有 `.parse` 方法的调用，可以使用以下 **SyntaxFlow** 查询：
+
+```syntaxflow
+.parse();
+```
+
+这条规则将匹配所有调用 `.parse` 方法的地方，不论其上下文或传递的参数。
+
+### 2. 审计所有参数
+
+如果您希望审计 `.parse` 方法调用时传递的所有参数，可以使用如下格式：
+
+```syntaxflow
+.parse(* as $source);
+```
+
+解释：
+- `*` 表示匹配任何参数。
+- `as $source` 将匹配到的参数赋予变量名 `$source`，方便后续分析。
+
+### 3. 审计特定位置的参数
+
+当您只关注 `.parse` 方法调用中特定位置的参数（例如，第一个参数）时，可以使用以下查询：
+
+```syntaxflow
+.parse(* as $source,);
+```
+
+解释：
+- 逗号 `,` 表示参数的分隔。
+- `* as $source` 指定只匹配第一个参数。
+
+如果需要匹配第二个或后续参数，可以根据需要添加逗号和相应的匹配模式。
+
+### 4. 语法详解
+
+- **filterItemFirst**:
+  - `nameFilter`：匹配具体的函数名或方法名。
+  - `.` + `nameFilter`：指定函数或方法调用。
+
+- **filterItem**:
+  - `filterItemFirst`：初步匹配函数或方法名。
+  - `(` `actualParam?` `)`：匹配函数调用时的参数列表。
+
+- **actualParam**:
+  - `singleParam`：匹配所有参数。
+  - `actualParamFilter+ singleParam?`：匹配特定位置的参数。
+
+- **singleParam**:
+  - 表达式用于捕获并操作函数调用中的参数。
+
+### 5. 使用场景示例
+
+#### 示例 1：审计安全敏感函数 `loadData` 的调用
+
+假设需要审计一个安全敏感的函数 `loadData`，以确保其参数的安全性：
+
+```syntaxflow
+.loadData(* as $data);
+```
+
+此规则将捕获所有 `loadData` 函数调用的参数，并将其存储在变量 `$data` 中，以便进一步分析是否存在安全隐患。
+
+#### 示例 2：审计可能存在命令注入风险的 `exec` 函数调用
+
+```syntaxflow
+Runtime.getRuntime().exec(* as $cmd);
+```
+
+解释：
+- 该查询寻找所有 `Runtime.getRuntime().exec` 的调用。
+- 它捕获传递给 `exec` 的所有参数，并赋值给变量 `$cmd`，用于后续分析命令的内容和安全性。
+
+### 6. 实战使用：结合变量名、方法名链与方法调用逻辑进行审计
+
+结合变量名、方法名链与方法调用逻辑进行审计是一种高效的策略，能够帮助审计员深入理解代码的功能和潜在风险。以下通过几个案例展示如何实现这种审计：
+
+#### 案例 1：审计 XML 解析器的配置和使用
+
+目标：确定 `DocumentBuilder.parse` 方法的调用是否正确配置，以防止 XXE 攻击。
+
+**SyntaxFlow 查询：**
+
+```syntaxflow
+DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(* as $source);
+```
+
+**解释：**
+- 定位所有 `DocumentBuilderFactory.newInstance().newDocumentBuilder()` 的调用。
+- 追踪到 `parse` 方法的调用，并捕获传递给 `parse` 方法的参数。
+- 参数存储在变量 `$source` 中，以进一步分析。
+
+#### 案例 2：审计 `exec` 方法的调用以防止命令注入
+
+目标：识别所有使用 `Runtime.getRuntime().exec` 的地方，防止潜在的命令注入攻击。
+
+**SyntaxFlow 查询：**
+
+```syntaxflow
+Runtime.getRuntime().exec(* as $cmd);
+```
+
+**解释：**
+- 查找所有 `Runtime.getRuntime().exec` 的调用。
+- 捕获传递给 `exec` 的所有参数，赋值给变量 `$cmd`，用于后续分析命令的安全性。
+
+## 实战中注意事项
+
+### 1. 避免过于具体的参数名
+
+:::tip **提示**
+在编写 **SyntaxFlow** 规则时，尽量避免指定具体的参数名。这提高了规则的通用性和适用范围，尤其在处理多项目或多技术栈时尤为重要。
+:::
+
+**具体说明：**
+- 参数命名可能因项目或技术栈不同而有所变化。
+- 使用通用的匹配模式（如 `*` 或正则表达式）可以提升规则的灵活性和适用性。
+
+### 2. 深入理解数据流
+
+:::tip **提示**
+利用 **SyntaxFlow** 的 SSA（静态单赋值）架构优势，深入理解变量赋值和数据流在代码中的传递方式。
+:::
+
+**具体说明：**
+- 在 SSA 中，每个变量在其生命周期内只被赋值一次，这简化了数据流分析。
+- 重新赋值会创建新的变量，确保数据流追踪的准确性。
+- 即使面对复杂的链式调用和多次赋值，数据流分析依然高效准确。
+
+### 3. 重视方法链的完整性
+
+:::tip **提示**
+在编写规则时，尽可能追踪完整的方法调用链。这有助于精确定位问题，并提供调用上下文，便于深入分析潜在问题。
+:::
+
+**具体说明：**
+- 完整的方法链追踪能防止漏报，特别是在涉及多层方法调用和对象创建的复杂系统中。
+- 通过方法链的完整追踪，可以更好地理解代码的执行流程和潜在的安全隐患。

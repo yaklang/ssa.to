@@ -23,7 +23,7 @@ const config: Config = {
     url: "https://ssa.to",
     baseUrl: "/",
 
-    organizationName: "yaklang",
+    organizationName: "yaklang", 
     projectName: "ssa.to",
 
     onBrokenLinks: "throw",
@@ -65,6 +65,19 @@ const config: Config = {
             },
         ],
         [
+            '@docusaurus/plugin-content-docs',
+            {
+              id: 'syntaxflow-guide',
+              path: 'syntaxflow-guide',
+              routeBasePath: 'syntaxflow-guide',
+              sidebarPath: require.resolve('./syntaxflow-guide-sidebars.js'),
+              // 添加其他配置
+              editUrl: 'https://github.com/yaklang/ssa.to/tree/main/syntaxflow-guide/',
+              showLastUpdateTime: true,
+              showLastUpdateAuthor: true,
+            },
+        ],
+        [
             '@docusaurus/plugin-client-redirects',
             {
                 createRedirects: (path) => {
@@ -94,7 +107,14 @@ const config: Config = {
                     position: "left",
                     label: "代码扫描基础使用",
                 },
-                { to: "/cookbook", label: "SyntaxFlow 扫描规则编写指南", position: "left" },
+                {
+                    type: "docSidebar",
+                    sidebarId: "syntaxflowGuideSidebar",
+                    position: "left",
+                    label: "SyntaxFlow 文档",
+                    docsPluginId: "syntaxflow-guide"
+                },
+                { to: "/cookbook", label: "SyntaxFlow 手册离线 PDF", position: "left" },
                 {
                     to: "/codeAnalysis",
                     label: "Code Analysis NOW!", 
