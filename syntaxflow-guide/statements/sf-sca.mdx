@@ -1,0 +1,242 @@
+# SCA: 依赖版本信息检测
+
+**SyntaxFlow** 能够解析依赖包的版本信息，同时也允许用户编写规则来分析这些版本信息。通过对依赖版本的检测，可以有效识别项目中存在已知漏洞的依赖包，从而提升代码的安全性和稳定性。本节将详细介绍如何在 **SyntaxFlow** 中获取和筛选依赖版本信息，并通过实例演示如何检测具有漏洞的依赖包版本。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 简介
+
+在现代软件开发中，依赖管理是一个关键环节。项目通常依赖多个第三方库和框架，而这些依赖包的版本直接影响项目的安全性和稳定性。**SyntaxFlow** 提供了强大的功能来解析和分析依赖包的版本信息，使开发者能够轻松检测出存在已知漏洞的依赖版本，从而及时采取措施进行更新或替换。
+
+## 获取依赖信息
+
+**SyntaxFlow** 通过内置变量 `__dependency__` 存储解析后的依赖信息。用户可以通过筛选依赖名称的方式获取特定依赖的版本信息或文件信息。以下是获取依赖信息的示例：
+
+```syntaxflow
+// 获取依赖名以 fastjson 结尾的依赖版本
+__dependency__.*fastjson.version as $ver;
+
+// 获取依赖名以 fastjson 结尾所在的依赖文件
+__dependency__.*fastjson.filename as $file;
+```
+
+- **`__dependency__.*fastjson.version as $ver;`**：筛选依赖名称以 `fastjson` 结尾的依赖版本，并将结果存储在变量 `$ver` 中。
+- **`__dependency__.*fastjson.filename as $file;`**：筛选依赖名称以 `fastjson` 结尾的依赖文件，并将结果存储在变量 `$file` 中。
+
+## 筛选依赖版本
+
+获取到依赖的版本信息后，下一步通常是筛选出存在已知漏洞的版本。**SyntaxFlow** 提供了 `version_in` 语法来定义版本区间，以便检测依赖版本是否落在特定的漏洞版本范围内。
+
+### version_in 语法定义
+
+**SyntaxFlow** 中 `version_in` 的语法定义如下：
+
+```
+filterItem
+    ...
+    | In versionInExpression                     # VersionInFilter
+    ;
+
+versionInExpression: versionInterval ('||' versionInterval)*;
+versionInterval: ( '[' | '(') vstart? ',' vend? (   ']'| ')' ) ;
+vstart: versionString;
+vend: versionString;
+// unless ',' ']' ')'
+versionBlockElement: Number versionSuffix* ;
+versionSuffix: '-' | Identifier;
+versionBlock:  versionBlockElement ('.' versionBlockElement )*;
+versionString
+    : stringLiteral
+    | versionBlock
+    ;
+
+In: 'in';
+conditionExpression
+    ...
+    |  VersionIn ':' versionInExpression              # VersionInCondition
+    ;
+
+VersionIn: 'version_in';
+```
+
+- **`version_in`**：关键字，用于表示版本区间筛选。
+- **`versionInterval`**：定义一个版本区间，使用圆括号 `()` 表示不包括边界，方括号 `[]` 表示包括边界。多个区间可以用 `||` 连接，表示并集。
+- **`versionString`**：版本字符串，可以是简单的字符串字面量或由数字和后缀组成的版本块。
+
+### version_in 语法示例
+
+以下是 `version_in` 语法的使用示例：
+
+```syntaxflow
+// 检查版本是否在 1 < version <= 2 范围内
+$version in (1,2]
+
+// 检查版本是否在 1.0.0 < version <= 2.0.0 范围内
+$version in (1.0.0,2.0.0]
+
+// 检查版本是否在 1.2.3-beta < version <= 2.2.1-beta 范围内
+$version in (1.2.3-beta,2.2.1-beta]
+
+// 检查版本是否在 [1.1,1.3] 或 [2.2,2.3] 或 [3.2,3.3] 范围内
+$version in [1.1,1.3] || [2.2,2.3] || [3.2,3.3]
+```
+
+此外，也可以使用分析值筛选过滤的语法进行版本筛选：
+
+```syntaxflow
+$version ?{version_in:(1,2]} // 版本号是否在 1 < version <= 2 范围内
+$version ?{version_in:(1.0.0,2.0.0]} // 版本号是否在 1.0.0 < version <= 2.0.0 范围内
+$version ?{version_in:(1.2.3-beta,2.2.1-beta]} // 版本号是否在 1.2.3-beta < version <= 2.2.1-beta 范围内
+$version ?{version_in:[1.1,1.3] || [2.2,2.3] || [3.2,3.3]} // 版本号是否在多个范围内
+```
+
+## 实战案例：分析具有漏洞版本的 fastjson
+
+以下将通过一个实际案例，演示如何使用 **SyntaxFlow** 检测项目中是否存在具有已知漏洞的 `fastjson` 版本。
+
+### 依赖信息示例（Maven）
+
+假设项目使用 Maven 进行依赖管理，以下是一个含有 `fastjson` 依赖的 `pom.xml` 文件示例：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>vulnerable-fastjson-app</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <!-- Fastjson dependency with known vulnerabilities -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <!-- An example version with known vulnerabilities, make sure to check for specific vulnerable versions -->
+            <version>1.2.24</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+### 规则编写
+
+基于上述依赖信息，编写 **SyntaxFlow** 规则以检测 `fastjson` 的版本是否存在已知漏洞。以下是具体的规则示例：
+
+```syntaxflow
+// 定义规则描述
+desc(
+    "Title": "检测存在漏洞的 fastjson 版本",
+    "Description": "识别项目中使用的 fastjson 版本是否在已知漏洞范围内。",
+    "Fix": "升级 fastjson 到最新安全版本"
+)
+
+// 获取依赖名以 fastjson 结尾的依赖版本
+__dependency__.*fastjson.version as $ver;
+
+// 筛选出存在漏洞的 fastjson 版本
+$vulnVersion = $ver ?{version_in:(1.2.3,2.3.4]};
+
+// 定义警告信息
+alert $vulnVersion for {
+    "title": "存在 fastjson 1.2.3-2.3.4 版本漏洞",
+    "description": "项目中使用的 fastjson 版本在 1.2.3 到 2.3.4 之间，存在已知漏洞，建议升级。",
+    "severity": "High",
+    "fix": "升级 fastjson 到最新安全版本。"
+};
+```
+
+#### 规则解释
+
+1. **描述信息**：
+    - **`desc`**：定义规则的标题、描述和修复建议。
+2. **获取依赖版本**：
+    - **`__dependency__.*fastjson.version as $ver;`**：筛选依赖名称以 `fastjson` 结尾的依赖版本，并将结果存储在 `$ver` 中。
+3. **筛选漏洞版本**：
+    - **`$vulnVersion = $ver ?{version_in:(1.2.3,2.3.4]};`**：使用 `version_in` 语法，筛选出版本号在 `(1.2.3,2.3.4]` 范围内的 `fastjson` 版本。
+4. **定义警告**：
+    - **`alert $vulnVersion for { ... };`**：针对筛选出的漏洞版本，定义警告信息，包括标题、描述、严重性等级以及修复建议。
+
+### 执行效果
+
+保存上述规则为 `fastjson_vuln.sf`，并执行以下命令进行审计：
+
+```bash
+yak ssa -t . --program fastjson_app
+yak sf --program fastjson_app fastjson_vuln.sf
+```
+
+**预期输出示例**：
+
+```
+[INFO] 2024-07-10 14:20:30 [ssacli:272] syntax flow query result:
+rule md5 hash: f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1
+rule preview: desc(    "Title": "检测存在漏洞的 fastjson 版本",...
+description: {Title: "检测存在漏洞的 fastjson 版本", Description: "识别项目中使用的 fastjson 版本是否在已知漏洞范围内。", Fix: "升级 fastjson 到最新安全版本", $vulnVersion: "存在 fastjson 1.2.3-2.3.4 版本漏洞"}
+Result Vars:
+  vulnVersion:
+    t1329001: 1.2.24
+        pom.xml:17:20 - 17:27
+```
+
+**结果解释**：
+
+- **`$vulnVersion`**：检测到 `fastjson` 版本 `1.2.24` 落在 `(1.2.3,2.3.4]` 的漏洞范围内。
+- **警告信息**：根据规则定义，输出存在漏洞的 `fastjson` 版本，并提供相应的修复建议。
+
+## 实战中的注意事项
+
+在实际应用 **SyntaxFlow** 进行依赖版本信息检测时，需要注意以下几点：
+
+### 1. 确保依赖信息的准确性
+
+- **依赖格式**：确保项目的依赖管理工具（如 Maven、Gradle）的配置文件格式正确，以便 **SyntaxFlow** 能够准确解析依赖信息。
+- **依赖名称匹配**：在筛选依赖时，使用正确的名称匹配模式，避免因名称不匹配导致未能检测到目标依赖。
+
+### 2. 版本区间的准确性
+
+- **边界符号**：圆括号 `()` 表示不包括边界，方括号 `[]` 表示包括边界。根据漏洞公告，准确设置版本区间的包含与否。
+- **多区间的使用**：当漏洞影响多个不连续的版本区间时，使用 `||` 连接多个区间进行并集匹配。
+
+### 3. 性能优化
+
+- **筛选范围**：尽量缩小筛选的依赖范围，避免对不相关的依赖进行不必要的版本检测，提升审计性能。
+- **规则模块化**：将不同依赖的版本检测规则分模块编写，便于管理和优化。
+
+### 4. 定期更新漏洞信息
+
+- **漏洞数据库**：及时更新已知漏洞的版本范围，确保 **SyntaxFlow** 规则能够覆盖最新的漏洞信息。
+- **自动化脚本**：考虑使用自动化脚本定期更新和验证规则中的漏洞版本信息，保持规则的时效性。
+
+## 最佳实践
+
+为了充分发挥 **SyntaxFlow** 在依赖版本信息检测中的优势，建议遵循以下最佳实践：
+
+### 1. 模块化编写规则
+
+将不同依赖的版本检测规则分模块编写，每个模块专注于特定依赖的漏洞检测。例如，为 `fastjson`、`commons-io` 等常见依赖包分别编写独立的规则文件，提升规则的可维护性和可读性。
+
+### 2. 结合自动化工具
+
+利用自动化工具（如 CI/CD 管道）集成 **SyntaxFlow** 审计，确保每次代码提交或依赖更新时，自动触发版本信息检测，及时发现并处理潜在漏洞。
+
+### 3. 定期审查和更新规则
+
+随着项目依赖的变化和新漏洞的发现，定期审查并更新 **SyntaxFlow** 的规则，确保规则能够覆盖最新的依赖版本信息和漏洞范围。
+
+### 4. 使用详细的描述和修复建议
+
+在规则中提供详细的描述信息和明确的修复建议，帮助开发者快速理解问题并采取相应措施。例如，提示具体需要升级到的安全版本。
+
+### 5. 测试规则的有效性
+
+在大规模应用规则之前，先在小范围内测试，确保规则能够准确检测出目标依赖的漏洞版本，避免误报或漏报。
+
+## 总结
+
+通过 **SyntaxFlow** 的依赖版本信息检测功能，开发者能够轻松识别项目中存在已知漏洞的依赖包版本，从而及时采取措施进行升级或替换，提升项目的安全性和稳定性。掌握 `version_in` 语法的使用方法，结合实际项目需求编写有效的规则，是确保代码安全的重要一环。遵循最佳实践，定期更新和优化规则，将显著提高依赖管理和漏洞检测的效率与准确性。

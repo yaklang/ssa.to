@@ -26,6 +26,11 @@ const sidebars = {
         "statements/sf-func-call",
         "statements/sf-variable",
         "statements/sf-dot-call-chain",
+        "statements/sf-dataflow",
+        "statements/sf-filter",
+        "statements/sf-calc",
+        "statements/sf-nativecall",
+        "statements/sf-sca",
       ]
     }
   ]
