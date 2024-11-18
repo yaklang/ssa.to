@@ -23,7 +23,7 @@ function HomepageHeader() {
                         <h1>
                             <div className={styles["title-text_1"]}>编译器级</div>
                             <div className={styles["title-text_2"]}>SSA IR</div>
-                            <div className={styles["title-text_1"]}>安全扫描技术</div>
+                            <div className={styles["title-text_1"]}>代码扫描技术</div>
                         </h1>
 
                     </> : <>
@@ -635,7 +635,7 @@ export default function Home() {
     return (
         <Layout
             title={`Compiler-Level SSA-IR Security Scanning Tech`}
-            description="编译器级SSA安全扫描技术"
+            description="编译器级SSA代码扫描技术"
         >
             <HomepageHeader/>
             <HomepageFeatures/>
