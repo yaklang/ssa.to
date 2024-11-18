@@ -21,9 +21,9 @@ function HomepageHeader() {
                 {
                     isZh ? <>
                         <h1>
-                            <div className={styles["title-text_1"]}>先 编译</div>
+                            <div className={styles["title-text_1"]}>编译器级</div>
                             <div className={styles["title-text_2"]}>SSA IR</div>
-                            <div className={styles["title-text_1"]}>再 深度扫描安全漏洞</div>
+                            <div className={styles["title-text_1"]}>安全扫描技术</div>
                         </h1>
 
                     </> : <>
