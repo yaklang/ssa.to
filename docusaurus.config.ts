@@ -13,6 +13,11 @@ console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
 console.log("Ws Base URL:", process.env.REACT_APP_WS_URL);
 
 const config: Config = {
+    markdown: {
+        mermaid: true,
+    },
+    themes: ['@docusaurus/theme-mermaid'],
+
     customFields: {
         wsUrl: process.env.REACT_APP_WS_URL,
     },
@@ -35,13 +40,17 @@ const config: Config = {
         defaultLocale: "zh",
         locales: ["zh", "en"],
     },
-
     presets: [
         [
             "classic",
             {
                 docs: {
                     sidebarPath: "./sidebars.js",
+                    remarkPlugins: [require('remark-math')],
+                    rehypePlugins: [require('rehype-katex')],
+                    editUrl: 'https://github.com/yaklang/ssa.to/tree/main/docs/',
+                    showLastUpdateTime: true,
+                    showLastUpdateAuthor: true,
                 },
                 blog: {
                     showReadingTime: true,
@@ -78,6 +87,18 @@ const config: Config = {
             },
         ],
         [
+            '@docusaurus/plugin-content-docs',
+            {
+                id: 'static-analysis-guide',
+                path: 'static-analysis-guide',
+                routeBasePath: 'static-analysis-guide',
+                sidebarPath: require.resolve('./static-analysis-guide-sidebars.js'),
+                editUrl: 'https://github.com/yaklang/ssa.to/tree/main/static-analysis-guide/',
+                showLastUpdateTime: true,
+                showLastUpdateAuthor: true,
+            },
+        ],
+        [
             '@docusaurus/plugin-client-redirects',
             {
                 createRedirects: (path) => {
@@ -101,6 +122,13 @@ const config: Config = {
                 srcDark: "img/logo-dark.svg",
             },
             items: [
+                {
+                    type: "docSidebar",
+                    sidebarId: "staticAnalysisGuideSidebar",
+                    position: "left",
+                    label: "静态代码分析教程",
+                    docsPluginId: "static-analysis-guide"
+                },
                 {
                     type: "docSidebar",
                     sidebarId: "tutorialSidebar",

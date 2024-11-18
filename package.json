@@ -20,6 +20,7 @@
     "@docusaurus/preset-classic": "^3.6.1",
     "@docusaurus/theme-classic": "^3.6.1",
     "@docusaurus/theme-common": "^3.6.1",
+    "@docusaurus/theme-mermaid": "^3.6.1",
     "@docusaurus/tsconfig": "^3.6.1",
     "@mdx-js/react": "^3.0.0",
     "@viz-js/viz": "^3.9.0",
@@ -44,10 +45,10 @@
     "react-monaco-editor": "^0.56.2",
     "react-resize-detector": "^11.0.1",
     "rehype-highlight": "^7.0.1",
-    "rehype-katex": "^7.0.1",
+    "rehype-katex": "6",
     "rehype-raw": "^7.0.0",
     "remark-breaks": "^4.0.0",
-    "remark-math": "^6.0.0",
+    "remark-math": "5",
     "sass": "^1.80.6"
   },
   "devDependencies": {
