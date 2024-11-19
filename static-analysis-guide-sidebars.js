@@ -11,6 +11,7 @@ const sidebars = {
     staticAnalysisGuideSidebar: [
         "intro",
         "compile-ssa-form",
+        "ssa-for-advanced-language",
     ]
   };
   
