@@ -17,6 +17,15 @@ const config: Config = {
         mermaid: true,
     },
     themes: ['@docusaurus/theme-mermaid'],
+    stylesheets: [
+        {
+          href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
+          type: 'text/css',
+          integrity:
+            'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
+          crossorigin: 'anonymous',
+        },
+      ],
 
     customFields: {
         wsUrl: process.env.REACT_APP_WS_URL,
@@ -51,6 +60,7 @@ const config: Config = {
                     editUrl: 'https://github.com/yaklang/ssa.to/tree/main/docs/',
                     showLastUpdateTime: true,
                     showLastUpdateAuthor: true,
+                    sidebarCollapsed: false,
                 },
                 blog: {
                     showReadingTime: true,
@@ -83,6 +93,7 @@ const config: Config = {
               // 添加其他配置
               editUrl: 'https://github.com/yaklang/ssa.to/tree/main/syntaxflow-guide/',
               showLastUpdateTime: true,
+              sidebarCollapsed: false,
               showLastUpdateAuthor: true,
             },
         ],
@@ -95,6 +106,7 @@ const config: Config = {
                 sidebarPath: require.resolve('./static-analysis-guide-sidebars.js'),
                 editUrl: 'https://github.com/yaklang/ssa.to/tree/main/static-analysis-guide/',
                 showLastUpdateTime: true,
+                sidebarCollapsed: false,
                 showLastUpdateAuthor: true,
             },
         ],

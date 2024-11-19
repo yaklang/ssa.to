@@ -10,6 +10,7 @@ const sidebars = {
     // SyntaxFlow 指南侧边栏
     staticAnalysisGuideSidebar: [
         "intro",
+        "compile-ssa-form",
     ]
   };
   
