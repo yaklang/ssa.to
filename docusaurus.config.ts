@@ -11,6 +11,8 @@ require("dotenv").config({ path: envFile });
 console.log(process.env.NODE_ENV);
 console.log("API Base URL:", process.env.REACT_APP_API_BASE_URL);
 console.log("Ws Base URL:", process.env.REACT_APP_WS_URL);
+const math = require('remark-math');
+const katex = require('rehype-katex');
 
 const config: Config = {
     markdown: {
@@ -19,11 +21,8 @@ const config: Config = {
     themes: ['@docusaurus/theme-mermaid'],
     stylesheets: [
         {
-          href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
+          href: '/katex/katex.min.css',
           type: 'text/css',
-          integrity:
-            'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
-          crossorigin: 'anonymous',
         },
       ],
 
@@ -51,12 +50,12 @@ const config: Config = {
     },
     presets: [
         [
-            "classic",
+            "@docusaurus/preset-classic",
             {
                 docs: {
                     sidebarPath: "./sidebars.js",
-                    remarkPlugins: [require('remark-math')],
-                    rehypePlugins: [require('rehype-katex')],
+                    remarkPlugins: [math],
+                    rehypePlugins: [katex],
                     editUrl: 'https://github.com/yaklang/ssa.to/tree/main/docs/',
                     showLastUpdateTime: true,
                     showLastUpdateAuthor: true,
@@ -64,6 +63,8 @@ const config: Config = {
                 },
                 blog: {
                     showReadingTime: true,
+                    remarkPlugins: [math],
+                    rehypePlugins: [katex],
                 },
                 theme: {
                     customCss: "./src/css/custom.scss",
@@ -108,6 +109,8 @@ const config: Config = {
                 showLastUpdateTime: true,
                 sidebarCollapsed: false,
                 showLastUpdateAuthor: true,
+                remarkPlugins: [math],
+                rehypePlugins: [katex],
             },
         ],
         [

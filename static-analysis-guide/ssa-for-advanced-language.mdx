@@ -1,6 +1,7 @@
 # 第三章：高级语言的 SSA 构建
 
 import TOCInline from '@theme/TOCInline';
+import { InlineMath, BlockMath } from 'react-katex';
 
 <TOCInline toc={toc} />
 
@@ -512,7 +513,73 @@ const a = 10;
 
 可以把 `10` 视为一个字面量值，它的 SSA 指令为：`{ opcode: "ssa-const", type: "literal", value: "10" }`
 
+:::tip
+
+在实际的 SSA 编译中，我们建议把所有的 SSA Const 都认为是一个指令，他的 ID 不同。
+
+即：数字 `10` 和 `100` 的 SSA 指令 ID 不同。但是他们的 opcode 都是 `ssa-const`，type 都是 `number / integer`。
+
+同样的，字符串 `"hello"` 和 `"world"` 的 SSA 指令 ID 不同。但是他们的 opcode 都是 `ssa-const`，type 都是 `string`。
+
+:::
+
+在数据流的角度上来说，他们都是 `ssa-const` 指令，只是 value 不同。据此，我们设计出了第一个 SSA 指令（其结构描述的伪代码如下）：
+
+```typescript
+type SSA_Const = {
+  opcode: "ssa-const";
+  id: number;
+  type: "number" | "string" | any;
+  value: string;
+}
+```
+
+:::note
+
+虽然我们上面的结构描述代码使用了 TypeScript 的语法，但是请记住，这只是为了方便理解，在实际的 SSA 编译中，我们的结构会更加复杂，需要存储 SSA 指令之间的关系或者额外信息需要开启大量的额外字段。
+
+:::
+
 #### 复合类型字面量：容器
+
+在掌握了基本类型字面量的形式化表示后，我们可以进一步探讨复合类型字面量系统的构建理论。
+
+在复合类型字面量的形式化定义中，容器类型通常被视为一个固定的抽象接口。这种抽象类似于 EcmaScript 规范中的 Object 原型，它提供了一个统一的对象操作接口，支持多态性引用和动态派发。
+
+:::tip 多语言实现范式
+值得注意的是，这种容器抽象在不同语言实现中呈现出不同的特征。例如，PHP 的实现中采用了统一数组（Array）作为基础容器，通过支持任意类型的键值对映射，实现了数组和关联数组（字典）的双重语义。这种设计展现了容器抽象的灵活性。
+:::
+
+因此，在设计支持复合类型的高级 SSA（Static Single Assignment）中间表示时，复合类型字面量的形式化表示和操作语义是需要重点考虑的核心问题。
+
+对于采用 classless 范式的动态类型语言（如 PHP 或 EcmaScript），其中间表示可以采用统一的容器抽象，该抽象需要同时满足序列容器（Array）和关联容器（Object）的操作语义。这种设计既简化了类型系统的复杂度，又保持了足够的表达能力。
+
+
+:::info 无类（Classless）语言的形式化定义
+
+无类（Classless）语言范式是一种去中心化的类型系统设计方法，其形式化定义可表示为：
+
+1. **原型链接机制（Prototype Linkage）**：
+   对象间的关系通过原型链接（prototype link）而非类继承建立，可表示为：
+   <BlockMath math="O_2 \rightarrow O_1 \rightarrow O_0" />
+   其中 <InlineMath math="O_i" /> 表示对象，<InlineMath math="\rightarrow" /> 表示原型链接。
+
+2. **动态分派（Dynamic Dispatch）**：
+   方法调用的解析过程可形式化为：
+   <BlockMath math="dispatch(obj, method) = lookup(obj, method) \lor lookup(prototype(obj), method)" />
+
+3. **属性访问语义（Property Access Semantics）**：
+   对于任意对象 <InlineMath math="o" /> 和属性 <InlineMath math="p" />：
+   <BlockMath math="access(o, p) = o[p] \lor access(prototype(o), p)" />
+
+这种范式在编译器实现中具有以下特征：
+
+- **统一存储模型**：对象和数组共享相同的底层存储结构
+- **动态类型检查**：类型检查在运行时而非编译时执行
+- **属性查找优化**：通常需要实现内联缓存（Inline Caching）等优化技术
+
+相比传统的基于类的语言，无类范式在编译器实现上需要更复杂的运行时系统支持，但提供了更大的动态性和表达灵活性。
+:::
 
 #### 高级字面量：插值字符串
 
