@@ -12,6 +12,10 @@ const sidebars = {
         "intro",
         "compile-ssa-form",
         "ssa-for-advanced-language",
+        "deep-dive-into-ssa-oop",
+        "deep-dive-into-ssa-closure",
+        "deep-dive-into-ssa-use-def-chain",
+        "deep-dive-into-ssa-cross-procedure",
     ]
   };
   
