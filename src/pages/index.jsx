@@ -8,7 +8,7 @@ import codeAnalysisRightBottom from "@site/static/img/code-analysis-right-bottom
 import styles from "./index.module.scss";
 import { useEffect, useState } from "react";
 import axios from "axios";
-
+import TextScramble from "@site/src/components/TextScramble";
   
 function HomepageHeader() {
     const {siteConfig} = useDocusaurusContext();
@@ -35,7 +35,9 @@ function HomepageHeader() {
                     </>
                 }
 
-                <h2 className={styles["title_subtitle"]}>{siteConfig.tagline}</h2>
+                <h2 className={styles["title_subtitle"]}>
+                    <TextScramble text={siteConfig.tagline} />
+                </h2>
                 <div className={styles["more-buttons"]}>
                     <Link to="/codeAnalysis" target="_blank">
                         <div className={clsx(styles["more-btn"], styles["start-for-free"])}>
