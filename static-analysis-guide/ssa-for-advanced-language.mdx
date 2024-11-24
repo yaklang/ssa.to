@@ -1,4 +1,4 @@
-# 第三章：高级语言的 SSA 构建
+# 第三章：高级语言的 SSA 构建（一）
 
 import TOCInline from '@theme/TOCInline';
 import { InlineMath, BlockMath } from 'react-katex';
@@ -688,6 +688,7 @@ interface SSA_Container {
 
 ```mermaid
 classDiagram
+    direction LR
     class SSA_Container {
         +opcode: string
         +id: number
@@ -1367,7 +1368,7 @@ B3: // 回到父定义域
 ### 定义域的版本管理规则
 
 ```mermaid
-graph TD
+graph LR
     A["变量赋值"] --> B{"是否在当前定义域?"}
     B -->|"是"| C["创建新版本"]
     B -->|"否"| D{"是否是遮蔽声明?"}
@@ -1694,6 +1695,220 @@ graph TB
     end
 ```
 
+SWITCH 连续执行模型，默认会 fallthrough，除非显式使用 break。幸运的是现有很多的语言都遵循着一个规则，我们可以直接使用 JS 的一个案例来表示对比：
+
+```typescript
+let x = 1
+switch (x) {
+case 1:
+	x = 2
+case 2:
+	x = 3
+default:
+	x = 4
+}
+console.info(x)
+```
+
+上述代码编译后的 SSA 指令如下：
+
+```typescript
+package:  application
+main 
+type: () -> null
+entry-0:
+	<any> t3 = make any [<nil>, <nil>]
+switch-condition-1: <- entry-0 
+	switch <number> 1 default:[switch.default-6] {<number> 1:switch.handler-2, <number> 2:switch.handler-4}
+switch.handler-2: <- switch-condition-1 
+	jump -> switch.block-3
+switch.block-3: <- switch.handler-2 
+	jump -> switch.handler-4
+switch.handler-4: <- switch.block-3 switch-condition-1 
+	jump -> switch.block-5
+switch.block-5: <- switch.handler-4 
+	<number> t12 = phi [<number> 2, switch.block-3] [<number> 1, entry-0] 
+	jump -> switch.default-6
+switch.default-6: <- switch-condition-1 switch.block-5 switch-condition-1 
+	<number> t20 = phi [<number> 3, switch.block-5] [<number> 1, entry-0] 
+	jump -> switch.done-7
+switch.done-7: <- switch.default-6 
+	<any> t27 = undefined-console.info(valid)(from:25)
+	<any> t25 = undefined-console
+	<any> t28 = call <any> t27 (<number> 4) binding[] member[]
+```
+
+上述指令比 IF 语句要复杂得多，我们还是需要借助 CFG 来理解 SSA 的基本块如何切合和他们最终的展示形式：
+
+```mermaid
+graph LR
+    Entry["entry-0<br/>t3 = make any [nil, nil]"] --> Switch["switch-condition-1<br/>switch 1"]
+    
+    Switch -->|"case 1"| Handler1["switch.handler-2"]
+    Switch -->|"case 2"| Handler2["switch.handler-4"]
+    Switch -->|"default"| Default["switch.default-6<br/>t20 = φ[3, block-5]<br/>[1, entry-0]"]
+    
+    Handler1 --> Block1["switch.block-3"]
+    Block1 --> Handler2
+    
+    Handler2 --> Block2["switch.block-5<br/>t12 = φ[2, block-3]<br/>[1, entry-0]"]
+    
+    Block2 --> Default
+    
+    Default --> Done["switch.done-7<br/>t27 = undefined-console.info<br/>t25 = undefined-console<br/>t28 = call t27(4)"]
+    
+    style Entry fill:#9f6,stroke:#333
+    style Switch fill:#f96,stroke:#333
+    style Done fill:#f96,stroke:#333
+
+```
+
+
+这段代码的特点是：
+
+1. **Fall-through 结构**：
+   - case 1 会 fall-through 到 case 2
+   - case 2 会 fall-through 到 default
+
+2. **φ 函数的使用**：
+   - 在 block-5 中：`t12 = φ[2, block-3][1, entry-0]`
+   - 在 default-6 中：`t20 = φ[3, block-5][1, entry-0]`
+
+对应的 JavaScript 代码等价于如下的内容：
+
+```javascript
+switch (1) {
+    case 1:
+    case 2:
+    default:
+        console.info(4);
+}
+```
+
+:::tip
+这个控制流图展示了一个有趣的特点：
+1. 所有的分支最终都会执行到 default 块
+2. φ 函数在这里用于合并不同路径的值
+3. 最终在 done 节点中调用 console.info(4)
+:::
+
+:::warning
+在 SSA 中，φ 函数的位置很重要：
+- `t12` 在 block-5 中合并了来自 block-3 的值 2 和来自 entry-0 的值 1
+- `t20` 在 default-6 中合并了来自 block-5 的值 3 和来自 entry-0 的值 1
+:::
+
+这个连续执行的 SWITCH 例子展示了 SSA 如何处理带有 fall-through 的 switch 语句，以及如何使用 φ 函数来处理不同路径上的值合并。每个基本块都清晰地标示了其前驱和后继关系，这对于理解控制流非常重要。
+
+作为对比，我们再看其带 break 的连续执行模型（我们在 case 结束的时候，手动加上了 break 来避免连续执行）：
+
+```typescript
+let x = 1
+switch (x) {
+case 1:
+	x = 2
+	break
+case 2:
+	x = 3
+	break
+default:
+	x = 4
+}
+console.info(x)
+```
+
+上述代码编译后的 SSA 指令和基本块结构和我们刚才看到的有明显的区别：
+
+```typescript
+package:  application
+main 
+type: () -> null
+entry-0:
+	<any> t3 = make any [<nil>, <nil>]
+switch-condition-1: <- entry-0 
+	switch <number> 1 default:[switch.default-6] {<number> 1:switch.handler-2, <number> 2:switch.handler-4}
+switch.handler-2: <- switch-condition-1 
+	jump -> switch.block-3
+switch.block-3: <- switch.handler-2 
+	jump -> switch.done-7
+switch.handler-4: <- switch-condition-1 
+	jump -> switch.block-5
+switch.block-5: <- switch.handler-4 
+	jump -> switch.done-7
+switch.default-6: <- switch-condition-1 switch-condition-1 
+	jump -> switch.done-7
+switch.done-7: <- switch.block-3 switch.block-5 switch.default-6 
+	<number> t23 = phi [<number> 2, switch.block-3] [<number> 3, switch.block-5] [<number> 4, switch.default-6] 
+	<any> t26 = undefined-console.info(valid)(from:24)
+	<any> t24 = undefined-console
+	<any> t27 = call <any> t26 (<number> t23) binding[] member[]
+
+```
+
+我们把上述基本块 CFG 进行可视化：
+
+
+```mermaid
+graph LR
+    Entry["entry-0<br/>t3 = make any [nil, nil]"] --> Switch["switch-condition-1<br/>switch 1"]
+    
+    Switch -->|"case 1"| Handler1["switch.handler-2"]
+    Switch -->|"case 2"| Handler2["switch.handler-4"]
+    Switch -->|"default"| Default["switch.default-6"]
+    
+    Handler1 --> Block1["switch.block-3"]
+    Handler2 --> Block2["switch.block-5"]
+    
+    Block1 -->|"break"| Done
+    Block2 -->|"break"| Done
+    Default --> Done["switch.done-7<br/>t27 = undefined-console.info<br/>t25 = undefined-console<br/>t28 = call t27(2)"]
+    
+    style Entry fill:#9f6,stroke:#333
+    style Switch fill:#f96,stroke:#333
+    style Done fill:#f96,stroke:#333
+
+```
+
+
+与之前的连续执行模型相比，这个带 break 的版本有以下明显区别：
+
+1. **控制流结构**：
+   - 每个 case 块直接跳转到 done 块，而不是 fall-through 到下一个 case
+   - 没有了复杂的 φ 函数，因为各个分支是互斥的
+
+2. **基本块的简化**：
+   - 每个 handler 块都有自己独立的 block
+   - 所有块都直接跳转到 done 块
+   - 不需要在中间块中使用 φ 函数来合并值
+
+3. **执行路径**：
+   - case 1 路径：entry → condition → handler-2 → block-3 → done
+   - case 2 路径：entry → condition → handler-4 → block-5 → done
+   - default 路径：entry → condition → default-6 → done
+
+:::tip
+带 break 的 switch 结构的优点：
+1. 控制流更清晰，每个 case 的执行是独立的
+2. 不会出现意外的 fall-through
+3. SSA 形式更简单，没有复杂的 φ 函数
+:::
+
+:::warning
+虽然带 break 的版本更清晰，但在某些场景下，fall-through 也是有用的：
+1. 多个 case 共享相同的处理逻辑时
+2. 需要累积处理的场景
+3. 特定的状态机实现
+:::
+
+这个对比很好地展示了为什么现代编程语言倾向于默认不使用 fall-through：
+1. 代码意图更明确
+2. 减少了意外的执行路径
+3. 生成的 SSA 代码更简单，更容易优化
+4. 降低了维护成本和出错可能
+
+在编译器实现中，这种带 break 的结构也更容易进行优化，因为控制流更加清晰和可预测。
+
+--- 
 ##### 离散执行模型（Go-style）
 ```mermaid
 graph TB
@@ -1712,6 +1927,77 @@ graph TB
         C2 -->|"explicit fallthrough"| D2
         D2 -->|"explicit fallthrough"| E2
     end
+```
+
+对于离散执行模型，我们可以用下面这个案例来说明，考虑以下代码：
+
+```go
+x = 1
+switch x {
+case 1:
+	x = 2
+case 2:
+	x = 3
+default:
+	x = 4
+}
+dump(x)
+```
+
+:::tip
+
+要注意，上述代码的 SWITCH 语句是离散执行模型，也就是说，他默认会 break，除非显式使用 fallthrough。
+
+:::
+
+上述代码编译后的 SSA 指令如下：
+
+```typescript
+package:  application
+main 
+type: () -> null
+entry-0:
+	<any> t3 = make any [<nil>, <nil>]
+switch-condition-1: <- entry-0 
+	switch <number> 1 default:[switch.default-6] {<number> 1:switch.handler-2, <number> 2:switch.handler-4}
+switch.handler-2: <- switch-condition-1 
+	jump -> switch.block-3
+switch.block-3: <- switch.handler-2 
+	jump -> switch.done-7
+switch.handler-4: <- switch-condition-1 
+	jump -> switch.block-5
+switch.block-5: <- switch.handler-4 
+	jump -> switch.done-7
+switch.default-6: <- switch-condition-1 switch-condition-1 
+	jump -> switch.done-7
+switch.done-7: <- switch.block-3 switch.block-5 switch.default-6 
+	<number> t23 = phi [<number> 2, switch.block-3] [<number> 3, switch.block-5] [<number> 4, switch.default-6] 
+	<any> t24 = undefined-dump
+	<any> t25 = call <any> t24 (<number> t23) binding[] member[]
+
+```
+
+上述代码切割成 handler 和 block 和 dome 的多个基本块，可以参考如下可视化 CFG 来表示一个基础类型字面量：
+
+```mermaid
+graph LR
+    Entry["entry-0<br/>t3 = make any [nil, nil]"] --> Switch["switch-condition-1<br/>switch 1"]
+    
+    Switch -->|"case 1"| Handler1["switch.handler-2"]
+    Switch -->|"case 2"| Handler2["switch.handler-4"]
+    Switch -->|"default"| Default["switch.default-6"]
+    
+    Handler1 --> Block1["switch.block-3"]
+    Handler2 --> Block2["switch.block-5"]
+    
+    Block1 --> Done["switch.done-7<br/>t23 = φ[2, block-3]<br/>[3, block-5]<br/>[4, default-6]<br/>t24 = undefined-dump<br/>t25 = call t24(t23)"]
+    Block2 --> Done
+    Default --> Done
+    
+    style Entry fill:#9f6,stroke:#333
+    style Switch fill:#f96,stroke:#333
+    style Done fill:#f96,stroke:#333
+
 ```
 
 
@@ -1779,105 +2065,142 @@ graph TB
     end
 ```
 
-## SSA 构建流程控制：循环
+### 高级逻辑运算符 `&&` 和 `||`
 
-在开始了解 SSA 构建循环之前，我们需要先了解循环本身的基本概念：
+:::note
 
-### 规约循环与非规约循环
+高级逻辑运算符 `&&` 和 `||` 的短路特性，在 SSA 构建中需要特别注意。
 
-规约循环（Reducible Loop）：规约循环是一个非常好的循环，他的特点是：
-
-1. 入口唯一
-2. 所有回边都指向入口（循环头）
-3. 循环头支配所有循环体的节点
-
-```mermaid
-graph TD
-    A["Entry"] --> B["Loop Header"]
-    B --> C["Loop Body 1"]
-    C --> D["Loop Body 2"]
-    D --> B
-    D --> E["Exit"]
-    
-    style B fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style E fill:#9f6,stroke:#333
-
-```
-
-:::tip
-
-规约循环是最常见的循环形式，大多数高级语言不使用 Goto 构成的循环结构（如 for、while）都会生成规约循环。
+这是套着表达式外衣的控制流结构，再编译的时候万万不可直接编译成表达式。
 
 :::
 
-与之相对的概念是非规约循环（Irreducible Loop），非规约循环的特点是：
 
-1. 入口点可能有多个；
-2. 回边可以指向循环内任意节点；
-3. 循环头有可能无法支配所有循环体节点；
+对于 `&&` 和 `||` 这样的短路运算符，我们需要将其转换为基本块的跳转结构（我们讨论的通用 SSA 构建，当然希望同时讨论多种语言的情况啦）。
 
-我们可以举出很多个非规约循环的案例：
+考虑如下 PHP 代码：
 
-#### 多入口循环
+```typescript
+<?php
 
-```mermaid
-graph TD
-    A["[A] Entry 1"] --> B["[B] Loop Node 1"]
-    C["[C] Entry 2"] --> D["[D] Loop Node 2"]
-    B --> D
-    D --> B
-    B --> E["[E] Exit"]
-    
-    style B fill:#f96,stroke:#333
-    style D fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style C fill:#9f6,stroke:#333
-    style E fill:#9f6,stroke:#333
+$x = check1() && check2();
+dump($x);
 ```
 
-这个循环是非规约的，原因在于：
-1. 存在两个入口点（Entry 1 和 Entry 2）可以进入循环
-2. 循环没有唯一的循环头（B 和 D 都可以作为入口点）
-3. 既不是 B 支配 D，也不是 D 支配 B
+通过 SSA 编译器后，我们会得到一个结果为：
 
-#### 交叉循环
-
-```mermaid
-graph TD
-    A["[A] Entry"] --> B["[B] Node 1"]
-    B --> C["[C] Node 2"]
-    C --> D["[D] Node 3"]
-    D --> B
-    C --> E["[E] Node 4"]
-    E --> C
-    B --> F["[F] Exit"]
-    
-    style B fill:#f96,stroke:#333
-    style C fill:#f96,stroke:#333
-    style D fill:#f96,stroke:#333
-    style E fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style F fill:#9f6,stroke:#333
+```typescript
+package: c2623de844e06698629ca1afc24b9ecb1c6597abd0bbee6b559c73722872d3c5 library
+main 
+type: () -> null
+entry-0:
+	<any> t14 = undefined-89b7a239-22b6-4e0c-bf42-da4ee2d8efd9
+	<any> t12 = undefined-check1
+	<any> t13 = call <any> t12 () binding[] member[]
+	jump -> if-condition-1
+if-condition-1: <- entry-0 
+	<boolean> t19 = <any> t13 eq <boolean> true
+	If [<boolean> t19] true -> if.true-2, false -> if.false-3
+if.true-2: <- if-condition-1 
+	<any> t20 = undefined-check2
+	<any> t21 = call <any> t20 () binding[] member[]
+	<boolean> t23 = <any> t21 eq <boolean> true
+	jump -> if.done-4
+if.false-3: <- if-condition-1 
+	jump -> if.done-4
+if.done-4: <- if.true-2 if.false-3 
+	<boolean> t30 = phi [<boolean> t23, if.true-2] [<boolean> false, if.false-3] 
+	<any> t31 = undefined-dump
+	<any> t32 = call <any> t31 (<boolean> t30) binding[] member[]
 
 ```
 
-这个例子展示了两个相互交叉的循环：
+我们发现源代码虽然只有短短两行，但是编译后的内容包含了多个基本块，这个结果就是因为 `&&` 和 `||` 的短路特性导致的。
 
-1. B-C-D 形成一个循环
-2. C-E 形成另一个循环
-3. 循环 C-E 和循环 B-C-D 共享节点 C
-4. 没有唯一的循环头，因为 C 既属于一个循环又属于另一个循环
+:::tip 短路特性
+
+短路特性（Short-circuit Evaluation）是逻辑运算符的一个重要特性，指的是在进行逻辑运算时，如果第一个操作数的值已经能够确定整个表达式的结果，那么第二个操作数就不会被求值。
+
+具体来说：
+1. 对于 `&&` (与运算)：
+   - 如果第一个操作数为 `false`，整个表达式必定为 `false`，无需计算第二个操作数
+   - 只有当第一个操作数为 `true` 时，才需要计算第二个操作数
+
+2. 对于 `||` (或运算)：
+   - 如果第一个操作数为 `true`，整个表达式必定为 `true`，无需计算第二个操作数
+   - 只有当第一个操作数为 `false` 时，才需要计算第二个操作数
 
 
-## SSA 构建：函数与方法
+:::
 
-### 函数内（过程内） SSA 构建
+我们把上述基本块 CFG 进行可视化：
 
-### 函数本身的 SSA 构建
+```mermaid
+graph LR
+    Entry["entry-0<br/>t14 = undefined-id<br/>t12 = undefined-check1<br/>t13 = call t12()"] --> Condition["if-condition-1<br/>t19 = t13 eq true"]
+    
+    Condition -->|"t19 == true"| True["if.true-2<br/>t20 = undefined-check2<br/>t21 = call t20()<br/>t23 = t21 eq true"]
+    Condition -->|"t19 == false"| False["if.false-3"]
+    
+    True --> Done["if.done-4<br/>t30 = φ[t23, if.true-2][false, if.false-3]<br/>t31 = undefined-dump<br/>t32 = call t31(t30)"]
+    False --> Done
+    
+    style Entry fill:#9f6,stroke:#333
+    style Done fill:#f96,stroke:#333
 
-## 高级语言特性构建
+```
 
-### 闭包函数中的 SSA 问题
 
-### OOP 中的 SSA 问题
+让我们分析这个 CFG 中体现的短路特性：
+
+1. **入口块（entry-0）**：
+   ```typescript
+   t14 = undefined-id
+   t12 = undefined-check1
+   t13 = call t12()  // 调用第一个函数 check1()
+   ```
+
+2. **条件判断块（if-condition-1）**：
+   ```typescript
+   t19 = t13 eq true  // 检查 check1() 的返回值
+   ```
+   - 这里是短路逻辑的关键判断点
+   - 基于 `check1()` 的结果决定是否需要执行 `check2()`
+
+3. **真值块（if.true-2）**：
+   ```typescript
+   t20 = undefined-check2
+   t21 = call t20()   // 只有在 check1() 为 true 时才会执行
+   t23 = t21 eq true
+   ```
+   - 只有当 `check1()` 返回 `true` 时才会进入此块
+   - 体现了 `&&` 运算符的短路特性
+
+4. **合并块（if.done-4）**：
+   ```typescript
+   t30 = phi [t23, if.true-2] [false, if.false-3]
+   ```
+   - 使用 φ 函数合并不同路径的结果
+   - 如果来自 if.true-2，使用 `check2()` 的结果
+   - 如果来自 if.false-3，直接使用 `false`
+
+:::tip 短路优化
+这个 SSA 实现展示了几个重要的优化特点：
+1. **避免不必要的计算**：当 `check1()` 返回 `false` 时，完全跳过了 `check2()` 的调用
+2. **控制流优化**：使用基本块的跳转而不是表达式计算来实现短路逻辑
+3. **结果合并**：通过 φ 函数处理不同执行路径的结果
+:::
+
+:::tip 关于 `||` 运算符的实现
+`||` 运算符的 SSA 实现思路与 `&&` 非常相似，只需要调整条件判断的逻辑和跳转方向即可：
+- 当第一个操作数为 `true` 时直接返回 `true`（短路）
+- 当第一个操作数为 `false` 时才需要计算第二个操作数
+
+基本块的划分结构基本保持一致，主要区别在于条件判断的布尔逻辑和 φ 函数中的值选择。由于实现逻辑如此相似，这里就不再展开详细讨论了。
+:::
+
+这样的实现同样遵循了清晰的控制流结构，为后续的代码优化提供了良好的基础。
+
+## 后续循环与函数的讨论见下一节
+
+在[《第三章：高级语言的 SSA 构建（二）》](./ssa-for-advanced-language-2)中，我们将继续讨论循环和函数的 SSA 构建。
