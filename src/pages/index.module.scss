@@ -197,6 +197,14 @@ html[data-theme="dark"],
 .animation-btn-white {
   --light-color: #ffffff;
 }
+.mord.text {
+  .mord {
+    .text {
+      font-size: 50px !important;
+    }
+  }
+}
+
 @keyframes button_light_effect {
   0% {
     transform: translate(-50%, -100%) rotate(-180deg);

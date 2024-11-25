@@ -1,7 +1,7 @@
 # 第三章：高级语言的 SSA 构建（一）
 
 import TOCInline from '@theme/TOCInline';
-import { InlineMath, BlockMath } from 'react-katex';
+import Math, { InlineMath, BlockMath } from '@site/src/components/Math';
 
 <TOCInline toc={toc} />
 
@@ -561,16 +561,16 @@ type SSA_Const = {
 
 1. **原型链接机制（Prototype Linkage）**：
    对象间的关系通过原型链接（prototype link）而非类继承建立，可表示为：
-   <BlockMath math="O_2 \rightarrow O_1 \rightarrow O_0" />
-   其中 <InlineMath math="O_i" /> 表示对象，<InlineMath math="\rightarrow" /> 表示原型链接。
+   <Math inline="false" math="O_2 \rightarrow O_1 \rightarrow O_0" />
+   其中 <Math inline="true" math="O_i" /> 表示对象，<Math inline="true" math="\rightarrow" /> 表示原型链接。
 
 2. **动态分派（Dynamic Dispatch）**：
    方法调用的解析过程可形式化为：
-   <BlockMath math="dispatch(obj, method) = lookup(obj, method) \lor lookup(prototype(obj), method)" />
+   <Math inline="false"  math="dispatch(obj, method) = lookup(obj, method) \lor lookup(prototype(obj), method)" />
 
 3. **属性访问语义（Property Access Semantics）**：
    对于任意对象 <InlineMath math="o" /> 和属性 <InlineMath math="p" />：
-   <BlockMath math="access(o, p) = o[p] \lor access(prototype(o), p)" />
+   <Math inline="false"  math="access(o, p) = o[p] \lor access(prototype(o), p)" />
 
 这种范式在编译器实现中具有以下特征：
 
