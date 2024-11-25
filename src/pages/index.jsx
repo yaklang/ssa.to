@@ -5,6 +5,7 @@ import clsx from "clsx";
 import {OutlineArrowrightIcon} from "@site/src/assets/icons/outline";
 import codeAnalysis from "@site/static/img/code-analysis-bg.png";
 import codeAnalysisRightBottom from "@site/static/img/code-analysis-right-bottom.png";
+import 'katex/dist/katex.min.css';
 import styles from "./index.module.scss";
 import { useEffect, useState } from "react";
 import axios from "axios";

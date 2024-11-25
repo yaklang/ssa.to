@@ -1,0 +1,32 @@
+/* src/components/Math/katex-fonts.css */
+@font-face {
+    font-family: 'KaTeX_Main';
+    src: url('~katex/dist/fonts/KaTeX_Main-Regular.woff2') format('woff2'),
+         url('~katex/dist/fonts/KaTeX_Main-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'KaTeX_Math';
+    src: url('~katex/dist/fonts/KaTeX_Math-Italic.woff2') format('woff2'),
+         url('~katex/dist/fonts/KaTeX_Math-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+  }
+  
+  @font-face {
+    font-family: 'KaTeX_Size1';
+    src: url('~katex/dist/fonts/KaTeX_Size1-Regular.woff2') format('woff2'),
+         url('~katex/dist/fonts/KaTeX_Size1-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'KaTeX_Size2';
+    src: url('~katex/dist/fonts/KaTeX_Size2-Regular.woff2') format('woff2'),
+         url('~katex/dist/fonts/KaTeX_Size2-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }

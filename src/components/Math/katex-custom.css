@@ -1,0 +1,22 @@
+/* src/components/Math/katex-custom.css */
+
+/* 强制设置 mord text 的字体大小 */
+.katex-container .katex .mord.text {
+    font-size: 20px !important;
+  }
+  
+  /* 确保其他元素的大小相对协调 */
+  .katex-container .katex .mord.text .text {
+    font-size: 20px !important;
+  }
+  
+  /* 保持行高合适 */
+  .katex-container .katex .mord.text {
+    line-height: 1.2;
+  }
+  
+  /* 确保不会被其他样式覆盖 */
+  .katex-display .katex .mord.text,
+  .katex-inline .katex .mord.text {
+    font-size: 20px !important;
+  }
