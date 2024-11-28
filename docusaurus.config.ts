@@ -105,8 +105,6 @@ const config: Config = {
                 showLastUpdateTime: true,
                 sidebarCollapsed: false,
                 showLastUpdateAuthor: true,
-                // remarkPlugins: [math],
-                // rehypePlugins: [katex],
             },
         ],
         [

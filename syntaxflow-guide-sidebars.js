@@ -32,6 +32,13 @@ const sidebars = {
         "statements/sf-nativecall",
         "statements/sf-sca",
       ]
+    },
+    {
+      type: 'category',
+      label: '高级静态代码分析实战',
+      items: [
+        "advanced/advanced-analyzing-dataflow",
+      ]
     }
   ]
 };
