@@ -134,21 +134,21 @@ $factory.newDocumentBuilder().parse(* as $source);
 
 2. **数据处理**：
     ```syntaxflow
-    sanitize($input) as $safeInput;
+    $input?{<string>?{have: filter}} as $safeInput;
     ```
     对 `$input` 进行清理，并将结果存储到 `$safeInput`。
 
 3. **最终使用**：
     ```syntaxflow
-    database.executeQuery($safeInput);
+    alert $safeInput for {msg: "user safe input"};
     ```
-    使用已清理的 `$safeInput` 进行数据库查询。
+    将清理后的用户输入 `$safeInput` 打印出来，便于进一步分析。
 
 **完整查询**：
 ```syntaxflow
 request.getParameter(* as $input);
-sanitize($input) as $safeInput;
-database.executeQuery($safeInput);
+$input?{<string>?{have: filter}} as $safeInput;
+alert $safeInput for {msg: "user safe input"};
 ```
 
 ## 重要性与优势

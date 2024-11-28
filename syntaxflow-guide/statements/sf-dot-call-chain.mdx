@@ -70,7 +70,7 @@ DocumentBuilderFactory...parse();
 
 ## 实战应用
 
-### 案例 1：追踪 XML 解析器的配置和使用
+### 案例：追踪 XML 解析器的配置和使用
 
 **目标**：审计 `DocumentBuilderFactory` 的配置和使用，确保 XML 解析器的安全配置，以防止 XXE 攻击。
 
@@ -112,38 +112,6 @@ $factory...parse(* as $source);
 
 - 通过递归检查链式调用，分别捕获工厂实例化、配置设置及解析调用的参数，方便后续的安全性分析。
 
-### 案例 2：审计数据库连接与查询执行
-
-**目标**：审计数据库连接的建立及查询的执行，防止 SQL 注入攻击。
-
-**解析步骤**：
-
-1. **追踪数据库连接的获取**：
-
-    ```syntaxflow
-    DriverManager...getConnection(* as $connection);
-    ```
-
-    - 捕获 `DriverManager.getConnection()` 方法的调用，并将连接对象存储在 `$connection` 中。
-
-2. **创建语句并执行查询**：
-
-    ```syntaxflow
-    $connection...executeQuery(* as $sql);
-    ```
-
-    - 通过递归检查链式调用，捕获 `executeQuery` 方法的所有参数，并将其存储在 `$sql` 中。
-
-**完整查询**：
-
-```syntaxflow
-DriverManager...getConnection(* as $connection);
-$connection...executeQuery(* as $sql);
-```
-
-**解释**：
-
-- 通过递归链式调用，快速定位数据库连接和查询执行的关键步骤，便于进行 SQL 注入风险分析。
 
 ## 重要性与优势
 

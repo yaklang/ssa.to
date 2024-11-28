@@ -47,222 +47,41 @@ filterItem
 
 通过具体的代码案例，结合 **SyntaxFlow** 的语法规则，可以更直观地理解集合运算的应用。
 
-### 案例一：识别共同的安全漏洞点
+## 交集运算符: `&`
 
-**背景**：在多个不同的数据流分析路径中，可能存在一些共同的安全漏洞点。通过交集运算符，可以识别出这些共同的关键点，帮助审计员集中注意力。
-
-#### 审计代码示例
-
-```java
-public class ExampleVulnerabilities {
-    public void methodA(String input) {
-        // 潜在的漏洞点1
-        String cmd = "ping " + input;
-        Runtime.getRuntime().exec(cmd);
-    }
-
-    public void methodB(String input) {
-        // 潜在的漏洞点2
-        String cmd = "curl " + input;
-        Runtime.getRuntime().exec(cmd);
-    }
-}
-```
-
-#### SyntaxFlow 规则案例
+交集运算符 `&` 用于找出两个集合中共有的元素。在代码分析的上下文中，这可以用来确定两个不同数据流路径中共同的数据点或函数调用。
 
 ```syntaxflow
-// 定义潜在的命令执行点
-desc(title: "潜在的命令执行漏洞")
-
-// 捕获所有通过 Runtime.exec 方法执行的命令
-$callPoint = Runtime.exec(*);
-    
-// 捕获所有包含直接参数的命令执行调用
-$directCalls = Runtime.exec($cmdDirectly) as $direct;
-
-    
-// 捕获所有包含间接参数的命令执行调用
-$indirectCalls = Runtime.exec($cmdIndirectly) as $indirect;
-
-// 识别同时存在于直接和间接调用中的漏洞点
-$vulnerablePoints = $directCalls & $indirectCalls as $vuln;
-
-// 输出结果
-check $vuln then "共同的命令执行漏洞" else "未发现共同漏洞";
+$callPoint & $filteredCall as $vuln;
 ```
 
-#### 执行效果
+这里，`$callPoint & $filteredCall` 表示求 `$callPoint` 集合与 `$filteredCall` 集合的交集。结果集 `$vuln` 将包含同时存在于 `$callPoint` 和 `$filteredCall` 中的元素。这种操作通常用于识别两个不同分析过程中共同的安全漏洞或关键点。
 
-执行以下命令进行审计：
+## 差集运算符: `-`
 
-```bash
-yak ssa -t . --program vulnerable && yak sf --program vulnerable vuln_common.sf
-```
-
-**输出示例**：
-
-```
-[INFO] 2024-06-26 16:20:30 [ssacli:272] syntax flow query result:
-rule md5 hash: a1b2c3d4e5f67890123456789abcdef0
-rule preview: desc(title: "潜在的命令执行漏洞")...
-description: {title: "潜在的命令执行漏洞", $vuln: "共同的命令执行漏洞"}
-Result Vars:
-  vuln:
-    t1326001: Runtime.exec(cmdDirectly)
-        ExampleVulnerabilities.java:5:34 - 5:54
-    t1326002: Runtime.exec(cmdIndirectly)
-        ExampleVulnerabilities.java:10:34 - 10:53
-```
-
-#### 解释
-
-- **`$callPoint = Runtime.exec(*);`**：捕获所有通过 `Runtime.exec` 方法执行的命令，并存储在 `$callPoint` 中。
-- **`$directCalls` 和 `$indirectCalls`**：分别捕获直接和间接参数传递的命令执行调用。
-- **`$vulnerablePoints = $directCalls & $indirectCalls as $vuln;`**：使用交集运算符 `&` 找出同时存在于直接和间接调用中的漏洞点。
-- **`check $vuln then "共同的命令执行漏洞" else "未发现共同漏洞";`**：检查是否存在共同的命令执行漏洞，并输出相应的结果。
-
-### 案例二：排除已验证的危险数据流
-
-**背景**：在某些情况下，可能已经对部分数据流进行了验证或过滤，审计时需要排除这些已处理的数据流，以免产生误报。通过差集运算符，可以有效地排除这些已验证的数据点。
-
-#### 审计代码示例
-
-```java
-public class SecureExample {
-    public void processInput(String input) {
-        // 已验证的数据流
-        if (isValid(input)) {
-            String cmd = "echo " + input;
-            Runtime.getRuntime().exec(cmd);
-        }
-    }
-
-    public boolean isValid(String input) {
-        // 验证逻辑
-        return input.matches("[a-zA-Z0-9]+");
-    }
-}
-```
-
-#### SyntaxFlow 规则案例
+差集运算符 `-` 用于从一个集合中移除存在于另一个集合中的元素。这在需要排除特定数据点或排除已处理（例如已经过滤或验证）的数据点时非常有用。
 
 ```syntaxflow
-// 定义潜在的命令执行点
-desc(title: "排除已验证的命令执行漏洞")
-
-// 捕获所有通过 Runtime.exec 方法执行的命令
-$allCalls = Runtime.exec(*);
-
-// 捕获所有经过验证的命令执行调用
-$validatedCalls = Runtime.exec($cmdValidated) as $validated;
-
-// 排除已验证的命令执行调用
-$unvalidatedCalls = $allCalls - $validatedCalls as $vuln;
-
-// 输出结果
-check $vuln then "未验证的命令执行漏洞" else "所有命令执行调用已验证";
+$callPoint - $filteredCall as $vuln;
 ```
 
-#### 执行效果
+在这个例子中，`$callPoint - $filteredCall` 表示从 `$callPoint` 集合中移除那些也出现在 `$filteredCall` 集合中的元素。结果集 `$vuln` 将包含只存在于 `$callPoint` 中，而不在 `$filteredCall` 中的元素。这可以用来识别潜在的未过滤或未验证的危险数据流。
 
-执行以下命令进行审计：
+## 并集运算符: `+`
 
-```bash
-yak ssa -t . --program secure && yak sf --program secure secure_filter.sf
-```
-
-**输出示例**：
-
-```
-[INFO] 2024-06-26 16:45:50 [ssacli:272] syntax flow query result:
-rule md5 hash: b1c2d3e4f5a67890123456789abcdef1
-rule preview: desc(title: "排除已验证的命令执行漏洞")...
-description: {title: "排除已验证的命令执行漏洞", $vuln: "未验证的命令执行漏洞"}
-Result Vars:
-  vuln:
-    t1326101: Runtime.exec(cmdUnvalidated)
-        SecureExample.java:6:34 - 6:54
-```
-
-#### 解释
-
-- **`$allCalls = Runtime.exec(*);`**：捕获所有通过 `Runtime.exec` 方法执行的命令，并存储在 `$allCalls` 中。
-- **`$validatedCalls`**：捕获所有经过验证的命令执行调用。
-- **`$unvalidatedCalls = $allCalls - $validatedCalls as $vuln;`**：使用差集运算符 `-` 从所有调用中排除已验证的调用，得到未验证的漏洞点。
-- **`check $vuln then "未验证的命令执行漏洞" else "所有命令执行调用已验证";`**：检查是否存在未验证的命令执行漏洞，并输出相应的结果。
-
-### 案例三：合并多来源的数据流进行全面分析
-
-**背景**：有时需要将来自不同来源的数据流合并，以进行更全面的分析。例如，结合直接和间接传递的参数来识别潜在的漏洞。
-
-#### 审计代码示例
-
-```java
-public class ComprehensiveExample {
-    public void methodOne(String input) {
-        String cmdDirect = "ls " + input;
-        Runtime.getRuntime().exec(cmdDirect);
-    }
-
-    public void methodTwo(String input) {
-        String cmdIndirect = "rm " + input;
-        Runtime.getRuntime().exec(cmdIndirect);
-    }
-}
-```
-
-#### SyntaxFlow 规则案例
+并集运算符 `+` 用于合并两个集合的元素，结果集包含两个集合中的所有元素（重复的元素只保留一份）。这在需要组合来自不同源的数据点时特别有用。
 
 ```syntaxflow
-// 定义潜在的命令执行点
-desc(title: "全面合并命令执行漏洞点")
-
-// 捕获所有通过 Runtime.exec 方法执行的命令
-$execCalls = Runtime.exec(*);
-
-// 捕获直接传递的命令执行调用
-$directCalls = Runtime.exec($cmdDirect) as $direct;
-
-// 捕获间接传递的命令执行调用
-$indirectCalls = Runtime.exec($cmdIndirect) as $indirect;
-
-// 合并直接和间接调用的漏洞点
-$combinedVulns = $directCalls + $indirectCalls as $vuln;
-
-// 输出结果
-check $combinedVulns then "发现命令执行漏洞点" else "未发现命令执行漏洞点";
+$paramDirectly + $paramIndirectly as $vuln;
 ```
 
-#### 执行效果
+这里，`$paramDirectly + $paramIndirectly` 表示将 `$paramDirectly` 集合和 `$paramIndirectly` 集合合并。结果集 `$vuln` 将包含两个集合中的所有元素。这通常用于创建一个更全面的数据集，以便进行更广泛的分析。
 
-执行以下命令进行审计：
+:::tip
 
-```bash
-yak ssa -t . --program comprehensive && yak sf --program comprehensive comprehensive_merge.sf
-```
+通过这些集合运算符，SyntaxFlow 提供了一种简洁而强大的方式来操作和分析代码中的数据流。这些操作使得用户能够根据特定的需求灵活地组合、排除或扩展数据集，从而更有效地识别和处理潜在的安全问题。
 
-**输出示例**：
-
-```
-[INFO] 2024-06-26 17:10:15 [ssacli:272] syntax flow query result:
-rule md5 hash: c1d2e3f4a5b67890123456789abcdef2
-rule preview: desc(title: "全面合并命令执行漏洞点")...
-description: {title: "全面合并命令执行漏洞点", $vuln: "发现命令执行漏洞点"}
-Result Vars:
-  vuln:
-    t1326201: Runtime.exec(cmdDirect)
-        ComprehensiveExample.java:4:34 - 4:54
-    t1326202: Runtime.exec(cmdIndirect)
-        ComprehensiveExample.java:9:34 - 9:54
-```
-
-#### 解释
-
-- **`$execCalls = Runtime.exec(*);`**：捕获所有通过 `Runtime.exec` 方法执行的命令，并存储在 `$execCalls` 中。
-- **`$directCalls` 和 `$indirectCalls`**：分别捕获直接和间接传递的命令执行调用。
-- **`$combinedVulns = $directCalls + $indirectCalls as $vuln;`**：使用并集运算符 `+` 合并直接和间接调用的漏洞点。
-- **`check $combinedVulns then "发现命令执行漏洞点" else "未发现命令执行漏洞点";`**：检查是否存在命令执行漏洞点，并输出相应的结果。
+:::
 
 ## 实战中的注意事项
 
