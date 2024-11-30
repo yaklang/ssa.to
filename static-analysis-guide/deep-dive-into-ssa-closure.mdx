@@ -1,1 +1,491 @@
-# 第五章：SSA 深水区 - 处理闭包
+# 第四章：SSA 深水区 - 闭包函数
+
+:::tip 题外话
+
+虽然有一些语言对闭包的支持并不好，但是作为 “通用静态” 编译技术，闭包函数是无论如何都绕不过去的一个话题。
+
+我们强烈建议读者在了解完之前的所有内容，再开始阅读这一章节。
+
+:::
+
+我们在前面的内容中，讨论了各种语言的高级特性的 SSA 编译手段，并且给出了很多形式化表达，但是这些内容基本停留在基础的 SSA 层面。
+
+在接下来的内容中，我们将讨论一些更深层次的 SSA 内容，包括我们怎么对待闭包函数，我们怎么对待 OOP 并且怎么找到 OOP 相关概念与 Classless 概念的联系。
+
+这两大话题是 SSA 中非常具有实践意义的话题。
+
+import TOCInline from '@theme/TOCInline';
+import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
+
+---
+<TOCInline toc={toc} />
+---
+
+## 术语解析
+
+:::tip 在本节中，我们将会讨论一些闭包中的术语，这些术语将会贯穿整个闭包的讨论过程。
+
+副作用（SideEffect, Effects）：在函数中，修改了捕获变量的值。
+
+:::
+
+## 闭包函数概念
+
+闭包（Closure）是一个函数与其相关的引用环境的组合体。从技术角度来说，闭包是一个记录结构（record），它包含了一个函数和一个关联的环境组件。
+
+这个环境组件中包含了函数体内引用的、但是既不是函数参数也不是函数局部变量的所有变量的绑定。
+
+:::tip 题外话
+
+我们在定义讨论中将会暂时忘掉 SSA 这个事情，如果你已经深入了解了闭包是什么，那你可以直接查看 SSA 相关的闭包编译技术。
+
+:::
+
+闭包的定义如下：
+
+<BlockMath math={`
+Closure = (F, E)
+`} />
+
+其中：
+
+- <InlineMath math="F" /> 表示函数本身
+- <InlineMath math="E" /> 表示捕获的环境（Captured Environment）
+
+:::tip 闭包的本质
+
+从计算机科学的角度来看，闭包实际上是一种特殊的作用域规则的实现机制。它允许内部函数访问外部函数的变量，即使外部函数已经返回。这种机制打破了常规的栈式作用域规则。
+
+这就要求在运行的时候，函数可以访问到捕获的环境，并且捕获的环境可能和“符号表”不一样，而是一个定义与实体的映射。
+
+:::
+
+
+### 闭包的核心特性
+
+1. **变量捕获**：闭包可以捕获其定义时所在作用域的变量，我们再补充一点，这个变量必须被使用的时候才算是“捕获”，如果不被使用，就不需要考虑这个事情了。
+
+<BlockMath math={`
+CapturedVars(closure) = \\{ v \\mid v \\in Scope(F) \\land v \\notin (Params(F) \\cup Locals(F)) \\}
+`} />
+
+
+2. **生命周期延展**：被捕获的变量的生命周期会被延长至闭包函数的生命周期。
+
+3. **状态保持**：每个闭包实例都维护着其自己的变量状态。
+
+### 形式化表达
+
+我们可以将闭包的形式化定义扩展为：
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Closure Definition:} \\\\
+& Closure = (F: Function, E: Environment) \\\\
+\\\\
+& \\textbf{Function Structure:} \\\\
+& Function = (Params \\times Body \\times FreeVars) \\\\
+\\\\
+& \\textbf{Environment Mapping:} \\\\
+& Environment: CapturedVars \\to Location \\\\
+& Location = (Address \\times Type) \\\\
+\\\\
+& \\textbf{Variable Capture Rules:} \\\\
+& FreeVars(F) = Used(F) \\setminus (Params(F) \\cup Locals(F)) \\\\
+& CapturedVars(F) = \\{ v \\mid v \\in FreeVars(F) \\land v \\in Scope(Parent(F)) \\} \\\\
+\\\\
+& \\textbf{Environment Construction:} \\\\
+& E = \\{(v, ref(v)) \\mid v \\in CapturedVars(F)\\} \\\\
+& ref: Var \\to Location
+\\end{aligned}
+`} />
+
+接下来我们将会就形式化表达配合 MVP 来进行详细讲解闭包函数的各种神奇的特性。
+
+### 自由变量：闭包捕获变量
+
+我们在开始 SSA 编译之前，一定要知道闭包中的重要概念都是什么，虽然在形式表达中我们有一些符号，但是这些符号都是可以被替换为更加详细并且容易理解的形式。
+
+#### 如何捕获自由变量？
+
+:::caution 因地制宜
+
+每一种语言的闭包捕获变量的方式都不一样，虽然我们会讨论一些特例，但是通用情况对我们来说更加重要。
+
+:::
+
+闭包捕获变量的情况虽然绝大多数是通过变量名直接来捕获的，但是也总有例外情况：
+
+1. PHP 中，需要通过 `use` 关键字来显式声明捕获变量
+2. 在 Python 中，需要通过 `nonlocal` 关键字来显式声明捕获变量
+
+这两种情况实际上会改变捕获变量的方式，但是捕获变量的本质还是不变的。我们把这两种情况称为显式捕获，而绝大多数情况我们称为隐式捕获。
+
+:::info 形式定义（自由变量）
+
+我们给出显示捕获和隐式捕获的形式化定义：
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Capture Mechanisms:} \\\\
+\\\\
+& \\textbf{Implicit Capture:} \\\\
+& CapturedVars_{implicit}(F) = \\{ v \\mid v \\in FreeVars(F) \\land v \\in Scope(Parent(F)) \\} \\\\
+\\\\
+& \\textbf{Explicit Capture:} \\\\
+& CapturedVars_{explicit}(F) = \\{ v \\mid v \\in DeclaredVars(F) \\land v \\in Scope(Parent(F)) \\} \\\\
+& DeclaredVars(F) \\subseteq FreeVars(F)
+\\end{aligned}
+`} />
+
+不论是显式捕获还是隐式捕获，捕获变量的本质可以用以下形式化表达：
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Capture Essence:} \\\\
+& Capture = (Var \\times AccessMethod \\times LifetimeExtension) \\\\
+\\\\
+& \\textbf{Where:} \\\\
+& AccessMethod = Direct \\mid Indirect \\mid Reference \\\\
+& LifetimeExtension = \\{t \\mid t_{capture} \\leq t \\leq t_{closure_{death}}\\}
+\\end{aligned}
+`} />
+
+:::
+
+##### 隐式捕获（Implicit Capture）
+
+隐式捕获是编译器自动分析和处理的捕获方式，主要特点是：
+
+```javascript
+function outer() {
+    let x = 1;
+    let y = 2;
+    return function inner() {
+        return x + y;  // x 和 y 被自动捕获
+    }
+}
+```
+
+:::tip 隐式捕获的工作原理
+1. 编译器自动分析变量使用
+2. 识别函数中使用但未在本地定义的变量
+3. 在外层作用域中查找这些变量
+4. 自动建立捕获关系
+:::
+
+##### 显式捕获（Explicit Capture）
+
+显式捕获需要程序员明确声明要捕获的变量：
+
+```php
+// PHP 的显式捕获
+$x = 1;
+$y = 2;
+$closure = function() use ($x, $y) {
+    return $x + $y;
+};
+
+// Python 的显式声明
+def outer():
+    x = 1
+    def inner():
+        nonlocal x  # 显式声明使用外部变量
+        x += 1
+        return x
+    return inner
+```
+
+:::tip 显式捕获的特点
+1. 需要明确的语法标记（如 `use`、`nonlocal`）
+2. 捕获的变量集合是声明变量的子集
+3. 编译器可以直接根据声明进行优化
+:::
+
+#### 捕获的归一化处理
+
+无论是显式还是隐式捕获，在了解到他的本质之后，我们可以统一处理这些内容：
+
+引入 FreeValues 这个概念，把捕获的变量统一称为 FreeValues，要求函数处理的时候，需要对 FreeValues 进行处理。
+
+##### FreeValues 的形式化定义
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{FreeValues Definition:} \\\\
+& FreeValues = \\{(v_i, AccessMode_i, CaptureKind_i) \\mid v_i \\in CapturedVars\\} \\\\
+\\\\
+& \\textbf{Where:} \\\\
+& AccessMode = ReadOnly \\mid ReadWrite \\\\
+& CaptureKind = Declared \\mid Implicit \\\\
+\\\\
+& \\textbf{Constraints:} \\\\
+& Declared(v) \\Rightarrow v \\in DeclaredVars \\\\
+& Implicit(v) \\Rightarrow v \\in FreeVars(F) \\setminus DeclaredVars
+\\end{aligned}
+`} />
+
+类似 PHP 的 use，只不过我们的 freevalue 可以通过声明或者自动捕获（编译时的选项）。
+
+
+### 副作用：闭包中捕获变量的修改
+
+在上一节我们讨论了变量捕获的概念，现在让我们深入探讨闭包中捕获变量的修改所导致的副作用问题。
+
+#### 副作用定义
+
+首先我们来定义副作用的概念：
+
+副作用（Side Effect）是指函数在执行过程中，除了返回值之外，还对函数作用域外部的状态进行了修改。
+
+#### 形式化表达
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Side Effects Definition:} \\\\
+& SideEffect = (Var \\times Operation \\times Scope) \\\\
+\\\\
+& \\textbf{Where:} \\\\
+& Operation = Write \\mid ReadWrite \\\\
+& Scope = Local \\mid Captured \\mid Global \\\\
+\\\\
+& \\textbf{Effect Analysis:} \\\\
+& Effects(F) = \\{(v, op, scope) \\mid v \\in Modified(F) \\} \\\\
+& Modified(F) = \\{v \\mid v \\in CapturedVars(F) \\land IsModified(v, F)\\} \\\\
+\\\\
+& \\textbf{Effect Propagation:} \\\\
+& HasEffect(F) \\Leftrightarrow Modified(F) \\neq \\emptyset
+\\end{aligned}
+`} />
+
+#### 代码示例
+
+考虑以下代码：
+
+```javascript
+function outer() {
+    let x = 1;
+    let y = 2;
+    return function inner() {
+        x = x + 1;      // 副作用：修改闭包中的捕获变量
+        return x + y;
+    }
+}
+```
+
+这段代码展示了一个重要的概念：函数的副作用。让我们分析其中的关键点：
+
+1. **闭包与变量捕获**
+   - inner 函数形成了一个闭包，捕获了外部作用域的 x 和 y
+   - 这些变量在 outer 函数执行完毕后仍然存在于闭包环境中
+
+2. **副作用的识别**
+   - inner 函数中对 x 的修改构成了一个副作用
+   - 这是因为它修改了函数作用域之外的状态（闭包中的变量）
+
+3. **副作用的特性**
+   ```javascript
+   const innerFn = outer();
+   console.log(innerFn()); // 第一次调用
+   console.log(innerFn()); // 第二次调用会得到不同的结果
+   ```
+   - 副作用的存在是函数的静态特性，不依赖于函数是否被调用
+   - 副作用的实际影响只有在函数执行时才会发生
+   - 由于副作用的存在，多次调用 inner 函数会得到不同的结果
+
+### 副作用与自由变量关系
+
+我们知道了自由变量和副作用的基本概念之后，就可以思考这两个概念之间的关系。
+
+:::note
+
+简单我们可以理解为，如果存在自由变量，如果不修改自由变量，就不会产生副作用。
+
+:::
+
+#### 形式化表达
+
+我们知道产生副作用的核心一定是 “修改”。因此我们可以做出如下定义，<InlineMath math="IsModified(v)" /> 表示变量 <InlineMath math="v" /> 是否被修改。
+
+<BlockMath math={`
+
+
+\\begin{aligned}
+& \\textbf{Effect-Free Variable Relationship:} \\\\
+& HasSideEffect(F) \\Leftrightarrow \\exists v \\in FreeVars(F): IsModified(v) \\\\
+\\\\
+& \\textbf{Where:} \\\\
+& IsModified(v) = \\begin{cases}
+    true & \\text{if } v \\text{ is written to} \\\\
+    false & \\text{if } v \\text{ is only read}
+\\end{cases}
+\\end{aligned}
+`} />
+
+让我们用更严格的数学语言来描述这些关系：
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Relationship Categories:} \\\\
+& PureObservation(F) \\Leftrightarrow \\forall v \\in FreeVars(F): \\neg IsModified(v) \\\\
+\\\\
+& Modification(F) \\Leftrightarrow \\exists v \\in FreeVars(F): IsModified(v) \\\\
+\\\\
+& Hybrid(F) \\Leftrightarrow \\exists v_1, v_2 \\in FreeVars(F): \\\\
+& \\quad IsModified(v_1) \\land \\neg IsModified(v_2)
+\\end{aligned}
+`} />
+
+根据 “修改” 这个概念，我们可以分为三个类别：“观察”，”修改“，”混合“。
+
+
+#### 1. PureObservation(F) - 纯观察关系
+
+<BlockMath math={`
+PureObservation(F) \\Leftrightarrow \\forall v \\in FreeVars(F): \\neg IsModified(v)
+`} />
+这个公式表示：
+- 对于函数 <InlineMath math="F" /> 中的所有自由变量 <InlineMath math="v" />
+- <InlineMath math="\forall" /> 表示"对所有"
+- <InlineMath math="\neg IsModified(v)" /> 表示"<InlineMath math="v" /> 没有被修改"
+- <InlineMath math="\Leftrightarrow" /> 表示"当且仅当"
+
+例子：
+```javascript
+function createReader() {
+    const config = { maxSize: 100 };
+    const threshold = 50;
+    
+    return function read() {
+        // 只读取自由变量，不修改
+        return {
+            config: config,
+            threshold: threshold
+        };
+    }
+}
+```
+
+#### 2. Modification(F) - 修改关系
+
+<BlockMath math={`
+Modification(F) \\Leftrightarrow \\exists v \\in FreeVars(F): IsModified(v)
+`} />
+
+这个公式表示：
+- 存在（<InlineMath math="\exists" />）至少一个自由变量 <InlineMath math="v" />
+- <InlineMath math="IsModified(v)" /> 表示"<InlineMath math="v" /> 被修改"
+- 只要有一个自由变量被修改，就满足这个关系
+
+例子：
+```javascript
+function createCounter() {
+    let count = 0;
+    
+    return function increment() {
+        count++; // 修改自由变量
+        return count;
+    }
+}
+```
+
+#### 3. Hybrid(F) - 混合关系
+
+<BlockMath math={`
+\\begin{aligned}
+& Hybrid(F) \\Leftrightarrow \\exists v_1, v_2 \\in FreeVars(F): \\\\
+& \\quad IsModified(v_1) \\land \\neg IsModified(v_2)
+\\end{aligned}
+`} />
+
+这个公式表示：
+- 存在两个自由变量 <InlineMath math="v_1" /> 和 <InlineMath math="v_2" />
+- <InlineMath math="v_1" /> 被修改（<InlineMath math="IsModified(v_1)" />）
+- <InlineMath math="v_2" /> 不被修改（<InlineMath math="\neg IsModified(v_2)" />）
+- <InlineMath math="\land" /> 表示"且"，两个条件同时成立
+
+例子：
+```javascript
+function createLogger() {
+    let logCount = 0;        // v₁: 会被修改
+    const maxLogs = 1000;    // v₂: 只被读取
+    
+    return function log(message) {
+        if (logCount < maxLogs) {  // 读取 maxLogs
+            logCount++;            // 修改 logCount
+            console.log(`[${logCount}/${maxLogs}] ${message}`);
+        }
+    }
+}
+```
+
+### 无副作用：纯函数
+
+本节需要额外引入一个概念：纯函数。这是一个函数式编程的概念。
+
+<BlockMath math={`
+\\begin{aligned}
+& \\textbf{Pure Function Definition:} \\\\
+& PureFunction(F) \\Leftrightarrow \\begin{cases}
+    \\forall v \\in FreeVars(F): \\neg IsModified(v) & \\text{(1) No Side Effects} \\\\
+    \\land \\\\
+    \\forall x: F(x) = F(x) & \\text{(2) Referential Transparency} \\\\
+    \\land \\\\
+    \\nexists g: F \\text{ calls } g \\land \\neg PureFunction(g) & \\text{(3) Pure Calls}
+\\end{cases}
+\\end{aligned}
+`} />
+
+这个公式定义了纯函数的三个核心特性：
+
+1. **无副作用**：函数不修改任何自由变量（<InlineMath math="\forall v \in FreeVars(F): \neg IsModified(v)" />）
+
+2. **引用透明性**：对于相同的输入 x，函数总是返回相同的结果（<InlineMath math="\forall x: F(x) = F(x)" />）
+
+3. **纯调用**：函数只调用其他纯函数，不调用任何非纯函数（<InlineMath math="\nexists g: F \text{ calls } g \land \neg PureFunction(g)" />）
+
+这三个条件必须同时满足（用 <InlineMath math="\land" /> 连接），函数才能被称为纯函数。
+
+#### 纯函数的特性
+
+1. **无副作用（No Side Effects）**
+   - 不修改任何外部状态
+   - 不修改输入参数
+   - 不进行I/O操作
+
+2. **引用透明性（Referential Transparency）**
+   - 相同的输入总是产生相同的输出
+   - 函数调用可以被其结果替换
+
+3. **纯调用（Pure Calls）**
+   - 只调用其他纯函数
+   - 不依赖外部可变状态
+
+#### 纯函数与副作用的关系：**互斥关系**
+
+<BlockMath math={`
+\\begin{aligned}
+& PureFunction(F) \\Rightarrow \\neg HasSideEffect(F) \\\\
+& HasSideEffect(F) \\Rightarrow \\neg PureFunction(F)
+\\end{aligned}
+`} />
+
+
+#### **代码示例**
+
+```javascript
+// 纯函数示例
+function pure(x, y) {
+    return x + y;
+}
+
+// 非纯函数示例（有副作用）
+let total = 0;
+function impure(x) {
+    total += x;  // 副作用：修改外部状态
+    return total;
+}
+```
+
+## SSA表示捕获
+
