@@ -1,4 +1,4 @@
-# 第四章：SSA 深水区 - 闭包函数
+# 第四章：SSA 深水区 - 分析闭包函数
 
 :::tip 题外话
 
@@ -695,13 +695,19 @@ extern type:
 \\end{aligned}
 `} />
 
-## 深入讨论：副作用生效机制
+## 深入讨论：副作用生效（实例化）机制
 
 在前文中，我们已经探讨了副作用的形式化定义及其静态属性特征。本节将深入分析副作用指令的执行机制、传播特性以及其在静态分析中的应用。
 
+:::caution 名词解释
+
+我们在这里说的副作用生效，物化（Materialization），实例化等概念，本质上指的是一个东西，就是作为属性存在的副作用什么时候变成虚拟指令影响构建流程。
+
+:::
+
 :::tip 核心概念
 
-副作用生效（Side Effect Materialization）是指程序中状态改变实际发生的时刻。虽然这本质上是一个运行时概念，但通过静态分析，我们可以：
+副作用实例化（SideEffect Materialization）是指程序中状态改变实际发生的时刻。虽然这本质上是一个运行时概念，但通过静态分析，我们可以：
 
 1. 预测和追踪副作用的传播路径
 2. 优化副作用的执行时机
@@ -709,15 +715,15 @@ extern type:
 
 :::
 
-:::caution 副作用生效时机分析
+:::caution 副作实例化时机分析
 
-在本知识体系中，副作用生效时机的讨论标志着我们首次深入静态程序分析领域。这种分析不同于传统的数据流分析，它需要我们，可以用静态手段追踪状态变化的传播路径，评估副作用对程序行为的影响，并确保优化变换的正确性。
+在本知识体系中，副作用实例化时机的讨论标志着我们首次深入静态程序分析领域。这种分析不同于传统的数据流分析，它需要我们，可以用静态手段追踪状态变化的传播路径，评估副作用对程序行为的影响，并确保优化变换的正确性。
 
 这种分析方法将为我们后续讨论更复杂的编译分析技术奠定基础。
 
 :::
 
-### 分析简单的副作用生效
+### 分析简单的副作用实例化
 
 一般来说，副作用发生作用经常发生在函数调用的时候，我们来看一个具体的例子：
 
@@ -767,14 +773,16 @@ graph LR
 在分析副作用时，我们可以将函数调用中的副作用显式地提取出来，转换为专门的 SideEffect 指令。这样的转换可以帮助我们更好地理解和分析副作用的传播路径：
 
 :::note
+
 注意：SideEffect 指令并不一定需要直接被编译成更低级的指令，他表示的是分析的时候的副作用传播路径。真正在运行的时候，副作用在修改的那个时候就已经生效了。
+
 :::
 
-所以我们需要理解的是副作用的传播路径，而不是副作用的执行时机。这对分析和潜在优化非常重要。
+所以我们需要理解的是副作用的传播路径和副作用的执行时机。这对分析和潜在优化非常重要。
 
-### Phi 函数下的副作用生效
+### Phi 函数下的副作用实例化
 
-我们在前面讨论了 Phi 函数的时候，讨论了 Phi 函数在 SSA 中的作用，这里我们再讨论一下 Phi(<InlineMath math="\phi"/>) 函数下的副作用生效。这个案例要稍微比简单的副作用生效复杂一些。
+我们在前面讨论了 Phi 函数的时候，讨论了 Phi 函数在 SSA 中的作用，这里我们再讨论一下 Phi(<InlineMath math="\phi"/>) 函数下的副作用物化。这个案例要稍微比简单的副作用实例化复杂一些。
 
 考虑如下代码：
 
@@ -790,20 +798,529 @@ println(x) // 无法确定 x 的值，要取决于 c 的值
            // 因此这里是一个 phi 函数
 ```
 
-上述代码编译后结果为：
+上述代码关键的 x 变量的编译后结果为：
+
+```mermaid
+  graph LR
+      A["Entry<br/>x₁ = 1"]
+      B["if (i > c)"]
+      C["x₂ = x₁ + i"]
+      D["Exit<br/>x₃ = φ(x₁, x₂)"]
+      
+      A --> B
+      B -->|true| C
+      B -->|false| D
+      C --> D
+```
+
+:::caution 注意
+
+<InlineMath math="\\x_3"/> 虽然是一个 <InlineMath math="\\phi"/> 但是它一定是一个静态的值（静态值才有 <InlineMath math="\\phi"/> 而动态值没有）
+
+这个 <InlineMath math="\\phi"/> 如何产生呢？显然这个 <InlineMath math="\\phi"/> 是通过 `myFunc(3)` 产生的，在这个函数中，存在一个 IF，这个 IF 的判断条件是 `i > c`，显然这个条件在运行时才会知道，因此这个 <InlineMath math="\\phi"/> 是一个动态值。
+
+我们发现，这个值被一个函数调用影响了，在不深入函数内部每一条指令的时候，我们其实就可以知道这个副作用的传播路径。
+
+通过副作用机制我们成功实现了第一次复杂的跨过程数据流的分析
+
+:::
+
+因此我们可以画一个更详细的编译时分析的过程图方便大家来理解：
+
+```mermaid
+graph LR
+    P["sideEffect x₃ = φ(x₁, x₂)"]
+    subgraph "Main Program"
+        A["Entry<br/>x₁ = 1"]
+        D["println(x₃)"]
+        E["x₃ = φ(x₁, x₂)"]
+    end
+
+    
+    
+    subgraph "myFunc(3)"
+        B["if (i > c)"]
+        C["x₂ = x₁ + i"]
+        B -->|"true"| C
+        
+    end
+    C --> P
+    B -->|"false"| P
+    A -->|"x₁ init"| F["myFunc call"]
+    F --> B
+    P -->|"apply"| E
+    E --> D
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#ff9,stroke:#333,stroke-width:2px
+    style F fill:#9cf,stroke:#333,stroke-width:2px
+    style P fill:#bfb,stroke:#333,stroke-width:2px
+
+```
+
+:::tip 数据流说明
+1. **主程序流程**：
+   - 从 `x₁ = 1` 的初始化开始
+   - 通过函数调用传递到 myFunc
+   - 最终在主程序中通过 φ 函数合并结果
+
+2. **函数内部流程**：
+   - 条件判断 `if (i > c)`
+   - true 分支：计算 `x₂ = x₁ + i`
+   - 两个分支都会到达内部的副作用计算点
+   - 副作用结果通过函数返回传递给主程序
+
+3. **副作用传播**：
+   - 函数内的副作用计算（P节点）明确地显示了对外部变量的修改
+   - 这个修改通过 "apply sideEffect" 边传递到主程序的 φ 函数
+:::
 
 
+:::danger 实例化的时机
 
+副作用要在整个函数分析完成之后才能确定它最终值是什么，且副作用在分析的时候实例化也需要在函数调用分析完成之后。
 
-### 分析副作用传递方式
+:::
+
+### 副作用实例化的总结
+
+在阅读和深入理解上述案例之后，我们可以给出一个副作用的实例化的时机流程图：
+
+```mermaid
+graph LR
+    subgraph "Main Program Flow"
+        direction LR
+        A["Entry<br/>v_old"]
+        F["Function Call"]
+        R["v_new = φ(v_old, v_modified)"]
+    end
+
+    subgraph "Side Effect Analysis"
+        direction TB
+        S1["sideEffect Declaration"]
+        S2["expr Evaluation"]
+        S3["v_modified"]
+        
+        S1 --> S2
+        S2 --> S3
+    end
+
+    A -->|"Original Value"| F
+    F -->|"Trigger"| S1
+    S3 -->|"Effect Application"| R
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style R fill:#ff9,stroke:#333,stroke-width:2px
+    style S3 fill:#bfb,stroke:#333,stroke-width:2px
+
+```
+
 
 其形式化表示为：
 
 <BlockMath math={`
 \\begin{aligned}
-& \\text{SideEffect Declaration:} \\\\
-& sideEffect(v_{in}, expr) \\triangleq \\{v_{out} = expr\\} \\\\
-& \\text{Effect Materialization:} \\\\
-& v_{new} = \\phi(v_{old}, sideEffect(v_{old}, expr)) \\\\
+& \\textbf{SideEffect Materialization Algorithm} \\\\
+\\\\
+& \\textbf{1. Definitions:} \\\\
+& \\mathcal{V} : \\text{Variables} \\\\
+& \\mathcal{E} : \\text{Expressions} \\\\
+& \\mathcal{B} : \\text{BasicBlocks} \\\\
+& \\mathcal{S} : \\text{SideEffects} \\\\
+\\\\
+& \\textbf{2. Collection Phase:} \\\\
+& Collect: \\mathcal{B} \\rightarrow \\mathcal{P}(\\mathcal{S}) \\\\
+& Collect(b) = \\{s \\mid s = (v, e, b, c) \\land v \\in FreeVars \\land e \\in \\mathcal{E}\\} \\\\
+& \\text{where } c = IsConditional(b) \\\\
+\\\\
+& \\textbf{3. Analysis Phase:} \\\\
+& Analyze: \\mathcal{S} \\rightarrow \\mathcal{P}(\\phi) \\\\
+& Analyze(s) = \\begin{cases}
+    \\{\\phi(v_{old}, e(v_{old}))\\} & \\text{if } s.conditional = true \\\\
+    \\{v_{new} = e(v_{old})\\} & \\text{otherwise}
+\\end{cases} \\\\
+\\\\
+& \\textbf{4. Application Phase:} \\\\
+& Apply: \\mathcal{S} \\times \\mathcal{V} \\rightarrow \\mathcal{V} \\\\
+& Apply(s, v) = \\begin{cases}
+    v_{new} = \\phi(v, s.expr(v)) & \\text{if } s.conditional \\\\
+    v_{new} = s.expr(v) & \\text{otherwise}
+\\end{cases} \\\\
+\\\\
+& \\textbf{5. Correctness Conditions:} \\\\
+& \\forall v \\in \\mathcal{V}: |Def(v)| = 1 \\text{ (SSA Property)} \\\\
+& \\forall s \\in \\mathcal{S}: \\exists v \\in \\mathcal{V}: Apply(s, v) \\text{ (Effect Coverage)} \\\\
+& \\forall b \\in \\mathcal{B}: HasEffect(b) \\Rightarrow JoinPoint(b) \\neq \\emptyset \\\\
+\\\\
+& \\textbf{6. Optimization Rules:} \\\\
+& Merge(s_1, s_2) \\text{ if } Adjacent(s_1, s_2) \\land Target(s_1) = Target(s_2) \\\\
+& Eliminate(\\phi) \\text{ if } \\forall i: \\phi(i) = v \\text{ (Trivial Phi)} \\\\
+\\\\
+& \\textbf{7. Final Effect State:} \\\\
+& Effect_{final}(v) = \\begin{cases}
+    \\phi(v_{old}, v_{new}) & \\text{if } \\exists s \\in \\mathcal{S}: Conditional(s) \\\\
+    v_{new} & \\text{if } \\exists s \\in \\mathcal{S}: \\neg Conditional(s) \\\\
+    v_{old} & \\text{otherwise}
+\\end{cases}
+\\end{aligned}
+`} />
+
+副作用实例化(SideEffect Materialization)算法的各个关键部分：
+
+:::tip 算法概述
+这是一个处理程序中副作用的算法，主要用于SSA形式的编译优化过程中。它的目的是将闭包函数属性中的副作用转换为显式的操作，使得后续的分析和优化更容易进行。
+:::
+
+让我们逐部分分析：
+
+1. **基本定义部分**
+```
+𝒱 : Variables (变量集合)
+ℰ : Expressions (表达式集合)
+ℬ : BasicBlocks (基本块集合)
+𝒮 : SideEffects (副作用集合)
+```
+
+2. **收集阶段 (Collection Phase)**
+```
+Collect: ℬ → 𝒫(𝒮)
+```
+这个阶段的关键点是：
+- 函数将基本块映射到副作用的幂集（所有可能的副作用组合）
+- `s = (v, e, b, c)` 表示一个副作用四元组：
+  - v: 受影响的变量
+  - e: 产生副作用的表达式
+  - b: 所在的基本块
+  - c: 是否是条件执行
+
+:::tip 重要说明
+FreeVars 指的是在表达式中出现但未在当前作用域定义的变量。IsConditional(b) 用于判断一个基本块是否在条件执行路径上。
+:::
+
+3. **分析阶段 (Analysis Phase)**
+这个阶段决定如何处理每个副作用：
+- 对于条件性副作用：创建一个φ函数
+- 对于非条件性副作用：直接创建赋值语句
+
+4. **应用阶段 (Application Phase)**
+实际执行副作用转换：
+```
+Apply(s, v) = {
+    v_new = φ(v, s.expr(v))  // 条件副作用
+    v_new = s.expr(v)        // 非条件副作用
+}
+```
+
+5. **正确性条件**
+包含三个关键条件：
+- SSA属性：每个变量只能被定义一次
+- 效果覆盖：所有副作用都必须被处理
+- 连接点存在：有副作用的基本块必须有对应的连接点
+
+6. **优化规则**
+两个主要优化：
+- 合并相邻且目标相同的副作用
+- 消除平凡的φ函数（所有输入相同时）
+
+7. **最终效果状态**
+```
+Effect_final(v) = {
+    φ(v_old, v_new)  // 条件副作用情况
+    v_new            // 非条件副作用情况
+    v_old            // 无副作用情况
+}
+```
+
+:::tip 实际应用示例
+假设有如下代码：
+```c
+if (cond) {
+    x++;  // 副作用
+}
+```
+经过算法处理后变为：
+```c
+temp = x + 1;
+x_new = φ(x, temp);  // 物化的副作用
+```
+:::
+
+## 再深入：副作用通过实例化传播
+
+:::danger 结论先行
+
+在这里，我们先给出结论，然后再尝试论证这个结论的正确性。
+
+我们认为闭包函数的副作用属性本身并不具备传递性，但是可以通过实例化进行传播影响。
+
+一个函数编译过程中，实际上会对这个函数内部的过程都进行编译，他的副作用等于函数内所有代码都编译之后的副作用实例化结果的总和。而不需要去关心在这个过程内定义的函数。
+
+:::
+
+### 简单案例：副作用实例化后影响本函数
+
+考虑如下代码：
+
+```typescript
+x = 1
+func1 = () => {
+    if c > 0 {
+        x = x + 1
+    }
+}
+func2 = () => {
+    if e > 0 {
+        func1()
+    }
+}
+func2()
+println(x)
+```
+
+把这段代码进行 SSA 改造：得到结果为：
+
+```typescript
+x_1 = 1
+func1 = () => {
+    if c > 0 {
+        x_2 = x_freevalue + 1
+    }
+}
+func2 = () => {
+    if e > 0 {
+        func1()
+        x_3 = φ(x_2, x_freevalue)
+    }
+}
+func2()
+x_4 = φ(x_3, x_freevalue)
+println(x_4)
+```
+
+在这个代码中 `c` 和 `e` 都是外部变量，我们至少可以回答 func2 的副作用为 `x_4`。我们发现，func2 的副作用应该包含 func1 的副作用实例化的结果。
+
+分析结果如下：
+
+```mermaid
+graph TB
+    A["Entry func2"]
+    B{"e > 0"}
+    C["call func1()"]
+    D["x_3 = φ(x_2, x_freevalue)"]
+    E["Exit func2<br>Effect: x_4"]
+    
+    A --> B
+    B -->|"true"| C
+    C --> D
+    D --> E
+    B -->|"false"| E
+    
+    subgraph "Free Variables"
+        F["x_freevalue"]
+        G["c"]
+        H["e"]
+    end
+    
+    F -.->|"used in"| D
+    G -.->|"used in"| C
+    H -.->|"used in"| B
+    
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+```
+
+#### 分析要点
+
+1. **自由变量（Free Variables）**：
+
+<BlockMath math={`
+\\begin{aligned}
+& FreeVars(func2) = \\{\\text{e}, \\text{x\\_freevalue}\\} \\\\
+& FreeVars(func1) = \\{\\text{c}, \\text{x\\_freevalue}\\}
+\\end{aligned}
+`} />
+
+2. **副作用分析**：
+
+<BlockMath math={`
+\\begin\{aligned\}
+& Effects(func2) = \\{\\text{def}(\\text{x\\_4})\\} \\\\
+& \\text{where: } \\text{x\\_4} = \\phi(\\text{x\\_3}, \\text{x\\_freevalue})
+\\end{aligned}
+`} />
+
+3. **控制流依赖**：
+```typescript
+ControlDeps = {
+    'e > 0': ['x_3 = φ(x_2, x_freevalue)'],
+    'c > 0': ['x_2 = x_freevalue + 1']
+}
+```
+
+#### 重要观察
+
+1. **副作用的确定性**：
+   - `func2` 的副作用确实是 `x_4`
+   - 这是因为 `x_4` 是在 `func2` 的控制流范围内定义的
+
+2. **φ 节点的作用**：
+```typescript
+// 在 func2 中
+x_3 = φ(x_2, x_freevalue)  // 合并来自 func1 的修改和原值
+x_4 = φ(x_3, x_freevalue)  // 最终的合并结果
+```
+
+3. **值流分析**：
+```mermaid
+graph LR
+    A["x_freevalue"]
+    B["x_2"]
+    C["x_3"]
+    D["x_4"]
+    
+    A -->|"initial"| B
+    A -->|"unchanged"| C
+    B -->|"modified"| C
+    C --> D
+    A -->|"unchanged"| D
+    
+    style D fill:#f9f,stroke:#333,stroke-width:2px
+```
+
+
+:::tip 关键结论
+1. `func2` 的副作用是确定的（`x_4`）
+2. 这个副作用是通过 SSA 形式明确表达的
+3. φ 节点准确捕获了所有可能的值流
+:::
+
+:::warning 注意
+虽然我们可以确定 `func2` 的副作用是 `x_4`，但是：
+1. `x_4` 的具体值依赖于运行时条件
+2. 需要考虑 `func1` 的潜在副作用
+3. 自由变量的值可能影响最终结果
+:::
+
+根据上面的分析，我们可以得出一个结论：
+
+虽然一个函数的副作用不可直接传递给下一个函数，但是这个函数内所有函数调用的副作用实例化后的结果，都会影响这个函数最终副作用。
+
+### 扩展案例：副作用实例化生成副作用（无关本函数）
+
+考虑如下代码：
+
+```typescript
+x = 1
+y = 2
+func1 = () => {
+    if c > 0 {
+        y = y + 1
+    }
+}
+func2 = () => {
+    if e > 0 {
+        x = x + 1
+        func1()
+    }
+}
+func2()
+println(x)
+println(y)
+```
+
+这段代码 SSA 改造得到结果为：
+
+```typescript
+x_1 = 1
+y_1 = 2
+func1 = () => {
+    if c > 0 {
+        y_2 = y_freevalue + 1
+    }
+}
+func2 = () => {
+    if e > 0 {
+        x_2 = x_freevalue + 1
+        func1()
+        y_3 = φ(y_2, y_freevalue)
+    }
+}
+func2()
+x_3 = φ(x_2, x_freevalue)
+y_4 = φ(y_3, y_freevalue)
+println(x_3)
+println(y_4)
+```
+
+这段代码可以遵循如下分析过程：
+
+
+```mermaid
+graph TB
+    subgraph "func2" 
+        A["Entry func2"]
+        B{"e > 0"}
+        C["x_2 = x_freevalue + 1"]
+        D["call func1()"]
+        E["y_3 = φ(y_2, y_freevalue)"]
+        F["Exit func2"]
+        
+        A --> B
+        B -->|"true"| C
+        C --> D
+        D --> E
+        E --> F
+        B -->|"false"| F
+    end
+    
+    subgraph "func1"
+        G["Entry func1"]
+        H{"c > 0"}
+        I["y_2 = y_freevalue + 1"]
+        J["Exit func1"]
+        
+        G --> H
+        H -->|"true"| I
+        I --> J
+        H -->|"false"| J
+    end
+    
+    K["x_3 = φ(x_2, x_freevalue)"]
+    L["y_4 = φ(y_3, y_freevalue)"]
+    
+    D -.-> G
+    J -.->|"merge"| E
+    F --> K
+    F --> L
+    
+    style C fill:#f9f,stroke:#333,stroke-width:2px
+    style I fill:#f9f,stroke:#333,stroke-width:2px
+    style K fill:#bbf,stroke:#333,stroke-width:2px
+    style L fill:#bbf,stroke:#333,stroke-width:2px
+
+```
+
+我们发现，func1 被调用后，func2 需要创建一个新的 φ 节点来合并 func1 的副作用，并且这个 y 在非 SSA 改造之前，我们是无法感知的。
+
+### 形式化总结：副作用通过实例化传播
+
+1. **副作用实例化函数** (Effect Instantiation Function):
+
+<BlockMath math={`
+\\begin{aligned}
+& InstEffect: Function \\times Context \\rightarrow Effect \\\\
+& \\text{where:} \\\\
+& Context = \\{\\text{ControlFlow}, \\text{FreeVars}, \\text{CallSite}\\}
+\\end{aligned}
+`} />
+
+2. **副作用传播规则** (Effect Propagation Rules):
+
+<BlockMath math={`
+\\begin{aligned}
+& Effects(F) = DirectEffect(F) \\cup \\bigcup_{c \\in Calls(F)} InstEffect(c, ctx_F) \\\\
+& \\text{where:} \\\\
+& DirectEffect(F) = \\{\\text{直接在}F\\text{中定义的变量}\\} \\\\
+& Calls(F) = \\{\\text{F中的所有函数调用}\\}
 \\end{aligned}
 `} />
