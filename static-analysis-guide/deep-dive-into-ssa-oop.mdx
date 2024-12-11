@@ -62,7 +62,63 @@ import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
 :::
 
-### 为什么需要无类系统
+### 为什么 SSA 需要无类系统
 
-### 无类系统的形式化表达
+:::note 无类系统在 SSA 中的必要性
 
+无类系统理论中的原型委托和组合这种概念本质上是行为和关系的描述，并不需要传统 OOP 那样需要引入新的概念来描述。
+
+秉持“Less is More”的理念，使用无类系统表达类似传统 OOP 的程序行为在通用 SSA 编译中的还是很有必要讨论的。
+
+:::
+
+本质上，我们并不是要完全不讨论传统基于类和对象的 OOP 系统，而是要探讨在不引入类和对象这个概念的前提下，如何等效表达传统 OOP 系统中的行为和关系。
+
+为此，我们引入无类系统，并且使用无类中的原型委托和组合关系来表达 OOP 中的类似行为。这个操作的核心思路是 **通过减少概念的数量来增加系统的可理解性和可优化性**。
+
+为了读者能更好的理解我们上述提出的观点。我们使用下面的案例来说明这么做的真正意义。
+
+#### 案例：无类系统表达 OOP 行为
+
+我们使用一个语言（以 JavaScript 为例），他支持完整的闭包系统（见第四章），这门语言中包含一个“容器”，容器可以容纳任何值。
+
+假定在 JavaScript 尤其是我们后续案例中，不包含任何 class 这个概念。
+
+我们编写了如下一段代码：
+
+```javascript
+classContainer = {
+   staticField: 1,
+};
+classConstructor = () => {
+   this = {
+      staticMethod: () => {
+         println(classContainer.staticField)
+      },
+      field: "defaultValue",
+      objectMethod: () => {
+         println(this.field + " " + "world")
+      }
+   }
+   return this
+}
+
+object = classConstructor()
+object.objectMethod()
+```
+
+这段代码十分的精妙，我们发现，尽管我们在我们不使用 `class` 这个概念情况下，仍然可以表达出，一个类中的静态成员，对象的创建（闭包），对象的方法调用等一系列 OOP 特征。
+
+我们逐步分析上面内容的展示形态：
+
+```mermaid
+graph TD
+    A["classContainer"]-->|"静态成员容器"|B["staticField: 1"]
+    C["classConstructor()"]-->|"创建"|D["对象容器 this"]
+    D-->|"包含"|E["staticMethod()"]
+    D-->|"包含"|F["field: 'defaultValue'"]
+    D-->|"包含"|G["objectMethod()"]
+    E-.->|"访问"|B
+    G-.->|"访问"|F
+
+```
