@@ -15,8 +15,7 @@ const sidebars = {
         "ssa-for-advanced-language-2",
         "deep-dive-into-ssa-closure",
         "deep-dive-into-ssa-oop",
-        "deep-dive-into-ssa-use-def-chain",
-        "deep-dive-into-ssa-cross-procedure",
+        "deep-dive-into-ssa-dataflow-and-cross-procedure",
     ]
   };
   
