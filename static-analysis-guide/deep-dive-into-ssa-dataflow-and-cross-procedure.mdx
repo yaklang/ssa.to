@@ -357,6 +357,57 @@ graph LR
 | 12 | \{12\} | \{13\} | \{13\} |
 | 13 | \{13\} | ∅ | ∅ |
 
+给出支配边界计算算法的形式化表示：
+
+<BlockMath math={`
+\\begin{aligned}
+DF_{local}(X) &= \\{Y \\in succ(X) \\mid X \\not\\in Dom(Y)\\} \\\\
+DF_{up}(X) &= \\bigcup_{Z \\in DomTree_{children}(X)} \\{Y \\in DF(Z) \\mid X \\not\\in Dom(Y)\\} \\\\
+DF(X) &= DF_{local}(X) \\cup DF_{up}(X)
+\\end{aligned}
+`} />
+
+其中：
+- <InlineMath math={"DF_{local}(X)"} /> 表示节点X的局部支配边界
+- <InlineMath math={"DF_{up}(X)"} /> 表示从X的支配树子节点上传递来的支配边界
+- <InlineMath math={"succ(X)"} /> 表示X的直接后继节点集合
+- <InlineMath math={"DomTree_{children}(X)"} /> 表示X在支配树中的直接子节点集合
+
+下面是计算支配边界的完整算法伪代码：
+
+```javascript
+// 计算所有节点的支配边界
+function computeDominanceFrontiers(cfg) {
+    let DF = new Map()  // 存储每个节点的支配边界
+    
+    // 按照支配树的后序遍历节点
+    for (let X of postorderTraversal(cfg.domTree)) {
+        DF.set(X, new Set())  // 初始化空集
+        
+        // 计算局部支配边界
+        for (let Y of X.successors) {
+            if (X.immediateDominator !== Y.immediateDominator) {
+                DF.get(X).add(Y)
+            }
+        }
+        
+        // 计算来自子节点的支配边界
+        for (let Z of X.domTreeChildren) {
+            for (let Y of DF.get(Z)) {
+                if (!dominates(X, Y) || X === Y) {
+                    DF.get(X).add(Y)
+                }
+            }
+        }
+    }
+    return DF
+}
+
+// 判断X是否支配Y
+function dominates(X, Y) {
+    return Y.dominators.has(X)
+}
+```
 
 ### 数据流与 UD(DU) 链
 
