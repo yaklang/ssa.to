@@ -1,12 +1,24 @@
+# 第八章：控制流中的支配关系与 SSA Phi 指令
 
-### 数据流中的支配关系
+:::danger 未完成的章节
 
-在接下来的内容中，我们重点将会讨论数据节点（变量）的支配问题。
+本章是一个未完成的章节，将会基本介绍控制流和支配的关系，并且会介绍 SSA 的 Phi 节点问题。
 
-数据流分析中，变量支配是一个非常重要的概念，他描述了变量之间的依赖关系，我们以 <InlineMath math="Dom(x, y)" /> 来表示变量 <InlineMath math="x" /> 支配变量 <InlineMath math="y" />。
+:::
+
+## 控制流与基本块
+
+## 控制流中的支配关系
+
+import TOCInline from '@theme/TOCInline';
+import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
+
+在接下来的内容中，我们重点将会讨论控制流中基本块之间的支配问题。
+
+控制流分析中，支配是一个非常重要的概念，他描述了基本块之间的依赖关系，我们以 <InlineMath math="Dom(x, y)" /> 来表示基本块 <InlineMath math="x" /> 支配基本块 <InlineMath math="y" />。
 
 <BlockMath math={`
-对于变量\\ x\\ 和\\ y，如果：\\\\
+对于基本块\\ x\\ 和\\ y，如果：\\\\
 Dom(x,\\ y)\\ \\iff\\ \\text{所有到达\\ y\\ 的路径都必须经过\\ x}
 `} />
 
@@ -23,105 +35,7 @@ false\\ &\\ \\text{其他情况}
 - <InlineMath math="x" /> 是支配者(dominator)
 - <InlineMath math="y" /> 是被支配者(dominee)
 
-在深入思考，我们认为支配应该包含直接支配和间接支配两种，因此我们定义了三种支配关系：
-
-
-1. **一般支配关系**
-
-<BlockMath math={`
-Dom(x, y) \\iff \\text{所有到达 y 的路径都必须经过 x}
-`} />
-
-2. **直接支配关系**
-
-直接支配关系描述了两个变量之间最直接的依赖关系，没有任何中间变量。形式化定义如下：
-
-<BlockMath math={`
-iDom(x, y) \\iff \\begin{cases}
-Dom(x, y) \\land \\\\
-\\neg\\exists z(Dom(x, z) \\land Dom(z, y)) \\land \\\\
-Connected(x, y)
-\\end{cases}
-`} />
-
-其中：
-- <InlineMath math="Dom(x, y)" /> 表示 x 支配 y
-- <InlineMath math="\neg\exists z(Dom(x, z) \land Dom(z, y))" /> 表示不存在中间节点 z 同时被 x 支配且支配 y
-- <InlineMath math="Connected(x, y)" /> 表示 x 和 y 在数据流图中直接相连
-
-3. **间接支配关系**
-
-<BlockMath math={`
-indirectDom(x, y) \\iff \\begin{cases}
-Dom(x, y) \\land \\\\
-\\exists z(Dom(x, z) \\land Dom(z, y))
-\\end{cases}
-`} />
-
-
-
-让我们通过一个具体的代码示例来理解上述的内容：
-
-```go
-a = input()      // 1
-b = a + 1        // 2
-if a > 0 {       // 3
-    c = b + 2    // 4
-} else {
-    c = b - 2    // 5
-}
-d = c * 2        // 6
-```
-
-我们可以绘制这段代码的数据流图和支配关系：
-
-```mermaid
-graph LR
-    A["a (1)"] -->|"直接支配"| B["b (2)"]
-    B --> C1["c (4: b + 2)"]
-    B --> C2["c (5: b - 2)"]
-    C1 --> D["d (6)"]
-    C2 --> D
-    B -.->|"间接支配"| D
-    A -.->|"间接支配"| D
-    
-    %% 使用不同的样式来突出支配关系
-    classDef default fill:#f9f,stroke:#333,stroke-width:2px;
-    linkStyle default stroke:#666,stroke-width:2px;
-
-```
-
-上述支配关系有点奇怪，因为 IF 分支的存在，导致有两个 `C` 节点。但是在 “变量” 的角度来说，我们应该合并 C，我们会只出来的支配关系应该如下：
-
-```mermaid
-graph LR
-    A["a"] --> B["b"]
-    B --> C["c"]
-    C --> D["d"]
-    
-    classDef default fill:#bbf,stroke:#333,stroke-width:2px;
-```
-
-:::caution 注意
-
-上述图示中，我们只保留了变量 C，这显然是看着非常别扭的，我们习惯了 SSA 思路之后，上述图显然是不合适的，我们后续就要解决这个问题
-
-:::
-
-接下来，我们再来讨论另一个案例，这是一个易错点。
-
-```java
-a = input()
-b = input()
-c = a + b
-```
-
-这种情况下，变量 `c` 同时依赖于 `a` 和 `b`，但是并不能说 `a` 支配 `c`，或者也不能说 `b` 支配 `c`。
-
-`a` 和 `b` 仅仅是 `c` 的前继节点。
-
-
-### 数据节点（变量）支配边界
+### CFG 中的基本块支配边界
 
 在用户了解完支配问题之后，接下来我们提出一个问题，“一个数据节点的支配的范围有多大？”
 

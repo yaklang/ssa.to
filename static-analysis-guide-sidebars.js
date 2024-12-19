@@ -16,6 +16,7 @@ const sidebars = {
         "deep-dive-into-ssa-closure",
         "deep-dive-into-ssa-oop",
         "deep-dive-into-ssa-dataflow-and-cross-procedure",
+        "deep-dive-cfg",
     ]
   };
   
