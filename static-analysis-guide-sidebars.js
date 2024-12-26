@@ -10,6 +10,7 @@ const sidebars = {
     // SyntaxFlow 指南侧边栏
     staticAnalysisGuideSidebar: [
         "intro",
+        "topic-compiler-for-static-analysis",
         "compile-ssa-form",
         "ssa-for-advanced-language",
         "ssa-for-advanced-language-2",
