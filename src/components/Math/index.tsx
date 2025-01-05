@@ -150,7 +150,8 @@ const Math: React.FC<MathProps> = ({
       onMouseLeave={() => setIsHovered(false)}
       style={{
         position: 'relative',
-        padding: '8px',
+        padding: inline ? '4px' : '8px',
+        margin: inline ? '0' : '0 8px',
         border: isHovered ? '2px solid #4a90e2' : '1px solid transparent',
         borderRadius: '4px',
         display: inline ? 'inline-block' : 'block',
