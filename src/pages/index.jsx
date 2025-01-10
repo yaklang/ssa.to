@@ -207,7 +207,7 @@ function SyntaxFlowTable() {
                     // 提取所有语言
                     const langs = new Set();
                     rules.forEach(rule => {
-                        const lang = rule.rule.split("-")[0];
+                        const lang = rule.language 
                         if(lang && lang !== "sca") {
                             langs.add(lang);
                         }
@@ -242,10 +242,10 @@ function SyntaxFlowTable() {
         if(tabKey === "version") {
             return data;
         } else if(tabKey === "sca") {
-            return data.filter(item => item.rule.includes("-sca-"));
+            return data.filter(item => item.rule.includes("sca") || item.rule.includes("SCA"));
         } else {
             return data.filter(item => 
-                item.rule.startsWith(`${tabKey}-`) && !item.rule.includes("-sca-")
+                item.language == tabKey 
             );
         }
     };
