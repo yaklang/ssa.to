@@ -10,6 +10,17 @@ import styles from "./index.module.scss";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import TextScramble from "@site/src/components/TextScramble";
+import classNames from "classnames"
+import {
+    AppleIcon,
+    DownloadIcon,
+    LinuxIcon,
+    WindowsIcon,
+  } from "../assets/HomeIcon";
+  import {
+    useMemoizedFn,
+  } from "ahooks";
+  import { Dropdown, Menu, message } from "antd";
   
 function HomepageHeader() {
     const {siteConfig} = useDocusaurusContext();
@@ -591,8 +602,305 @@ function SyntaxFlowTable() {
 }
 
 function HomepageFeatures() {
+    const [legacyVisible, setLegacyVisible] = useState(false);
+    const [version, setVersion] = useState("");
+    const [macOSIntel, setMacOSIntel] = useState({
+        key: "macOS (Intel)",
+        url: "darwin-x64.dmg",
+        size: 0,
+      });
+      const [macOSAppleSillion, setMacOSAppleSillion] = useState({
+        key: "macOS (Apple Silicon)",
+        url: "darwin-arm64.dmg",
+        size: 0,
+      });
+      const [Linux, setLinux] = useState({
+        key: "Linux",
+        url: "linux-amd64.AppImage",
+        size: 0,
+      });
+      const [Windows, setWindows] = useState({
+        key: "Windows",
+        url: "windows-amd64.exe",
+        size: 0,
+      });
+      const [LinuxArm64, setLinuxArm64] = useState({
+        key: "Linux (Arm64)",
+        url: "linux-arm64.AppImage",
+        size: 0,
+      });
+    useEffect(() => {
+        init();
+      }, []);
+      const init = useMemoizedFn(() => {
+        axios
+          .get(
+            "https://oss-qn.yaklang.com/sast/latest/yakit-version.txt"
+          )
+          .then(async (response) => {
+            if (response && response.data && typeof response.data === "string") {
+              const yakVersion = (response.data).split("\n")[0];
+              setVersion(yakVersion);
+    
+              await getSize(macOSIntel.url, yakVersion, (size) => {
+                setMacOSIntel({ ...macOSIntel, size });
+              });
+              await getSize(
+                macOSAppleSillion.url,
+                yakVersion,
+                (size) => {
+                  setMacOSAppleSillion({ ...macOSAppleSillion, size });
+                }
+              );
+              await getSize(Linux.url, yakVersion, (size) => {
+                setLinux({ ...Linux, size });
+              });
+              await getSize(Windows.url, yakVersion, (size) => {
+                setWindows({ ...Windows, size });
+              });
+            } else {
+              message.error("获取sast版本错误，请刷新页面后重试");
+            }
+          })
+          .catch((error) => {
+            message.error("获取sast版本错误，请刷新页面后重试");
+          });
+      });
+      const getUrl = useMemoizedFn((url,newVersion = version) => {
+        return `https://oss-qn.yaklang.com/sast/${newVersion}/SastScan-${newVersion}-${url}`;
+      });
+      const getSize = useMemoizedFn(
+        async (url, newVersion, callBack) => {
+          await axios
+            .head(getUrl(url,newVersion))
+            .then((response) => {
+              if (
+                response &&
+                response.headers &&
+                response.headers["content-length"]
+              ) {
+                const size =
+                  Math.ceil(
+                    (response.headers["content-length"] / 1024 / 1024) * 100
+                  ) / 100;
+                callBack(size);
+              } else {
+                message.error(`获取yakit-${url}版本大小错误`);
+              }
+            })
+            .catch((error) => {
+              message.error(`获取yakit-${url}版本大小错误`);
+            });
+        }
+      );
+    
+      const onDownload = useMemoizedFn((url) => {
+        if (!version) {
+          message.error("获取yakit版本错误，请刷新页面后重试");
+          return;
+        }
+        const link = getUrl(url);
+        window.location.href = link;
+      });
+
     return (
-        <div className={clsx("container", styles["feature-wrapper"])}>
+        <div className={clsx("container", styles["feature-wrapper"])}> 
+
+            <div className={classNames(styles['guide-body-yakit'],styles["guide-body-yak-heard"])}>
+                <span className={styles["guide-body-yak-heard-text"]}>
+                  下载SAST IDE (Sast)
+                </span>
+                {/* <a
+                  target="_blank"
+                  href="/products/download_and_install"
+                  className={styles["guide-body-yak-heard-tip"]}
+                >
+                  安装说明
+                </a> */}
+              </div>
+              <div className={styles["guide-body-yakit-type"]}>
+                <div className={styles["guide-body-yakit-item"]}>
+                  <div className={styles["guide-body-yakit-item-left"]}>
+                    <span className={styles["guide-body-yakit-item-left-icon"]}>
+                      {AppleIcon}
+                    </span>
+                  </div>
+                  <div className={styles["guide-body-yakit-item-right"]}>
+                    <div>macOS (Intel / Apple Silicon)</div>
+                    <div className={styles["guide-body-yakit-item-right-size"]}>
+                      版本:&nbsp;{version || "-"}&nbsp;(
+                      {macOSIntel.size || "-"}
+                      &nbsp;MB / {macOSAppleSillion.size || "-"}&nbsp;MB)
+                    </div>
+                  </div>
+
+                  <div className={styles["download-btn-wrap"]}>
+                    <div className={styles["download-btn-item-box"]}>
+                      <div
+                        className={classNames(styles['download-btn-item'],styles["download-btn-item-special"])}
+                        style={{ marginBottom: 4 }}
+                        onClick={() => onDownload(macOSIntel.url)}
+                      >
+                        下载 Intel 芯片
+                      </div>
+                      <div
+                        className={classNames(styles['download-btn-item'],styles["download-btn-item-special"])}
+                        onClick={() => onDownload(macOSAppleSillion.url)}
+                      >
+                        下载 Apple Silicon 芯片
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles["guide-body-yakit-item"]}>
+                  <div className={styles["guide-body-yakit-item-left"]}>
+                    <span className={styles["guide-body-yakit-item-left-icon"]}>
+                      {LinuxIcon}
+                    </span>
+                  </div>
+                  <div className={styles["guide-body-yakit-item-right"]}>
+                    <div>{Linux.key}</div>
+                    <div className={styles["guide-body-yakit-item-right-size"]}>
+                      版本:&nbsp;{version || "-"}&nbsp;(
+                      {Linux.size || "-"}
+                      &nbsp;MB)
+                    </div>
+                  </div>
+                  <div className={styles["download-btn-wrap"]}>
+                    <div className={styles["download-btn-item-box"]}>
+                      <div
+                        className={styles["download-btn-item"]}
+                        onClick={() => onDownload(Linux.url)}
+                      >
+                        下载
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles["guide-body-yakit-item"]}>
+                  <div className={styles["guide-body-yakit-item-left"]}>
+                    <span className={styles["guide-body-yakit-item-left-icon"]}>
+                      {WindowsIcon}
+                    </span>
+                  </div>
+                  <div className={styles["guide-body-yakit-item-right"]}>
+                    <div>{Windows.key}</div>
+                    <div className={styles["guide-body-yakit-item-right-size"]}>
+                      版本:&nbsp;{version || "-"}&nbsp;(
+                      {Windows.size || "-"}
+                      &nbsp;MB)
+                    </div>
+                  </div>
+                  <div className={styles["download-btn-wrap"]}>
+                    <div className={styles["download-btn-item-box"]}>
+                      <div
+                        className={styles["download-btn-item"]}
+                        onClick={() => onDownload(Windows.url)}
+                      >
+                        下载
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles["guide-body-yakit-item"]}>
+                  <div className={styles["guide-body-yakit-item-left"]}>
+                    <span className={styles["guide-body-yakit-item-left-icon"]}>
+                      {LinuxIcon}
+                    </span>
+                  </div>
+                  <div className={styles["guide-body-yakit-item-right"]}>
+                    <div>{LinuxArm64.key}</div>
+                    <div className={styles["guide-body-yakit-item-right-size"]}>
+                      支持统信 UOS、麒麟等国产系统
+                    </div>
+                  </div>
+                  <div className={styles["download-btn-wrap"]}>
+                    <div className={styles["download-btn-item-box"]}>
+                      <div
+                        className={classNames(styles['download-btn-item'],styles["download-btn-item-special2"])}
+                        onClick={() => onDownload(LinuxArm64.url)}
+                      >
+                        下载
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className={styles["guide-body-yakit-legacy-wrap"]}>
+                <Dropdown
+                    className={styles["yakit-legacy-dropdown"]}
+                    visible={legacyVisible}
+                    destroyPopupOnHide={true}
+                    overlay={
+                      <Menu>
+                        {[
+                          {
+                            name: "Windows",
+                            desc: "支持Win7系统",
+                            url: "windows-legacy-amd64.exe",
+                          },
+                          {
+                            name: "Linux-amd",
+                            desc: "支持统信UOS、麒麟等国产系统，注意识别系统架构",
+                            url: "linux-legacy-amd64.AppImage",
+                          },
+                          {
+                            name: "Linux-arm",
+                            desc: "支持统信UOS、麒麟等国产系统，注意识别系统架构",
+                            url: "linux-legacy-arm64.AppImage",
+                          },
+                          {
+                            name: "macOS Intel",
+                            desc: "支持macOS 10.13和macOS 10.14",
+                            url: "darwin-legacy-x64.dmg",
+                          },
+                          {
+                            name: "macOS Apple Silicon",
+                            desc: "支持macOS 10.13和macOS 10.14",
+                            url: "darwin-legacy-arm64.dmg",
+                          },
+                        ].map((item) => {
+                          return (
+                              <Menu.Item key={item.name}>
+                                <div
+                                    className={styles["yakit-legacy-item"]}
+                                    onClick={() => {
+                                      onDownload(item.url);
+                                      setLegacyVisible(false);
+                                    }}
+                                >
+                                  <div className={styles["yakit-legacy-item-left"]}>
+                                    <div className={styles["yakit-legacy-item-name"]}>{
+                                        item.name
+                                    }</div>
+                                    <div className={styles["yakit-legacy-item-desc"]}>
+                                      {item.desc}（{version}）
+                                    </div>
+                                  </div>
+                                  <div className={styles["yakit-legacy-item-right"]}>
+                                    {DownloadIcon}
+                                  </div>
+                                </div>
+                              </Menu.Item>
+                          );
+                        })}
+                      </Menu>
+                    }
+                    trigger={["click"]}
+                    placement="bottomCenter"
+                    onVisibleChange={(visible) => setLegacyVisible(visible)}
+                >
+                  <span className={styles["guide-body-yakit-legacy-btn"]}>
+                    下载兼容版本
+                  </span>
+
+                </Dropdown>
+                <span style={{ display: 'block',fontSize :'12px',color:'#999ea8'}}>
+                    如果您需要使用Sast用于商业化目的，请确保你们已经获得官方授权，否则我们将追究您的相关责任。
+                  </span>
+              </div>
+
+
             <div className={clsx("row", styles["feature"])}>
                 {FeatureList.map((props, idx) => (
                     <Feature key={idx} {...props} />
