@@ -635,7 +635,7 @@ function HomepageFeatures() {
       const init = useMemoizedFn(() => {
         axios
           .get(
-            "https://oss-qn.yaklang.com/sast/latest/yakit-version.txt"
+            "https://oss-qn.yaklang.com/irify/latest/yakit-version.txt"
           )
           .then(async (response) => {
             if (response && response.data && typeof response.data === "string") {
@@ -659,15 +659,15 @@ function HomepageFeatures() {
                 setWindows({ ...Windows, size });
               });
             } else {
-              message.error("获取sast版本错误，请刷新页面后重试");
+              message.error("获取irify版本错误，请刷新页面后重试");
             }
           })
           .catch((error) => {
-            message.error("获取sast版本错误，请刷新页面后重试");
+            message.error("获取irify版本错误，请刷新页面后重试");
           });
       });
       const getUrl = useMemoizedFn((url,newVersion = version) => {
-        return `https://oss-qn.yaklang.com/sast/${newVersion}/SastScan-${newVersion}-${url}`;
+        return `https://oss-qn.yaklang.com/irify/${newVersion}/IRify-${newVersion}-${url}`;
       });
       const getSize = useMemoizedFn(
         async (url, newVersion, callBack) => {
@@ -708,7 +708,7 @@ function HomepageFeatures() {
 
             <div className={classNames(styles['guide-body-yakit'],styles["guide-body-yak-heard"])}>
                 <span className={styles["guide-body-yak-heard-text"]}>
-                  下载SAST IDE (Sast)
+                  下载IRIFY IDE (IRify)
                 </span>
                 {/* <a
                   target="_blank"
@@ -896,7 +896,7 @@ function HomepageFeatures() {
 
                 </Dropdown>
                 <span style={{ display: 'block',fontSize :'12px',color:'#999ea8'}}>
-                    如果您需要使用Sast用于商业化目的，请确保你们已经获得官方授权，否则我们将追究您的相关责任。
+                    如果您需要使用IRify用于商业化目的，请确保你们已经获得官方授权，否则我们将追究您的相关责任。
                   </span>
               </div>
 
