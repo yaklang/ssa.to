@@ -213,7 +213,7 @@ function SyntaxFlowTable() {
             .then(res => {
                 try {
                     setVersion(res.data.version);
-                    const rules = res.data.rules.sort((a, b) => b.score - a.score);
+                    const rules = res.data.rules.filter((item)=> typeof item === "object").sort((a, b) => b.score - a.score);
                     
                     // 提取所有语言
                     const langs = new Set();
