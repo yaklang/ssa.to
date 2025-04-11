@@ -5,8 +5,21 @@ on:
   push:
     # branches:
     #   - "master"
+    paths:
+      - '.github/workflows/ssa.yml'
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+    
 
 jobs:
   build:
@@ -15,42 +28,84 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+
       - name: Use Node.js 
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
+      # 缓存 node_modules
+      - name: Cache Node Modules
+        uses: actions/cache@v3
+        id: node-cache
+        with:
+          path: |
+            node_modules
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-
+            ${{ runner.os }}-node-
 
       # 打包
       - name: build
         run: yarn install
       - run: yarn run build
 
-      # 静态文件压缩
-      - name: pack out file
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        run: tar -zcvf out.tgz build
+
+      - name: Save Node Modules Cache
+        if: steps.node-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            node_modules
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package.json') }}-${{ hashFiles('yarn.lock') }}
+      
+
+      # 配置 Git
+      - name: Setup Git
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+        run: |
+          git config --global user.name "v1ll4n"
+          git config --global user.email "v1ll4n@users.noreply.github.com"
+
+      # 部署到 yaklang.io
+      - name: Deploy to yaklang.io
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GIT_USER: v1ll4n
+          GIT_PASS: ${{ secrets.GH_TOKEN }}
+        run: yarn deploy
+
+
+      # # 静态文件压缩
+      # - name: pack out file
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      #   run: tar -zcvf out.tgz build
         
 
-      - name: Upload out ssh
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: easingthemes/ssh-deploy@v2.1.6
-        with:
-          REMOTE_USER: 'root'
-          REMOTE_HOST: '${{ secrets.ONLINE_HOST }}' #测试服务器地址
-          SSH_PRIVATE_KEY: ${{ secrets.ONLINE_PRIV_KEY }}
-          ARGS: "-avzr --delete"
-          SOURCE: "out.tgz"
-          TARGET: '/root/yaklang-io/' #服务器中，代码部署的位置
+      # - name: Upload out ssh
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      #   uses: easingthemes/ssh-deploy@v2.1.6
+      #   with:
+      #     REMOTE_USER: 'root'
+      #     REMOTE_HOST: '${{ secrets.ONLINE_HOST }}' #测试服务器地址
+      #     SSH_PRIVATE_KEY: ${{ secrets.ONLINE_PRIV_KEY }}
+      #     ARGS: "-avzr --delete"
+      #     SOURCE: "out.tgz"
+      #     TARGET: '/root/yaklang-io/' #服务器中，代码部署的位置
 
-      - name: Deploy
-        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
-        uses: appleboy/ssh-action@master # 使用ssh链接服务器
-        with:
-          host: ${{ secrets.ONLINE_HOST }}
-          username: 'root'
-          key: ${{ secrets.ONLINE_PRIV_KEY }}
-          script: |
-            cd /root/yaklang-io/
-            tar zxvf out.tgz
-            rm -rf out.tgz
+      # - name: Deploy
+      #   if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      #   uses: appleboy/ssh-action@master # 使用ssh链接服务器
+      #   with:
+      #     host: ${{ secrets.ONLINE_HOST }}
+      #     username: 'root'
+      #     key: ${{ secrets.ONLINE_PRIV_KEY }}
+      #     script: |
+      #       cd /root/yaklang-io/
+      #       tar zxvf out.tgz
+      #       rm -rf out.tgz
 
