@@ -33,6 +33,7 @@ const sidebars = {
         "statements/sf-sca",
       ]
     },
+      'nativecall-demos',
     {
       type: 'category',
       label: '高级静态代码分析实战',
