@@ -1,0 +1,229 @@
+# 常见 NativeCall 以及用例
+
+在 SyntaxFlow 中，NativeCall 是一种强大的机制，允许用户在规则中调用内置函数来实现复杂的分析功能。本章节将详细介绍一些常用的 NativeCall 及其实际应用场景。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 什么是 NativeCall？
+
+NativeCall 是 SyntaxFlow 提供的一种特殊机制，它允许用户在规则中直接调用一些内置的高级分析函数。这些函数通常封装了复杂的分析逻辑，使得用户可以更方便地实现高级分析功能，而无需手动编写复杂的逻辑。
+
+:::tip 为什么需要 NativeCall？
+- 简化复杂分析逻辑的实现
+- 提供标准化的分析接口
+- 提高规则的可维护性
+- 确保分析的一致性和准确性
+:::
+
+## 常用 NativeCall 详解
+
+SyntaxFlow 提供了丰富的 NativeCall 功能，极大地扩展了规则编写的灵活性。在使用 IRify 编写规则时，输入 `<` 符号会自动提示可用的 NativeCall，无需记忆具体的函数名称。
+
+![NativeCall 示例图](/img/nativecall-demos1.png)
+
+### include
+
+include 是一个高频使用的 NativeCall，它允许在本规则中引用其他的规则，实现规则的复用与解耦。
+
+比如，在编写 SpringBoot 的数据流分析规则时，通常会遇到用户可控输入点（Source）都是控制层的可控参数，而污染汇聚点（Sink）则是不固定的。为了复用 Source 的规则，我们可以将其单独写成一个规则，并在 `desc` 声明的时候添加 `lib` 字段，以便被其他规则调用。
+
+以下为内置规则中，查找 Java Spring Boot 的用户可控输入的规则:
+
+```syntaxflow
+desc(
+    title: 'checking [spring controller source parameter]',
+    type: audit,
+    lib: 'java-spring-param',
+    desc: <<<TEXT
+此规则旨在审计Spring框架中控制器方法的参数来源安全性。确保控制器方法中的参数来源清晰且安全至关重要，因为不当的参数处理可能导致安全漏洞，如SQL注入、跨站脚本攻击(XSS)等。通过检查控制器方法的参数是否明确指定了来源（如通过@RequestParam、@PathVariable等注解），可以防止潜在的参数篡改和注入攻击。此外，这也有助于维护代码的清晰性和可维护性。
+TEXT
+)
+
+*Mapping.__ref__?{opcode: function} as $start;
+
+// annotation method' formal params.
+$start(*?{opcode: param && !have: this} as $formalParams);
+
+// fetching getParameter
+.getParameter()?{<getFunc>.annotation.*Mapping} as $dynamicParams;
+
+// merge start and output
+$formalParams + $dynamicParams as $output;
+
+// output lib params
+alert $output;
+```
+
+`desc` 中声明的 `lib` 为 `java-spring-param`，其他规则要调用这个规则就使用这个名称。在规则的最后使用 `alert $output`，将该规则分析的值传出。
+
+在其他规则中，就可以使用 NativeCall 调用该 lib 规则了:
+
+```syntaxflow
+<include('java-spring-param')> as $source;
+```
+
+这样，我们就能够根据不同的情况组合各种 lib 规则，比如检测 Java Spring Boot SSRF 漏洞的规则：
+
+```syntaxflow
+desc(
+    title_zh: "检测Java SpringBoot 直接SSRF",
+    title: "Find Java SpringBoot SSRF Vuln",
+    type: vuln,
+)
+
+<include('java-spring-param')> as $source;
+<include("java-http-sink")> as $sink;
+
+$sink #{
+    include: `<self> & $source`,
+    exclude: `<self>?{opcode:call}?{!<self> & $source}?{!<self> & $sink}`,
+}->as $mid;
+
+alert $mid for {
+    message: "发现Java SpringBoot SSRF漏洞，且未进行数据流过滤。",
+    risk: ssrf,
+    level: mid,
+}
+```
+
+比如 Java Spring Boot 与 Java Servlet 检测 RCE 的规则:
+
+```syntaxflow
+desc(
+    title: "Servlet & Springframework Paremeter Passed into Command Injection Sink",
+    title: 'Servlet & Springframework 基础参数命令注入',
+    type: vuln,
+    risk: rce,
+    desc: <<<TEXT
+    在Java中，如果用户输入的参数直接传递给命令执行函数，可能会导致命令注入漏洞。攻击者可以通过构造恶意输入，执行系统命令，进而控制服务器。为了防止命令注入漏洞，需要对用户输入的参数进行严格的过滤，包括验证参数的合法性、长度、字符等，并尽量避免直接将用户输入的参数传递给命令执行函数。
+TEXT
+)
+
+<include('java-servlet-param')> as $source;
+<include('java-spring-param')> as $source;
+check $source;
+<include('java-runtime-exec-sink')> as $sink;
+<include('java-command-exec-sink')> as $sink;
+check $sink;
+
+$sink #{
+    include: `<self> & $source`,
+    exclude: `<self>?{opcode:call}?{!<self> & $source}`
+}->as $high;
+
+alert $high for {
+    message: "发现Java代码中存在命令注入漏洞，且未进行数据流过滤。",
+    level: high,
+};
+```
+
+### typeName
+
+`typeName` 用于获取一个值的类型名。默认情况下，`typeName` 包含该值所属类的简单名称以及全名称。类型名是通过所导入包进行生成的，如以下例子:
+
+```java
+package org.example.moudels.typename;
+
+// highlight-start
+import com.alibaba.fastjson.JSON;
+// highlight-end
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.*;
+
+@Slf4j
+@Api(value = "TypeNameController", tags = "Irify TypeName用例")
+@Controller
+@RequestMapping("/typename")
+public class TypeNameController {
+    @GetMapping("/simple")
+    public ResponseEntity<Object> simple(@RequestParam(name = "id") String id) {
+        Object anyJSON = JSON.parse(id);
+        return ResponseEntity.ok(anyJSON);
+    }
+}
+```
+
+`JSON.parse` 的 `typeName` 是根据 import 了 `com.alibaba.fastjson.JSON` 的包所确定的。这个导入的包名同时也是 `JSON.parse` 的全限定名称。以下是获取 `typeName` 的规则:
+
+```syntaxflow
+JSON.parse<typeName()> as $name
+```
+
+![JSON.parse typeName 示例图](/img/nativecall-demos2.png)
+
+#### Import all 机制
+
+一些情况下，有一些类的使用是通过 import all 实现的，比如以下例子：
+
+```java
+package org.example.moudels.typename;
+
+import com.alibaba.fastjson.JSON;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+// highlight-start
+import org.springframework.web.client.*;
+import org.springframework.web.cors.*;
+// highlight-end
+
+@Slf4j
+@Api(value = "TypeNameController", tags = "Irify TypeName用例")
+@Controller
+@RequestMapping("/typename")
+public class TypeNameController {
+    @GetMapping("/importAll")
+    public void importAll(@ApiParam(name="url",value="请求参数",required = true)@RequestParam String url) {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.addAllowedOrigin(url);
+    }
+}
+```
+
+其中 `CorsConfiguration` 在源码中是根据 `import org.springframework.web.cors.*;` 导入的，该导入语句称作 import all 语句。import all 语句使得 `CorsConfiguration` 无法确定可以使用哪个语句进行生成 `typeName`。因此没办法确定使用哪条 import 语句生成 `typeName` 的值，会使用以下方式生成 `typeName`，以确保不会遗漏任何分析信息：
+
+1. 将自身名称与当前的包名拼接
+2. 将自身名称与所有 import all 语句拼接
+3. 与默认导入的 `java.lang` 包进行拼接
+
+因此 `CorsConfiguration` 有 5 个 `typeName`:
+
+```syntaxflow
+CorsConfiguration()<typeName()> as $name
+```
+
+![import all typeName 示例图](/img/nativecall-demos3.png)
+
+#### 左右类型合并
+
+在语句 `Object anyJSON = JSON.parse(id);` 中，右值 `JSON.parse` 的 `typeName` 是确定的，左值的 `anyJson` 的类型是 `Object`，而 `Object` 又没有进行显式导入，因而会通过 import all 机制生成 `typeName`。同时左右值的 `typeName` 不一致，因而会将左右值的 `typeName` 进行合并，以确保不会遗漏分析信息：
+
+```syntaxflow
+anyJSON<typeName()> as $name
+```
+
+![左右类型合并 typeName 示例图](/img/nativecall-demos4.png)
+
+### fullTypeName
+
+`fullTypeName` 意为全限定名，即一个值类型的全名称。它本质上与 `typeName` 一样，不过少了简单名称，并且多了版本信息（如果导入的类有版本信息的话）。如下：
+
+```syntaxflow
+JSON.parse<fullTypeName()> as $name
+```
+
+![fullTypeName 示例图](/img/nativecall-demos5.png)
