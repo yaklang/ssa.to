@@ -184,6 +184,38 @@ function Feature({img, title, description}) {
     );
 }
 
+// 筛选掉不符合限制的数据 并输出
+function judgeData(rules) {
+    const itemType = {
+      code: "string",
+      detail: "string",
+      detail_en: "string",
+      is_lib: "boolean",
+      language: "string",
+      rule: "string",
+      score: "number",
+      sha256: "string",
+    }
+    let pass = []
+    let error = []
+    rules.forEach((item)=>{
+      let isPass = true
+      Object.keys(item).forEach(key => {
+        if(itemType[key] && typeof item[key] !== itemType[key]){
+          isPass = false
+        }
+      });
+      if(isPass){
+        pass.push(item)
+      }
+      else{
+        error.push(item)
+      }
+    })
+    console.error(`数据错误排除项：${JSON.stringify(error)}`)
+    return pass
+}
+
 // fetch from https://aliyun-oss.yaklang.com/yak/latest/syntaxflow-meta.json
 // create a table
 function SyntaxFlowTable() {
@@ -214,10 +246,10 @@ function SyntaxFlowTable() {
                 try {
                     setVersion(res.data.version);
                     const rules = res.data.rules.filter((item)=> typeof item === "object").sort((a, b) => b.score - a.score);
-                    
+                    const judgeRule = judgeData(rules)
                     // 提取所有语言
                     const langs = new Set();
-                    rules.forEach(rule => {
+                    judgeRule.forEach(rule => {
                         const lang = rule.language 
                         if(lang && lang !== "sca") {
                             langs.add(lang);
@@ -234,7 +266,7 @@ function SyntaxFlowTable() {
                         }))
                     ];
                     setTabs(newTabs);
-                    setData(rules);
+                    setData(judgeRule);
                     
                     // 如果当前activeTab不在新的tabs中，设置为第一个tab
                     if(!newTabs.find(tab => tab.key === activeTab)) {
