@@ -245,11 +245,11 @@ function SyntaxFlowTable() {
             .then(res => {
                 try {
                     setVersion(res.data.version);
-                    const rules = res.data.rules.filter((item)=> typeof item === "object").sort((a, b) => b.score - a.score);
-                    const judgeRule = judgeData(rules)
+                    const judgeRule = judgeData(res.data.rules)
+                    const rules = judgeRule.filter((item)=> typeof item === "object").sort((a, b) => b.score - a.score);
                     // 提取所有语言
                     const langs = new Set();
-                    judgeRule.forEach(rule => {
+                    rules.forEach(rule => {
                         const lang = rule.language 
                         if(lang && lang !== "sca") {
                             langs.add(lang);
@@ -266,7 +266,7 @@ function SyntaxFlowTable() {
                         }))
                     ];
                     setTabs(newTabs);
-                    setData(judgeRule);
+                    setData(rules);
                     
                     // 如果当前activeTab不在新的tabs中，设置为第一个tab
                     if(!newTabs.find(tab => tab.key === activeTab)) {
