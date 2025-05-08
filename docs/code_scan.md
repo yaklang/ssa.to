@@ -5,42 +5,6 @@ sidebar_position: 3
 # 代码扫描
 原创 Yak  Yak Project   2024-11-01 17:30  
   
-<!-- ![](./quest_start_gui_auditstatic/wechat2md-57d4b38fb5fac67b077017855ed50c43.gif)  
-  
-朋友，你还在苦苦寻觅代码审计更便捷的方式么？  
-  
-![](./quest_start_gui_auditstatic/wechat2md-7fe779cc6a661bc8a40d988ea655889c.png)  
-  
-本周不仅有  
-**Yakit SyntaxFlow界面上新**  
-  
-更有全新  
-**网页端代码扫描小工具**  
-  
-一键启动代码审计！  
-  
-谁说这代码审计老啊？这代码审计可太棒了！  
-   -->
-  
-<!-- ![](./quest_start_gui_auditstatic/wechat2md-3ef8a0cfe654499ea76424d7c463e36d.png)   -->
-  
-
-## 代码审计功能
-  
-**代码审计功能：项目管理**  
-  
-点击代码审计功能会进入到项目管理页面， 在此页面将会展示已编译的所有项目，可以在操作中选择跳转到代码扫描页面或代码审计页面。  
-  
-![](./quest_start_gui_auditstatic/wechat2md-394168d6468ddc047d1363d20c56c78a.png)  
-  
-在此页面也可以在右上角开始编译新的项目，将会在编译完成以后自动跳转到代码审计页面：  
-  
-代码审计页面如下：  
-  
-![](./quest_start_gui_auditstatic/wechat2md-22a6b0c582cb79bb91e2ef91b3880f92.png)  
-  
-可以看到类似之前的yakRunner内的代码扫描功能，调整了下文件系统和代码审计框的布局。  
-  
 
 ## 代码扫描页面
   
