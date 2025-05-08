@@ -5,13 +5,20 @@ sidebar_position: 4
 
 # 代码审计
   
-<!-- ![](./code_auditstatic/wechat2md-57d4b38fb5fac67b077017855ed50c43.gif)   -->
+## 页面入口
   
-<!-- ![](./code_auditstatic/wechat2md-02fc660360dc2e301a9345bd67aae0b3.jpeg)   -->
+点击代码审计功能会进入到项目管理页面， 在此页面将会展示已编译的所有项目，可以在操作中选择跳转到代码扫描页面或代码审计页面。  
   
-<!-- **之前预告许久的SyntaxFlow功能已经登陆Yakit！**   -->
+![](./quest_start_gui_auditstatic/wechat2md-394168d6468ddc047d1363d20c56c78a.png)  
   
-<!-- ![](./code_auditstatic/wechat2md-1566a91164453a844241a5a301ca3d10.png)   -->
+在此页面也可以在右上角开始编译新的项目，将会在编译完成以后自动跳转到代码审计页面：  
+  
+代码审计页面如下：  
+  
+![](./quest_start_gui_auditstatic/wechat2md-22a6b0c582cb79bb91e2ef91b3880f92.png)  
+  
+  
+
 ## 编译项目
   
 SyntaxFlow代码查询需要先进行项目编译。  
@@ -122,3 +129,45 @@ SyntaxFlow代码查询需要先进行项目编译。
 普通节点可以点击并且显示节点信息，点击文件路径可以在编辑器跳转：  
   
 ![](./code_auditstatic/wechat2md-237c520463ebdf5d7d4c3772f2021fbb.png)  
+
+
+## 其他 
+
+### 快捷键 
+代码审计页面快捷键一览：
+
+**代码审计页面内**：
+
+- 双击 `shift` 唤出代码搜索功能
+- 选中内容将自动进行搜索
+![搜索自动选中内容演示](https://s2.loli.net/2025/04/12/Ba6mihPIg485Zbp.png)
+
+**代码搜索窗口**：
+
+   - ⬆️⬇️ 上下选择搜索结果
+   - `tab` 切换搜索类型
+   - `回车` 跳转到对应代码
+![搜索结果列表](https://s2.loli.net/2025/04/12/R1prG4ZmdfQ7aN8.png)
+
+**规则编写窗口**：
+   - `command/control + 回车` 运行当前编写的规则
+![规则编写窗口](https://s2.loli.net/2025/04/12/Eu7iJf3IZm4PM5h.png)
+
+
+### 审计漏洞与风险视图 
+
+
+在代码审计页面左侧，目前出现两个新的页面视图：“漏洞文件” “规则汇总”
+![](https://s2.loli.net/2025/05/08/cryML8Y6xibZ7kS.png)
+
+两个页面都有下拉框，用于选择某一次代码扫描的任务或该项目全部的漏洞与风险信息：
+* 漏洞文件汇总：显示在该项目中扫描存在漏洞风险的文件，以及其中的漏洞信息
+![](https://s2.loli.net/2025/05/08/THSi5kgYPOzbjtN.png)
+
+* 规则汇总： 显示所有在该项目中扫描存在漏洞风险的规则，二级目录按照文件分类。
+![](https://s2.loli.net/2025/05/08/F5hyaZISxkoXQLJ.png)
+
+同样，当代码扫描任务结束以后， 我们可以在代码扫描任务看到新的关联按钮： “在代码审计中打开”
+![](https://s2.loli.net/2025/05/08/F6QlVBGHgXtS1Jx.png)
+将会直接跳转并打开对应项目，并在汇总视图中选中对应的扫描任务。
+
