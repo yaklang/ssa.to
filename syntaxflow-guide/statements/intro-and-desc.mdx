@@ -103,7 +103,9 @@ yak ssa -t . --program xxe
 在大致了解了 SF 规则文件之后，我们可以开始构建自己的 SF 文件。首先，创建一个名为 `xxe.sf` 的文件，并在文件中写入以下内容：
 
 ```sf
-desc(title: "审计因为未设置 setFeature 等安全策略造成的XXE漏洞")
+desc(
+    title: "Check XXE Vulnerability in DocumentBuilderFactory",
+)
 ```
 
 显然，这段代码仅仅添加了一点文件描述信息，并不会产生实际的审计效果。然而，添加描述有助于在结果输出时包含对结果的解读信息，因此仍然是非常必要的。
@@ -112,12 +114,19 @@ desc(title: "审计因为未设置 setFeature 等安全策略造成的XXE漏洞"
 
 ```ebnf
 // descriptionStatement 将使用 stringLiteral 描述 filterExpr
-descriptionStatement: Desc ('(' descriptionItems? ')') | ('{' descriptionItems? '}');
-descriptionItems: descriptionItem (',' descriptionItem)*;
+descriptionStatement: Desc (('(' lines? descriptionItems? ')') | ('{' lines? descriptionItems? '}'));
+descriptionItems: lines? (descriptionItem descriptionSep)* descriptionItem descriptionSep? ;
 descriptionItem
-    : stringLiteral
-    | stringLiteral ':' stringLiteral
+    : comment
+    | stringLiteral
+    | stringLiteral ':' descriptionItemValue
     ;
+descriptionSep
+    : ',' lines?
+    | lines
+    ;
+
+descriptionItemValue: stringLiteral | hereDoc | numberLiteral;
 ```
 
 在 `SyntaxFlow` 规则文件中，`desc` 语句用于为规则提供描述性的文本，这有助于理解规则的目的和应用场景。此语句可以包含一条或多条描述项，这些项可以单独列出或配对（键和值）。下面是关于如何编写 `desc` 语句的详细教程，以及如何通过案例来实际应用这些语句。
@@ -140,42 +149,52 @@ descriptionItem
   - 一个或多个 `descriptionItem`，通过逗号 `,` 分隔。
   
 - **DescriptionItem**:
-  - 单个字符串字面量，或
-  - 一对字符串字面量，形式为 `key: value`。
+  - 可以是：
+    - 注释 `comment`
+    - 单个字符串字面量 `stringLiteral`
+    - 键值对形式的字符串字面量，格式为 `key: value`。
+- **DescriptionItemValue**:
+    - 可以是字符串字面量、Heredoc 或数字字面量。
 
 ### 示例解释
 
 考虑以下 `desc` 语句示例：
 
 ```sf
-desc(title: "审计因为未设置 setFeature 等安全策略造成的XXE漏洞")
+desc(
+    title:"Audit Unsafe Database Connection Configurations",
+    title_zh:"审计不安全的数据库连接配置",
+    type:Config,
+    risk:"信息泄露",
+    desc:<<<TEXT
+    该规则用于审计数据库连接配置是否存在不安全的设置，如未加密的连接字符串或弱密码。这些配置可能导致敏感信息泄露或数据库被攻击。
+TEXT
+    solution:<<<TEXT
+    为了提高安全性，建议使用加密的连接字符串，并确保数据库密码强度足够高。此外，定期审查和更新数据库配置，以防止潜在的安全风险。
+TEXT
+)
 ```
 
 这个例子中，`desc` 语句使用圆括号包含了一个键值对描述项：
 
-- **Key (`title`)**: 说明描述的类别或主题。
-- **Value (`"审计因为未设置 setFeature 等安全策略造成的XXE漏洞"`)**: 具体描述规则的目的，即审计由于未设置某些 XML 安全特性（如 `setFeature`）而可能导致的 XXE 漏洞。
+- **title**: 规则的英文名,简要概述规则的目的。
+- **title_zh**: 规则的中文名,简要概述规则的目的。
+- **heredoc (`<<<TEXT ... TEXT`)**:
+  - `desc` 和 `solution` 使用了 Heredoc 语法来提供多行文本描述。这种方式允许在描述中包含复杂的文本内容，而不需要担心换行或格式问题。
+  - heredoc语法以`<<<`跟着一个标识符（如 `TEXT`）开始，直到遇到相同的标识符结束。
+- **type**: 规则的类型，这里是 `Config`，表示这是一个检测配置的规则。
+- **risk**: 规则的风险类型，这里是 `信息泄露`。
 
 #### 编写教程
 
 编写有效的 `desc` 语句时，请遵循以下最佳实践：
 
-1. **明确目的**：确保描述清楚地阐述了规则的审计目的和背景。
-2. **使用键值对**：当需要明确区分多个方面的描述时，使用键值对格式可以增加清晰度。
-3. **简洁表达**：尽管描述需要完整，但也应避免冗长。精简的文本更易于理解和维护。
-
-### 应用案例
-
-假设你需要编写一个规则来审计使用了不安全配置的数据库连接。一个有效的 `desc` 语句可能是：
-
-```sf
-desc(
-  title: "审计数据库连接安全配置",
-  detail: "检查数据库连接是否使用了加密和正确配置的认证机制"
-)
-```
-
-在这个案例中，我们使用了两个描述项，`title` 和 `detail`，通过花括号 `{}` 分隔，以清晰地说明规则的目的和具体的审计焦点。这种结构化的描述方式不仅有助于规则的编写者，也方便其他开发者或安全分析师理解和使用该规则。
+1. **明确目的**：写清楚规则的目的和应用场景，确保其他开发者能够快速理解规则的意图。
+   - 使用 `title` 和 `title_zh` 来提供规则的英文和中文标题。
+   - 使用 `desc` 和 `solution` 来详细描述规则的功能和解决方案。
+   - 使用 `risk` 和 `type` 来标明规则的风险类型和类别。
+2. **使用多行文本**：对于复杂的描述，使用 Heredoc 语法可以使文本更易读。
+   - 例如，使用 `<<<TEXT ... TEXT` 来包含多行描述信息。
 
 ### 优化描述
 
@@ -183,8 +202,16 @@ desc(
 
 ```sf
 desc(
-    "Title": "审计因为未设置 setFeature 等安全策略造成的XXE漏洞",
-    "Fix": "修复方案：需要用户设置 setFeature / setXIncludeAware / setExpandEntityReferences 等安全配置"
+    title: "Check XXE Vulnerability in DocumentBuilderFactory",
+    title_zh: "检查 DocumentBuilderFactory 中的 XXE 漏洞",
+    type:Vulnerability,
+    risk:XXE,
+    desc: <<<TEXT
+    该规则旨在检查 Java 中 DocumentBuilderFactory 的使用是否存在 XXE 漏洞。XXE（XML External Entity）漏洞可能导致敏感信息泄露或远程代码执行。通过确保 DocumentBuilderFactory 实例未设置危险特性，可以防止此类攻击。
+TEXT
+    solution: <<<TEXT
+    为了防止 XXE 漏洞，建议在创建 DocumentBuilderFactory 实例时，确保未调用 setFeature、setXIncludeAware 或 setExpandEntityReferences 方法。这样可以避免解析外部实体，从而降低 XXE 攻击的风险。
+TEXT
 )
 ```
 
@@ -195,9 +222,9 @@ desc(
 [INFO] 2024-06-26 11:53:36 [ssacli:221] start to use SyntaxFlow rule: xxe.sf
 [INFO] 2024-06-26 11:53:36 [ssa:42] init ssa database: /Users/v1ll4n/yakit-projects/default-yakssa.db
 [INFO] 2024-06-26 11:53:36 [ssacli:272] syntax flow query result:
-rule md5 hash: 2b0aaa151a9f3c58a08487f38185ad47
-rule preview: desc(     "Title": "审计因为未设置 setF...tExpandEntityReferences 等安全配置" )
-description: {Title: "Title", Fix: "Fix"}
+rule md5 hash: a3d1e7b19e4a536eb8a87312e09d2ec8
+rule preview: desc(      title:"Audit Unsafe D...期审查和更新数据库配置，以防止潜在的安全风险。  TEXT  )
+description:     该规则用于审计数据库连接配置是否存在不安全的设置，如未加密的连接字符串或弱密码。这些置可能导致敏感信息泄露或数据库被攻击。
 ```
 
 在输出中，你可以看到规则的描述信息被正确解析和显示，这为后续的审计和分析提供了清晰的上下文信息。
