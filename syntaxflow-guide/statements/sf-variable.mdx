@@ -134,7 +134,7 @@ $factory.newDocumentBuilder().parse(* as $source);
 
 2. **数据处理**：
     ```syntaxflow
-    $input?{<string>?{have: filter}} as $safeInput;
+    $input?{<typeName>?{have: filter}} as $safeInput;
     ```
     对 `$input` 进行清理，并将结果存储到 `$safeInput`。
 
@@ -147,8 +147,10 @@ $factory.newDocumentBuilder().parse(* as $source);
 **完整查询**：
 ```syntaxflow
 request.getParameter(* as $input);
-$input?{<string>?{have: filter}} as $safeInput;
-alert $safeInput for {msg: "user safe input"};
+$input?{typeName>?{have: filter}} as $safeInput;
+alert $safeInput for {
+    msg: "user safe input"
+};
 ```
 
 ## 重要性与优势
