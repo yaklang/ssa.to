@@ -206,6 +206,64 @@ Result Vars:
 
 通过这种方式，**SyntaxFlow** 能够精准地定位未正确配置 `DocumentBuilderFactory` 实例的 `parse` 方法调用，帮助开发和安全团队及时发现和修复潜在的 XXE 漏洞。
 
+## 高级特性：根据参数筛选方法
+
+我们经常会遇到这么一个需求：找到某个参数符合某种条件的方法调用。
+
+例如：
+在Java内置规则检测XXE漏洞的时候，有这么一条规则："检测第一个参数为http://xml.org/sax/features/external-general-entities，第二个参数为false的XMLReader.setFeature方法"。
+这种情况下，我们如何使用`?{...}`结构实现上述需求呢？
+
+这种规则编写相较于其它过滤规则编写比较困难，原因是SyntaxFlow是比较"线性的"，我们编写的时候一般是线性从左到右写规则。
+但参数的获取是通过括号语法`(...)`,而对括号里面参数进行条件过滤希望的又是影响到外面方法调用的结果。
+这里的思维就是`进去括号里面`->`获取参数`->`筛选参数`->`退出括号`->`通过参数筛选过滤方法调用`,是非线性的。如下：
+```syntaxflow
+method( * ?{...} ) as $result
+```
+
+很明显可以发现，无论`?{...}` 的条件如何，`$result`的结果都不会变。
+那么我们如何使用SyntaxFlow实现上述需求呢？
+有一种方式是借助`nativeCall`来实现。
+
+
+我们以上述检测XXE的需求为例子，使用NativeCall可以写成下面的形式：
+```syntaxflow
+    XMLReader.setFeature()?{
+<getActualParams><slice(index=1)>?{=="http://xml.org/sax/features/external-general-entities"}
+&&
+<getActualParams><slice(index=2)>?{==false}
+} as $result
+```
+解释:
+- `XMLReader.setFeature()`：表示我们要查找的目标方法。
+- `?{...}`：用于筛选符合条件的参数。
+- `<getActualParams>`：获取方法调用的实际参数的nativeCall。
+- `<slice(index=1)>`：获取第一个参数。
+
+可以发现，虽然借用nativeCall可以满足需求了，但是存在一定的弊端。
+1. `nativeCall` 的使用会增加规则的复杂度，可能导致规则的可读性下降。
+2. 使用nativeCall无法继续使用逗号语法来切分参数，需要使用`<slice>`来获取参数，这可能会导致规则的可维护性降低。
+
+为了实现上述需求，我们引入新语法：`?(...)`
+### 新语法：`?(...)`
+
+`?(...)` 语法允许我们在方法调用中直接对参数进行筛选，简化了规则的编写。
+
+如下：method的?()内调用了`?{...}`筛选语法来过滤参数，如果参数被过滤，那么其对应的方法调用也会被过滤掉。因此最后的`$result`是受到过滤条件影响的。
+
+```syntaxflow
+method?(*?{...}) as $result
+```
+
+我们还是以刚才XXE的规则为例，现在可以写成以下形式:
+```syntaxflow
+XMLReader.setFeature?( ,*?{=="http://xml.org/sax/features/external-general-entities",?{==false}) as $result
+```
+解释:
+- `XMLReader.setFeature?`：表示我们要查找的目标方法。
+- `*?{=="http://xml.org/sax/features/external-general-entities"`表示第一个参数需要等于`http://xml.org/sax/features/external-general-entities`。
+- `?{==false}`表示第二个参数需要等于`false`。
+
 ## 实战中的注意事项
 
 在实际应用中，使用 **分析值的筛选过滤** 时需要注意以下几点：
