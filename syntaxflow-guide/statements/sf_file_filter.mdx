@@ -1,0 +1,104 @@
+# 11. 文件过滤：检测文件内容
+
+**SyntaxFlow** 能够直接通过正则、Xpath、JsonPath 等方式对文件内容进行过滤和审计。通过这种方式，用户可以直接定位到文件中的特定内容或结构，从而进行更精确的代码审计和安全分析。
+
+import TOCInline from '@theme/TOCInline';
+
+<TOCInline toc={toc} />
+
+## 文件过滤简介
+
+在代码审计和安全分析中，文件过滤是一个重要的环节。通过对文件内容进行过滤，审计员可以快速定位到感兴趣的部分，从而提高审计效率和准确性。**SyntaxFlow** 提供了强大的文件过滤功能，支持多种过滤方式，如正则表达式、XPath 和 JSONPath 等。
+
+## 语法规则
+
+```antlr
+fileFilterContentStatement
+    : '${' fileFilterContentInput '}' lines? '.' fileFilterContentMethod (As refVariable)?
+    ;
+
+fileFilterContentInput: ( fileName | regexpLiteral);
+
+fileFilterContentMethod: Identifier '(' fileFilterContentMethodParam? ')';
+fileFilterContentMethodParam:  fileFilterContentMethodParamItem lines? (',' lines? fileFilterContentMethodParamItem lines? )* ','? lines? ;
+fileFilterContentMethodParamItem: fileFilterContentMethodParamKey? fileFilterContentMethodParamValue;
+fileFilterContentMethodParamKey: Identifier ':';
+fileFilterContentMethodParamValue: nameFilter | hereDoc;
+fileName:nameFilter (. nameFilter)*;
+```
+
+## 具体案例解析
+
+### 1. 使用正则表达式过滤文件内容
+
+```syntaxflow
+    ${*}.re("\bya29\.[0-9A-Za-z\-_]+") as $google_oauth_access_token
+```
+
+解释:
+- `${...}` 里面填写要过滤的文件名，支持Glob形式。这里使用 `*` 表示匹配所有文件。
+- `.re(...)` 方法使用正则表达式过滤文件内容。
+- `"\bya29\.[0-9A-Za-z\-_]+"` 是要匹配的正则表达式，用于查找 Google OAuth 访问令牌。
+- `as $google_oauth_access_token` 将匹配到的结果存储到变量 `$google_oauth_access_token` 中，便于后续使用。
+
+### 2. 使用 JSONPath 过滤文件内容
+
+```syntaxflow
+    ${*.json}.jsonPath("$.users[*].name") as $userNames
+```
+
+解释:
+- `${*.json}` 匹配所有 JSON 文件。
+- `.jsonPath(...)` 方法使用 JSONPath 表达式过滤文件内容。
+- `"$.users[*].name"` 是 JSONPath 表达式，用于提取所有用户的名称。
+- `as $userNames` 将匹配到的用户名称存储到变量 `$userNames` 中。
+
+### 3. 使用 XPath 过滤 XML 文件内容
+
+```syntaxflow
+    ${*.xml}.xpath("//user/name") as $xmlUserNames
+```
+解释:
+- `${*.xml}` 匹配所有 XML 文件。
+- `.xpath(...)` 方法使用 XPath 表达式过滤文件内容。
+- `"//user/name"` 是 XPath 表达式，用于提取所有用户的名称。
+- `as $xmlUserNames` 将匹配到的用户名称存储到变量 `$xmlUserNames` 中。
+
+## 使用Xpath提取Json和Yaml文件内容
+
+   由于JsonPath的表达力有限，并不能很好的匹配内容。因此Xpath也支持匹配Json和Yaml文件内容。
+
+### 1. 使用 XPath 过滤 JSON 文件内容
+
+```syntaxflow
+    ${*.json}.json("$.auths.*.email") as $result
+```
+
+解释:
+- `${*.json}` 匹配所有 JSON 文件。
+- `.json(...)` 方法使用 XPath 表达式过滤 JSON 文件内容。
+- `"$.auths.*.email"` 是 XPath 表达式，用于提取所有认证信息中的电子邮件地址。
+
+### 2. 使用 XPath 过滤 YAML 文件内容
+
+```syntaxflow
+   ${*.yml}.xpath(<<<XPATH
+//*[contains(lower-case(local-name()), 'passwd') or contains(lower-case(local-name()), 'password')
+]
+XPATH) as $result
+```
+解释:
+- `${*.yml}` 匹配所有 YAML 文件。
+- `.xpath(...)` 方法使用 XPath 表达式过滤 YAML 文件内容。
+- `<<<XPATH ... XPATH` 是多HereDoc语法，用于编写复杂的 XPath 表达式。
+- xpath规则匹配所有包含 `passwd` 或 `password` 的元素，忽略大小写。
+
+## 实战中注意事项
+
+在实际应用中，使用文件过滤功能时需要注意以下几点：
+- **文件路径**：确保文件路径正确，支持通配符和相对路径。
+- **正则表达式**：编写正则表达式时，注意转义字符的使用，确保表达式能够正确匹配目标内容。
+- **性能考虑**：在处理大文件或复杂的过滤条件时，注意性能开销，避免过于复杂的正则表达式或 XPath 表达式导致性能下降。
+- **结果处理**：确保对过滤结果进行适当的处理和存储，以便后续分析和使用。
+
+

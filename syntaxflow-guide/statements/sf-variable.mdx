@@ -1,4 +1,4 @@
-# 变量：存储和追踪审计结果
+# 4. 变量：存储和追踪审计结果
 
 在进行代码审计和安全分析的过程中，审计中间结果的暂存是提升分析效率和准确性的重要手段。**SyntaxFlow** 提供了强大的功能，使得审计员能够将审计过程中捕获的中间结果存储为变量，方便后续的引用和进一步分析。本节将详细介绍如何在 **SyntaxFlow** 中审计中间变量的暂存，包括语法定义、使用方法、实际案例以及其重要性。
 
@@ -134,7 +134,7 @@ $factory.newDocumentBuilder().parse(* as $source);
 
 2. **数据处理**：
     ```syntaxflow
-    $input?{<string>?{have: filter}} as $safeInput;
+    $input?{<typeName>?{have: filter}} as $safeInput;
     ```
     对 `$input` 进行清理，并将结果存储到 `$safeInput`。
 
@@ -147,8 +147,10 @@ $factory.newDocumentBuilder().parse(* as $source);
 **完整查询**：
 ```syntaxflow
 request.getParameter(* as $input);
-$input?{<string>?{have: filter}} as $safeInput;
-alert $safeInput for {msg: "user safe input"};
+$input?{typeName>?{have: filter}} as $safeInput;
+alert $safeInput for {
+    msg: "user safe input"
+};
 ```
 
 ## 重要性与优势

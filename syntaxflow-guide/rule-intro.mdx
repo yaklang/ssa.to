@@ -17,7 +17,7 @@ SF 规则文件的结构通常遵循以下模式：
   - **过滤器**：通过条件表达式过滤和选择代码的特定部分。
   - **变量命名 `as`**：用于后续引用的结果命名。
 - **条件检查 `check`**：根据审计语句的结果来断言和输出相应的信息。
-  - 当然也可以通过 `alert` 来通知报告生成器需要重点关注的或者存在漏洞的变量信息。
+- **漏洞输出 `alert`**： `alert` 来通知报告生成器或前端(IRify)需要重点关注的或者存在漏洞的变量信息。
 
 > **注意**：虽然 `desc` 和 `check` 并非必须，但我们强烈建议在编写规则时包含这两个语句，以便让规则的输出更易于理解。在上述所有的内容中，**审计语句** 是最核心的部分。
 
@@ -30,21 +30,40 @@ SF 规则文件的结构通常遵循以下模式：
 #### **XXE 漏洞检测规则 (`xxe.sf`)**
 
 ```plaintext
-desc("Description": 'checking setFeature/setXIncludeAware/setExpandEntityReferences in DocumentBuilderFactory.newInstance()')
+desc(
+    title: "Check XXE Vulnerability in DocumentBuilderFactory",
+    title_zh: "检查 DocumentBuilderFactory 中的 XXE 漏洞",
+    risk:XXE,
+    type:Vulnerability,
+    desc: <<<TEXT
+    该规则旨在检查 Java 中 DocumentBuilderFactory 的使用是否存在 XXE 漏洞。XXE（XML External Entity）漏洞可能导致敏感信息泄露或远程代码执行。通过确保 DocumentBuilderFactory 实例未设置危险特性，可以防止此类攻击。
+TEXT
+    solution: <<<TEXT
+    为了防止 XXE 漏洞，建议在创建 DocumentBuilderFactory 实例时，确保未调用 setFeature、setXIncludeAware 或 setExpandEntityReferences 方法。这样可以避免解析外部实体，从而降低 XXE 攻击的风险。
+TEXT
+)
 
 DocumentBuilderFactory.newInstance()?{!((.setFeature) || (.setXIncludeAware) || (.setExpandEntityReferences))} as $entry;
 $entry.*Builder().parse(* #-> as $source);
 
 check $source then "XXE Attack" else "XXE Safe";
+alert $source for {
+    message:"XXE Attack Detected",
+    level: high,
+}
 ```
 
 **解读：**
 
-- **desc 语句** 描述了规则的目的，即检查在 `DocumentBuilderFactory.newInstance()` 方法调用中，是否避免了设置某些可能导致 XXE 漏洞的特性。
-- **审计表达式** 中的 `?{}` 结构用于确保没有调用 `setFeature`、`setXIncludeAware` 或 `setExpandEntityReferences` 方法。
-- `#->` 运算符追踪从 `parse` 方法传入的参数的顶级定义，以识别可能的攻击载体。
-- **check 语句** 基于 `$source` 的存在与否来判定是否可能存在 XXE 攻击。
-
+1. **desc 语句** 描述规则一些基础信息。
+    - `title` 和 `title_zh` 提供规则的标题和中文标题。
+    - `risk` 指定风险类型为 XXE。
+    - `desc` 和 `solution` 提供规则的详细描述和解决方案。其中`<<<TEXT`为heredoc语法，使用该语法使得我们可以在描述信息或者解决方案里面写各种格式的文本内容，而不用担心不符合SyntaxFlow语法错误。
+2. **审计表达式** 中的 `?{}` 结构用于确保没有调用 `setFeature`、`setXIncludeAware` 或 `setExpandEntityReferences` 方法。
+  `#->` 运算符追踪从 `parse` 方法传入的参数的顶级定义，以识别可能的攻击载体。
+3. **check 语句** 基于 `$source` 的存在与否来判定是否可能存在 XXE 攻击。
+    -   如果`$source`存在，那么就会打印`XXE Attack`并继续运行后续规则，否则打印 `XXE Safe`。
+4. **alert 语句** 如果`$source`存在，那么就会输出结果，结果的风险等级为high。输出的结果可以在前端页面IRify或者导出的漏洞报告查看。
 ---
 
 #### **URL 请求检测规则 (`url-open-connection.sf`)**
@@ -53,6 +72,10 @@ check $source then "XXE Attack" else "XXE Safe";
 URL(* #-> * as $source).openConnection().getResponseMessage() as $sink;
 
 check $sink then "Request From URL" else "No Response From URL";
+alert $sink for{
+    message:"Request From URL Detected",
+    level:info,
+}
 ```
 
 **解读：**
@@ -60,6 +83,7 @@ check $sink then "Request From URL" else "No Response From URL";
 - 此规则追踪 `URL` 对象创建到发起网络请求的完整流程。
 - **`$source`** 表示 `URL` 的来源，而 **`$sink`** 表示从该 `URL` 获得的响应。
 - 使用 **check 语句** 来确定是否成功从 `URL` 获取了响应。
+- 使用 **alert 语句** 来输出检测到的 URL 请求信息，便于后续分析。
 
 ---
 
@@ -70,6 +94,11 @@ Files.write(, * #-> as $params) as $sink;
 $params?{.getBytes()} as $source;
 
 check $source then "Local Files Writer" else "No Files Written";
+
+alert $source for{
+    message:"Local Files Write Detected",
+    level:info,
+}
 ```
 
 **解读：**
@@ -105,4 +134,4 @@ check $source then "Local Files Writer" else "No Files Written";
 ## 参考链接
 
 - [Yaklang 官方网站](https://www.yaklang.io/)
-- [SyntaxFlow 文档](https://docs.yaklang.io/syntaxflow)
+- [SyntaxFlow 文档](https://ssa.to/)

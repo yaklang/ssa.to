@@ -1,4 +1,4 @@
-# 数据流运算：追踪定义和使用
+# 6. 数据流运算：追踪定义和使用
 
 在静态代码分析和安全审计中，**Use-Def 链**（Use-Definition Chain，简称 UD 链）和 **Def-Use 链**（Definition-Use Chain，简称 DU 链）的追踪是至关重要的技术。它们能够帮助审计员精准地追踪变量或函数的使用与定义关系，从而有效识别潜在的安全漏洞。**SyntaxFlow** 支持对 UD 链和 DU 链的追踪，充分利用 SSA（静态单赋值）形式的优势，实现对数据流的精确追踪。本文将详细介绍 **SyntaxFlow** 中 Use-Def 链追踪的运算定义、语法规则、使用实例以及实战中的注意事项。
 
@@ -32,9 +32,10 @@ import TOCInline from '@theme/TOCInline';
    - `#>`：追踪到变量或函数的直接定义点。通常指变量被赋值或函数被声明的地方。
    - `#->`：追踪直到定义链的起点。使用这个运算符可以追踪到变量或函数的最初定义，穿过所有中间的定义点。
 
-3. **`-{}` 和 `-{...}->`（定制追踪深度或上下文）**
-   - `-{}`：用于在追踪时设置上下文或参数，如追踪深度。
+3. **`-{}` 和 `-{...}->`（定制追踪深度或设置数据流分析配置项）**
    - `-{depth: 5}->`：表示追踪使用链，且追踪深度限制为5层。
+   - `-{include:...}->`：设置配置项，数据流分析的结果只保留符合配置项的。
+   - `-{exclude:...}->`：设置配置项，数据流分析的结果排除符合配置项的。
 
 ### 语法结构
 
@@ -54,9 +55,9 @@ filterItem
 
 - **`filterItemFirst`**：定义过滤项的起始。
 - **`->`**：向下追踪一级使用链节点。
-- **`-->`**：向下追踪使用链节点直到链结束。
+- **`-->`**：向下追踪使用链节点直到链结束(也叫Bottom-Use分析)。
 - **`#>`**：向上追踪一级定义链节点。
-- **`#->`**：向上追踪定义链直到链结束。
+- **`#->`**：向上追踪定义链直到链结束(也叫Top-Def分析)。
 - **`-{...}->`**：在追踪过程中设置参数，如追踪深度。
 
 ## 使用实例与解释
@@ -92,6 +93,12 @@ ProcessBuilder(* as $cmd) as $builder
 $builder.start() as $execBuilder
 // 检查是否成功执行了 start 方法，如果未执行，则可能存在漏洞
 check $execBuilder then "fine" else "rce 2 SyntaxFlow error"
+// 如果发现了未正确处理的 ProcessBuilder 参数，则触发警报
+alert $execBuilder for {
+    message: "发现潜在的远程代码执行漏洞，未正确处理 ProcessBuilder 的参数。",
+    risk: rce,
+    level: high,
+}
 ```
 
 #### 执行效果
@@ -213,6 +220,176 @@ Result Vars:
 - **`$cmd #-> * as $target`**：追踪 `$cmd` 的定义来源，直到最初的定义点，将结果存储在 `$target` 中。
 - **`check $target then "fine" else "not found groovyShell.evaluate parameter"`**：检查 `$cmd` 的定义点是否可追踪，若无法追踪则提示潜在的代码注入风险。
 
+## 高级特性：数据流分析的配置项
+
+数据流分析，包括Top-Def和Bottom-Use分析，默认情况下会追踪到最顶级的定义或最底层的使用。但在某些情况下，期望限制追踪的深度或者范围。为此，**SyntaxFlow** 提供了配置项来控制数据流分析的行为。
+### 1. 追踪深度限制: `depth`
+
+    追踪深度限制可以通过 `{depth: N}` 来限制追踪的深度，其中 `N` 是一个正整数，表示最大追踪层数。
+- 示例
+```syntaxflow
+// Top-Def限制追踪深度为 5
+$sink #{depth: 5}-> $source;
+// Bottom-Use限制追踪深度为 3
+$source -{depth: 3}-> $sink;
+```
+
+### 2. 使用数据流分析期间的值：`hook`
+
+    在数据流分析过程中，可以使用 `hook` 来指定在追踪过程中需要记录的值或状态。这可以帮助在分析过程中捕获特定的变量状态或函数调用。
+- 示例
+```syntaxflow
+// 搜索 HttpServletRequest 的参数
+HttpServletRequest?{opcode:param}?{<typeName>?{have:'javax.servlet.http.HttpServletRequest'}} as $req
+// 使用Bottom-Use查找HttpServletRequest的使用，并记录HttpServletRequest.getParameter() 的调用作为间接参数
+$req -{
+  hook: `*.getParameter() as $indirectParam`
+}->;
+```
+
+:::tip **提示**
+hook的本质是每次运行数据流分析节点的时候，就会启用一个新的SyntaxFlow虚拟机运行一次配置项里面的规则。
+比如上述示例中，每次追踪到一个 `HttpServletRequest` 被使用的地方，都会运行一次 `*.getParameter() as $indirectParam` 的规则。
+
+配置项规则运行得到的变量，可以在数据流分析结束后继续被使用。因此可以再后续分析中使用变量`$indirectParam`。
+:::
+
+### 3.包含或排除特定条件：`include` 和 `exclude`
+
+- **作用**
+  - 在数据流分析中，可以使用 `include` 和 `exclude` 来指定需要包含或排除的特定条件。这可以帮助过滤掉不相关的结果，聚焦于感兴趣的部分。
+
+- **原理**
+   - `include`和`exclude`包含或者排除某项结果的原理是：当数据流分析（Bottom-Use或者Top-Def）结束以后，获得所有数据流分析的结果，然后使用深度优先算法（DFS）遍历结果，判断是否满足`include`或者`exclude`的条件。
+   - 与`hook`类似，`include`和`exclude`在进行DFS遍历的时候，会启用一个新的SyntaxFlow虚拟机运行一次配置项里面的规则。如果运行完后发现新的虚拟机产生了新变量，那么就会认为该配置项满足条件。
+
+具体流程可以参考下图：
+```mermaid
+flowchart TD
+    A[数据流分析完成] --> B[DFS遍历所有结果]
+    B --> C[启动SyntaxFlow虚拟机,执行规则]
+    C --> D{产生新变量？}
+    D -->|是| E{规则类型}
+    D -->|否| F{规则类型}
+
+    E -->|include| G[保留结果]
+    E -->|exclude| H[排除结果]
+    F -->|include| H
+    F -->|exclude| G
+
+    G --> I[加入最终结果集]
+    H --> J[丢弃结果]
+    I & J --> K[继续下一个结果]
+    K --> B
+    K --> L{遍历完成？}
+    L -->|是| M[输出最终结果]
+```
+- **示例**
+
+**include例子：**
+```syntaxflow
+desc(
+    title_zh:"检测Java弱加密 - 密钥长度不足"
+)
+RSAKeyGenParameterSpec?{<typeName>?{have:'java.security.spec.RSAKeyGenParameterSpec'}}(,* as $keySize);
+$keySize#{
+    include:`* ?{opcode:const}`
+}-> as $size;
+$size in (,2048) as $risk;
+alert $risk for{
+    message:"发现Java代码中使用不足2048位的RSA密钥长度",
+    solution:"当前密码学指南建议，使用RSA算法时，密钥长度至少应为2048位。开发者应该确保遵循推荐的密钥长度，以保障加密安全。",
+}
+```
+解释：
+- 查找RSAKeyGenParameterSpec构造函数的调用，并捕获其第二个参数密钥长度作为变量 `$keySize`。
+- 使用带有配置项的Top-Def算法(`#{...}->`)往上找$keySize的定义(keySize可能不是一个常量，而是一个参数，所以需要使用Top-Def找到keySize的顶级定义)。
+- 使用 `include` 规则来检查 `$keySize` 是否是一个常量，如果是，则作为最后的结果`$size`。
+- 检查 `$size` 是否在指定范围内（例如小于2048），如果是，则标记为风险 `$risk`。
+
+**exclude例子：**
+```syntaxflow
+desc(
+    title_zh:"检测Java不安全Process WaitFor使用"
+)
+// 查找没有设置超时时间Process.waitFor方法的Process.
+.waitFor?{!(<getActualParams><slice(start=1)>)}(* as $process,)
+check $process;
+// 检测Process是否调用destroy或者destroyForcibly主动销毁进程
+$process?{*-{
+    exclude:`<self>.destroy*`,
+}->} as $result
+alert $result for {
+    message: "发现Java的Process.waitFor方法可能导致DDOS漏洞",
+    level: mid,
+    type: vuln,
+}
+```
+解释：
+- 查找没有设置超时时间的 `Process.waitFor` 方法调用，并将其结果存储在 `$process` 变量中。
+- 使用 `exclude` 规则来排除那些调用了 `destroy` 或 `destroyForcibly` 方法的 `Process` 实例。
+- 如果 `$process` 中的实例没有调用销毁方法，则将其标记为风险 `$result`。
+
+### 4. 直到特定条件：`until`
+
+-   **作用**：
+- 在数据流分析中，可以使用 `until` 来指定追踪的终止条件。当满足特定条件时，数据流分析将停止。
+
+-   **原理**：
+
+`until`的原理包括两个阶段：数据流分析时检查（过程时检查）、数据流分析结束后检查（结果检查）。
+ - 在数据流分析过程中，持续检查当前追踪的状态是否满足 `until` 条件。如果满足，则停止追踪。
+ - `until`检测条件是否满足的方式和`hook`类似：每次进行数据流分析节点的时候，都会启用一个新的SyntaxFlow虚拟机运行一次配置项里面的规则。如果运行完后发现新的虚拟机产生了新变量，那么就会认为该配置项满足条件，那么就会停止数据流分析。
+ - 当数据流分析结束后，还会通过DFS遍历得到的结果，判断是否满足 `until` 条件，确保最终结果集中的数据流分析结果符合预期。
+
+具体流程可以参考下图：
+```mermaid
+flowchart TD
+    A[开始数据流分析] --> B[处理当前节点]
+    B --> C[启动SyntaxFlow虚拟机,执行until规则]
+    C --> D{产生新变量？}
+    D -->|是| E[满足until条件,停止当前路径追踪]
+    D -->|否| F[继续分析下一个节点]
+    F --> B
+
+    E --> G[结束当前路径分析]
+    G --> H{所有路径完成？}
+    H -->|否| B
+    H -->|是| I[数据流分析结束]
+
+    I --> J[DFS遍历所有结果]
+    J --> K[启动SyntaxFlow虚拟机,执行until规则]
+    K --> L{产生新变量？}
+    L -->|是| M[节点满足条件,保留在结果集中]
+    L -->|否| N[节点不满足条件,从结果集中移除]
+
+    M & N --> O[继续遍历下一个结果]
+    O -->|否| J
+    O -->|是| P[输出最终结果集]
+```
+-   示例
+```syntaxflow
+desc(
+    title_zh:"检测Java Servlet和SpringMVC中的命令注入漏洞"
+)
+<include('java-servlet-param')> as $source;
+<include('java-spring-mvc-param')> as $source;
+check $source;
+
+<include('java-runtime-exec-sink')> as $sink;
+<include('java-command-exec-sink')> as $sink;
+check $sink;
+
+$sink #{
+    until: "* & $source"
+}-> as $controlled_source_site
+```
+解释
+- 查找 Java Servlet 和 Spring MVC 中的参数传递，并将其结果存储在 `$source` 变量中。
+- 查找 Java 中的命令执行相关的 sink，并将其结果存储在 `$sink` 变量中。
+- 使用 `until` 规则来追踪 `$sink` 的定义，直到找到与 `$source` 相关的参数传递点。这样可以确保只追踪那些可能导致命令注入的路径。
+
+
 ## 实战中的注意事项
 
 在实际应用中，使用 Use-Def 链追踪时需要注意以下几点：
@@ -229,9 +406,6 @@ Result Vars:
 
 使用运算符时，需要确保理解每个符号的具体含义，以便精确地捕捉到所需的数据流和定义点。避免误匹配和漏匹配。
 
-### 4. 处理递归和循环
-
-在遇到递归函数或循环结构时，需谨慎设置追踪深度和条件，以防止无限追踪或遗漏重要的追踪点。
 
 ## 重要性与优势
 

@@ -31,6 +31,7 @@ const sidebars = {
         "statements/sf-calc",
         "statements/sf-nativecall",
         "statements/sf-sca",
+        "statements/sf_file_filter"
       ]
     },
       'nativecall-demos',
