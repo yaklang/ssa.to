@@ -81,6 +81,24 @@ const config: Config = {
             },
         ],
         [
+            '@easyops-cn/docusaurus-search-local',
+            {
+                hashed: true,
+                language: ['en', 'zh'],
+                indexDocs: true,
+                indexBlog: true,
+                indexPages: false,
+                docsRouteBasePath: ['/docs', '/syntaxflow-guide', '/static-analysis-guide'],
+                blogRouteBasePath: '/blog',
+                searchResultLimits: 8,
+                searchResultContextMaxLength: 50,
+                explicitSearchResultPath: true,
+                searchBarShortcut: true,
+                searchBarShortcutHint: true,
+                searchBarPosition: 'right'
+            }
+        ],
+        [
             '@docusaurus/plugin-content-docs',
             {
               id: 'syntaxflow-guide',
