@@ -27,16 +27,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Use Node.js 
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+
+      # 清理包管理器冲突
+      - name: Remove package-lock.json
+        run: rm -f package-lock.json
 
       # 缓存 node_modules
       - name: Cache Node Modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: node-cache
         with:
           path: |
@@ -55,7 +59,7 @@ jobs:
 
       - name: Save Node Modules Cache
         if: steps.node-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: |
             node_modules
