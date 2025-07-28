@@ -200,11 +200,15 @@ function judgeData(rules) {
     let error = []
     rules.forEach((item)=>{
       let isPass = true
-      Object.keys(item).forEach(key => {
+      try {
+        Object.keys(item).forEach(key => {
         if(itemType[key] && typeof item[key] !== itemType[key]){
           isPass = false
         }
       });
+      } catch (error) {
+        isPass = false
+      }
       if(isPass){
         pass.push(item)
       }
