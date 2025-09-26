@@ -81,8 +81,11 @@ export interface TableVirtualResizeProps<T> {
   enableDragSort?: boolean;
   onMoveRowEnd?: () => void;
   useUpAndDown?: boolean;
+  inMouseEnterTable?: boolean;
   containerClassName?: string;
   isRightClickBatchOperate?: boolean;
+  isHiddenLoadingUI?: boolean;
+  onRowDoubleClick?: (record?: T) => void;
 }
 
 export interface SortProps {

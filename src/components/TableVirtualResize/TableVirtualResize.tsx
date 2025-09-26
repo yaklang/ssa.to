@@ -139,8 +139,11 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     enableDragSort,
     onMoveRowEnd,
     useUpAndDown,
+    inMouseEnterTable = false,
     containerClassName,
     isRightClickBatchOperate,
+    isHiddenLoadingUI,
+    onRowDoubleClick,
   } = props;
   const defItemHeight = useCreation(() => {
     if (size === "middle") return 32;
@@ -150,6 +153,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const [selectedRows, setSelectedRows] = useState<T[]>([]);
   const [width, setWidth] = useState<number>(0); //表格所在div宽度
   const [height, setHeight] = useState<number>(300); //表格所在div高度
+  const [bodyHeight, setBodyHeight] = useState<number>(73); //表格body高度
   const [defColumns, setDefColumns] = useState<ColumnsTypeProps[]>(
     props.columns
   ); // 表头
@@ -240,8 +244,10 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
         containerHeight <= tableHeight
       ) {
         const hasMore = pagination.total == data.length;
-        if (!hasMore)
+        if (!hasMore) {
+          prePage.current = 1;
           pagination.onChange(Number(pagination.page) + 1, pagination.limit);
+        }
       }
     },
     [tableRef.current?.clientHeight, isRefresh],
@@ -267,11 +273,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   }, [scrollToIndex]);
 
   const [inViewport] = useInViewport(containerRef);
+  const [mouseEnter, setMouseEnter] = useState<boolean>(false);
 
   // 使用上箭头
   useHotkeys(
     "up",
     () => {
+      if (!mouseEnter && inMouseEnterTable) return;
       if (!setCurrentRow) return;
       const dataLength = data.length;
       if (dataLength <= 0) {
@@ -306,7 +314,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       }
     },
     { enabled: inViewport && useUpAndDown },
-    [data, currentRow, containerRef.current]
+    [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
   );
   const upKey = useDebounceFn(
     (index: number) => {
@@ -337,6 +345,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   useHotkeys(
     "down",
     () => {
+      if (!mouseEnter && inMouseEnterTable) return;
       if (!setCurrentRow) return;
       const dataLength = data.length;
       if (dataLength <= 0) {
@@ -373,7 +382,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       }
     },
     { enabled: inViewport && useUpAndDown },
-    [data, currentRow, containerRef.current]
+    [data, currentRow, containerRef.current, mouseEnter, inMouseEnterTable]
   );
   const downKey = useDebounceFn(
     (index: number) => {
@@ -520,7 +529,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       total = 0;
     }
     let w = (width - columnsAllWidth) / (cLength - total || 1);
-    const cw = w - scrollBarWidth / (cLength - total || 1) + 32;
+    const cw = w - scrollBarWidth / (cLength - total || 1);
     const newColumns = getColumns().map((ele, index) => {
       if (ele.isDefWidth) {
         return {
@@ -799,9 +808,13 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
   const [filters, setFilters] = useState<any>(query || {});
   const [opensPopover, setOpensPopover] = useState<any>({});
   useEffect(() => {
-    setFilters(cloneDeep(query));
+    if (query) {
+      setFilters(cloneDeep(query));
+    } else {
+      setFilters({});
+    }
   }, [query]);
-  useEffect(() => {
+  useUpdateEffect(() => {
     setFilters({});
     setSort({
       order: "none",
@@ -891,10 +904,28 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
             {...columnsItem.filterProps?.filterInputProps}
             value={filters[filterKey]}
             onChange={(e) => {
+              let val = e.target.value;
+              if (
+                columnsItem.filterProps &&
+                columnsItem.filterProps.filterInputProps &&
+                columnsItem.filterProps.filterInputProps.onRegular
+              ) {
+                val = columnsItem.filterProps?.filterInputProps?.onRegular(val);
+              }
               setFilters({
                 ...filters,
-                [filterKey]: e.target.value,
+                [filterKey]: val,
               });
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.stopPropagation();
+                setOpensPopover({
+                  ...opensPopover,
+                  [filterKey]: false,
+                });
+                if (onChangTable) onChangTable();
+              }
             }}
           />
         </div>
@@ -966,12 +997,30 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
     setHeight(calcTableHeight);
   }, [calcTableWidth, calcTableHeight]);
 
+  const tableBodyRef = useRef<any>(null);
+  const { width: calcTableBodyWidth, height: calcTableBodyHeight } =
+    useResizeDetector({
+      targetRef: tableBodyRef,
+      refreshMode: "debounce",
+      refreshRate: 50,
+    });
+  useEffect(() => {
+    if (!calcTableBodyWidth || !calcTableBodyHeight) return;
+    setBodyHeight(calcTableBodyHeight);
+  }, [calcTableBodyWidth, calcTableBodyHeight]);
+
   return (
     <div
       className={classNames(styles["virtual-table"])}
       ref={tableRef}
       tabIndex={-1}
       onMouseMove={(e) => onMouseMoveLine(e)}
+      onMouseEnter={() => {
+        setMouseEnter(true);
+      }}
+      onMouseLeave={() => {
+        setMouseEnter(false);
+      }}
     >
       {isShowTitle && (
         <>
@@ -1034,10 +1083,15 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
       {(width === 0 && <Spin spinning={true}></Spin>) || (
         <Spin
           spinning={
-            loading !== undefined ? loading && pagination?.page == 1 : false
+            isHiddenLoadingUI
+              ? false
+              : loading !== undefined
+              ? loading && pagination?.page == 1
+              : false
           }
         >
           <div
+            ref={tableBodyRef}
             className={classNames(styles["virtual-table-body"])}
             style={{
               maxHeight:
@@ -1096,7 +1150,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                     enableDrag={enableDrag}
                     columns={columns}
                     onMouseDown={onMouseDown}
-                    height={height}
+                    bodyHeight={bodyHeight}
                     setHoverLine={setHoverLine}
                     hoverLine={hoverLine}
                     size={size}
@@ -1120,6 +1174,7 @@ const Table = <T extends any>(props: TableVirtualResizeProps<T>) => {
                       renderKey={renderKey}
                       isLastItem={index === columns.length - 1}
                       onRowClick={onRowClick}
+                      onRowDoubleClick={onRowDoubleClick}
                       onRowContextMenu={(data, e, rowIndex) => {
                         onRowContextMenu(data, e, rowIndex);
                       }}
@@ -1193,7 +1248,7 @@ interface ColumnsItemRenderProps {
   enableDrag?: boolean;
   columns: ColumnsTypeProps[];
   onMouseDown: (e: any, index: number) => void;
-  height: number;
+  bodyHeight: number;
   hoverLine: boolean;
   setHoverLine: (b: boolean) => void;
   size: "small" | "middle" | "large";
@@ -1219,7 +1274,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
     enableDrag,
     columns,
     onMouseDown,
-    height,
+    bodyHeight,
     setHoverLine,
     hoverLine,
     size,
@@ -1337,8 +1392,8 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
                   </div>
                 }
                 overlayClassName={styles["search-popover"]}
-                open={opensPopover[filterKey]}
-                onOpenChange={(v) => {
+                visible={opensPopover[filterKey]}
+                onVisibleChange={(v) => {
                   setOpensPopover({
                     ...opensPopover,
                     [filterKey]: v,
@@ -1379,7 +1434,7 @@ const ColumnsItemRender = React.memo((props: ColumnsItemRenderProps) => {
           cIndex < columns.length - 1 && (
             <div
               className={classNames(styles["virtual-table-title-drag"])}
-              style={{ height: hoverLine ? height : 28 }}
+              style={{ height: hoverLine ? bodyHeight - 10 : 28 }}
               onMouseEnter={() => setHoverLine(true)}
               onMouseLeave={() => setHoverLine(false)}
               onMouseDown={(e) => onMouseDown(e, cIndex)}
@@ -1397,6 +1452,7 @@ interface ColRenderProps {
   renderKey: string;
   isLastItem: boolean;
   onRowClick: (r: any, rowIndex: number) => void;
+  onRowDoubleClick?: (r: any) => void;
   onRowContextMenu: (r: any, e: any, rowIndex: number) => void;
   currentRow: any;
   selectedRows?: any[];
@@ -1421,6 +1477,7 @@ const ColRender = React.memo((props: ColRenderProps) => {
     renderKey,
     isLastItem,
     onRowClick,
+    onRowDoubleClick,
     onRowContextMenu,
     currentRow,
     selectedRows,
@@ -1471,12 +1528,18 @@ const ColRender = React.memo((props: ColRenderProps) => {
               {(colIndex === 0 && (
                 <CellRenderDrop
                   colIndex={colIndex}
-                  key={`${item.data[renderKey]}-${colIndex}` || number}
+                  key={
+                    `${item.data[renderKey]}-${colIndex}-${item.data["cellClassName"]}` ||
+                    number
+                  }
                   item={item}
                   columnsItem={columnsItem}
                   number={item.index}
                   isLastItem={isLastItem}
                   onRowClick={() => onRowClick(item.data, item.index)}
+                  onRowDoubleClick={() =>
+                    onRowDoubleClick && onRowDoubleClick(item.data)
+                  }
                   onRowContextMenu={(e) =>
                     onRowContextMenu(item.data, e, item.index)
                   }
@@ -1502,13 +1565,16 @@ const ColRender = React.memo((props: ColRenderProps) => {
                   key={
                     `${item.data[renderKey]}-${colIndex}-${
                       item.data[columnsItem.dataKey]
-                    }` || number
+                    }-${item.data["cellClassName"]}` || number
                   }
                   item={item}
                   columnsItem={columnsItem}
                   number={item.index}
                   isLastItem={isLastItem}
                   onRowClick={() => onRowClick(item.data, item.index)}
+                  onRowDoubleClick={() =>
+                    onRowDoubleClick && onRowDoubleClick(item.data)
+                  }
                   onRowContextMenu={(e) =>
                     onRowContextMenu(item.data, e, item.index)
                   }
@@ -1538,6 +1604,7 @@ interface CellRenderProps {
   number: number;
   isLastItem: boolean;
   onRowClick: () => void;
+  onRowDoubleClick: () => void;
   onRowContextMenu: (e: any) => void;
   currentRow: any;
   selectedRows?: any[];
@@ -1562,6 +1629,7 @@ const CellRender = React.memo(
       number,
       isLastItem,
       onRowClick,
+      onRowDoubleClick,
       onRowContextMenu,
       // isSelect,
       colIndex,
@@ -1667,6 +1735,9 @@ const CellRender = React.memo(
           if (e.target.nodeName === "INPUT") return;
           onRowClick();
         }}
+        onDoubleClick={() => {
+          onRowDoubleClick();
+        }}
         onContextMenu={(e) => {
           onRowContextMenu(e);
         }}
@@ -1757,6 +1828,7 @@ const CellRenderDrop = React.memo(
       number,
       isLastItem,
       onRowClick,
+      onRowDoubleClick,
       onRowContextMenu,
       // isSelect,
       colIndex,
@@ -1951,6 +2023,9 @@ const CellRenderDrop = React.memo(
           // @ts-ignore
           if (e.target.nodeName === "INPUT") return;
           onRowClick();
+        }}
+        onDoubleClick={() => {
+          onRowDoubleClick();
         }}
         onContextMenu={(e) => {
           onRowContextMenu(e);
@@ -2283,6 +2358,7 @@ export const SelectSearch: React.FC<SelectSearchProps> = React.memo((props) => {
                         styles["select-item-text"],
                         "content-ellipsis"
                       )}
+                      title={item.data.label}
                     >
                       {item.data.label}
                     </span>
