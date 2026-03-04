@@ -1,0 +1,9 @@
+{
+  "label": "CLI 使用",
+  "position": 2,
+  "link": {
+    "type": "generated-index",
+    "title": "CLI 使用",
+    "description": "从安装到编译、查询、扫描，再到实战技巧的完整命令行指南。"
+  }
+}
