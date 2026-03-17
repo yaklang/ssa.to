@@ -1,25 +1,28 @@
 import React, { useEffect, useState } from "react";
 import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
 import { yakLang } from "./yakLang.js";
+import { syntaxflowLang } from "./syntaxflowLang.js";
 import { defineMonacoTheme } from "./monacoCustomTheme.js";
 import { useResizeDetector } from "react-resize-detector";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import { useColorMode } from "@docusaurus/theme-common";
 
-interface SsaEditorProps {
+interface SSAEditorProps {
   value: string;
   onSetValue: (value: string) => void;
   language?: string;
   readOnly?: boolean;
   wordWrap?: boolean;
+  editorOptions?: monacoEditor.editor.IStandaloneEditorConstructionOptions;
 }
-const SsaEditor: React.FC<SsaEditorProps> = (props) => {
+const SSAEditor: React.FC<SSAEditorProps> = (props) => {
   const {
     value: editorVal,
     onSetValue,
     language = "javascript",
     readOnly = false,
     wordWrap = true,
+    editorOptions,
   } = props;
   const { colorMode, setColorMode } = useColorMode();
   const [editor, setEditor] =
@@ -63,6 +66,7 @@ const SsaEditor: React.FC<SsaEditorProps> = (props) => {
 
     // yak语言高亮
     yakLang(monaco);
+    syntaxflowLang(monaco);
 
     // 阻止浏览器默认的右键菜单
     // editor.getContainerDomNode().addEventListener("contextmenu", (event) => {
@@ -106,6 +110,7 @@ const SsaEditor: React.FC<SsaEditorProps> = (props) => {
                 },
                 fixedOverflowWidgets: true,
                 contextmenu: true,
+                ...editorOptions,
               }}
               onChange={onSetValue}
               editorDidMount={editorDidMount}
@@ -117,4 +122,4 @@ const SsaEditor: React.FC<SsaEditorProps> = (props) => {
   );
 };
 
-export default SsaEditor;
+export default SSAEditor;

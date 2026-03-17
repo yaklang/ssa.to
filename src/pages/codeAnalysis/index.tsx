@@ -32,7 +32,7 @@ import {
   OutlineStopIcon,
 } from "@site/src/assets/icons/outline";
 import { ResizeBox } from "@site/src/components/ResizeBox";
-import SsaEditor from "@site/src/components/SsaEditor/index.module";
+import SSAEditor from "@site/src/components/SsaEditor/index.module";
 import {
   ColumnsTypeProps,
   SortProps,
@@ -491,7 +491,7 @@ const CodeAnalysisInit: React.FC<CodeAnalysisInitProps> = React.memo(
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
               >
-                <SsaEditor
+                <SSAEditor
                   value={code}
                   onSetValue={setCode}
                   language={language}
