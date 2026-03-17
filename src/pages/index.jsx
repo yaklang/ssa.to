@@ -310,11 +310,16 @@ function SyntaxFlowTable() {
                 marginBottom: '2px'
             }}>
                 <div style={{
+                width: '100%',
+                overflowX: 'auto'
+              }}>
+                <div style={{
                     display: 'flex',
                     flexDirection: 'row',
-                    overflowX: 'auto',
-                    whiteSpace: 'nowrap',
-                    justifyContent: 'center'
+                width: 'max-content',
+                minWidth: '100%',
+                whiteSpace: 'nowrap',
+                justifyContent: 'center'
                 }}>
                     <div
                         style={{
@@ -378,6 +383,7 @@ function SyntaxFlowTable() {
                             </span>
                         </div>
                     ))}
+                        </div>
                 </div>
             </div>
 
