@@ -1,0 +1,26 @@
+/*!
+	Copyright (c) 2018 Jed Watson.
+	Licensed under the MIT License (MIT), see
+	http://jedwatson.github.io/classnames
+*/
+
+/*! @license DOMPurify 3.0.5 | (c) Cure53 and other contributors | Released under the Apache license 2.0 and Mozilla Public License 2.0 | github.com/cure53/DOMPurify/blob/3.0.5/LICENSE */
+
+/*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
+
+/*!-----------------------------------------------------------------------------
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Version: 0.52.0(f6dc0eb8fce67e57f6036f4769d92c1666cdf546)
+ * Released under the MIT license
+ * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
+ *-----------------------------------------------------------------------------*/
+
+/**
+ * @license React
+ * react-is.production.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
