@@ -69,6 +69,7 @@ nativeCallActualParamValue
 | `<getFormalParams>`   | 检索函数或方法的形式参数。                                 |
 | `<getFunc>`           | 查找包含特定指令或值的当前函数。                           |
 | `<getCall>`           | 获取一个值的调用，通常用于获取与操作码相关的调用。         |
+| `<getActualParams>`   | 获取一次调用的实际参数列表，常与 `<slice>` / `<len>` / `?{...}` 组合使用做参数审计。 |
 | `<getCaller>`         | 查找包含特定值的调用指令。                                 |
 | `<searchFunc>`        | 在整个程序中搜索对某个函数的调用。如果输入已经是调用，则搜索该方法（函数）的其他调用。 |
 | `<getObject>`         | 获取与值关联的对象，通常用于面向对象的上下文中。           |
@@ -83,6 +84,7 @@ nativeCallActualParamValue
 | `<fuzztag>`           | 评估一个 **Yaklang** 的 fuzztag 模板，利用 **SFFrameResult** 中的变量。 |
 | `<show>`              | 输出值而不执行任何操作（用于调试）。                       |
 | `<slice>`             | 从值中提取一个切片，类似于数组或字符串的切片操作。使用示例：`<slice(start=0)>`。 |
+| `<len>`               | 获取列表/参数列表等容器的长度，常用于参数数量检查（例如 `*<len>?{==2}`）。 |
 | `<regexp>`            | 对字符串执行正则表达式匹配或提取。支持捕获组。示例：`<regexp(pattern="\d+", group=1)>`。 |
 | `<strlower>`          | 将字符串转换为小写。                                         |
 | `<strupper>`          | 将字符串转换为大写。                                         |
