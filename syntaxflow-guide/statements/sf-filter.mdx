@@ -76,6 +76,11 @@ import TOCInline from '@theme/TOCInline';
       <td><code>$vars?\{version_in:(1.2.3,2.3.4]\} as $vulnVersion</code></td>
     </tr>
     <tr>
+      <td><strong>比较运算</strong></td>
+      <td>对当前值或中间表达式结果进行比较（<code>==</code>/<code>!=</code>/<code>&gt;=</code>/<code>&lt;=</code> 等）</td>
+      <td><code>$vars?\{==2\} as $new</code></td>
+    </tr>
+    <tr>
       <td><strong>组合条件</strong></td>
       <td>结合多种条件进行复杂的逻辑过滤</td>
       <td><code>$vars?\{(.setFeature) && !(.setXIncludeAware)\} as $new</code></td>
@@ -101,12 +106,15 @@ filterItem
 
 conditionExpression
     : '(' conditionExpression ')'                     # ParenCondition
-    | filterExpr                                       # FilterCondition        // filter dot(.)Member and fields
-    | Opcode ':' opcodes (',' opcodes)* ','?          # OpcodeTypeCondition    // something like .(call, phi)
-    | Have ':' stringLiteralWithoutStarGroup           # StringContainHaveCondition // something like have: 'a', 'b'
-    | HaveAny ':' stringLiteralWithoutStarGroup        # StringContainAnyCondition // something like any: 'a', 'b'
-    | VersionIn ':' versionInExpression                # VersionInCondition
+    | filterExpr op=('>'|'<'|'='|'=='|'>='|'<='|'!=' ) (numberLiteral|identifier|boolLiteral) # BinaryCompare
+    | filterExpr                                       # FilterCondition        // 嵌套语句/字段/NativeCall 等
+    | Opcode ':' opcodes (',' opcodes)* ','?           # OpcodeTypeCondition
+    | Have ':' stringLiteralWithoutStarGroup            # StringContainHaveCondition
+    | HaveAny ':' stringLiteralWithoutStarGroup         # StringContainAnyCondition
+    | VersionIn ':' versionInExpression                 # VersionInCondition
     | negativeCondition conditionExpression           # NotCondition
+    | op=('>'|'<'|'='|'=='|'>='|'<='|'!=' ) (numberLiteral|identifier|boolLiteral) # CompareShorthand  // 例如 ?{==2}
+    | op=('=~'|'!~') (stringLiteral|regexpLiteral)      # RegexpMatchShorthand
     | conditionExpression '&&' conditionExpression    # FilterExpressionAnd
     | conditionExpression '||' conditionExpression    # FilterExpressionOr
     ;
@@ -114,6 +122,56 @@ conditionExpression
 
 - **`?{conditionExpression}`**：用于定义过滤条件，包含在 `{}` 内的条件表达式。
 - **`conditionExpression`**：支持多种条件逻辑，包括嵌套、操作码检查、字符串包含等。
+
+## 关键语义：条件是“按值求值”的
+
+在 `?{...}` 中，**每一个输入值都会在自己的上下文里求值**：条件表达式会在该值的作用域内执行，最终再决定“这个输入值是否保留”。
+
+这带来两个很实用的效果：
+
+- **不会串源**：多源输入时，某个值中间展开出来的结果，不会影响另一个值是否命中。
+- **自动分组**：即使你在条件里做 `*` 展开、或使用 `<len>` / `<slice>` 这类聚合/取位操作，计算也会按“每个输入值”分别进行，而不是把所有结果拍平后做全局计算。
+
+### 示例：多源值不会互相污染
+
+测试代码：
+
+```text
+x1 = { b: { c: 1 } }
+x2 = { b: { e: 2 } }
+```
+
+SyntaxFlow 规则：
+
+```syntaxflow
+x*?{.b.c} as $target
+```
+
+解释：
+
+- `.b.c` 会在每个 `x*` 命中的对象各自的上下文内尝试访问。
+- `x1` 命中（存在 `.b.c`），`x2` 不命中（只有 `.b.e`），因此 `$target` 只会保留 `x1`。
+
+### 示例：展开 + 聚合依然按源值分组
+
+测试代码：
+
+```text
+x1 = { b: 1, c: 2 }
+x2 = { b: 1 }
+```
+
+SyntaxFlow 规则：
+
+```syntaxflow
+x*?{.*<len>==2} as $target
+```
+
+解释：
+
+- `.*` 可能会把成员“展开”成多个中间值。
+- `<len>` 取的是“当前输入对象展开后的成员数量”，再与 `2` 比较。
+- 因此它会保留成员数为 `2` 的 `x1`，过滤掉 `x2`。
 
 ## 使用实例与解释
 
@@ -257,12 +315,40 @@ method?(*?{...}) as $result
 
 我们还是以刚才XXE的规则为例，现在可以写成以下形式:
 ```syntaxflow
-XMLReader.setFeature?( ,*?{=="http://xml.org/sax/features/external-general-entities",?{==false}) as $result
+XMLReader.setFeature?(,*?{=="http://xml.org/sax/features/external-general-entities"},*?{==false}) as $result
 ```
 解释:
 - `XMLReader.setFeature?`：表示我们要查找的目标方法。
-- `*?{=="http://xml.org/sax/features/external-general-entities"`表示第一个参数需要等于`http://xml.org/sax/features/external-general-entities`。
-- `?{==false}`表示第二个参数需要等于`false`。
+- `?(...)`：括号内是对“调用参数列表”的筛选逻辑；只要参数不满足，外层这个调用就会被过滤掉。
+- 第一个 `,`：用于跳过接收者（`XMLReader` 实例）的位置，从而对**第一个显式参数**开始对齐。
+- `*?{=="http://xml.org/sax/features/external-general-entities"}`：约束第一个显式参数等于目标字符串。
+- `*?{==false}`：约束第二个显式参数等于 `false`。
+
+### Call-wide 与 Per-arg：两种常见语义
+
+`?(...)` 内部的表达式，既可以表达“整次调用满足条件”（Call-wide），也可以表达“同一个参数位同时满足多个条件”（Per-arg）。
+
+```syntaxflow
+// Call-wide：参数集合里“存在一个 param”，并且“存在一个字符串 'a'”
+a?(opcode:param && =="a") as $callWide
+
+// Per-arg：必须存在“同一个参数位”同时满足 opcode:param 且等于 'a'
+a?(*?{opcode:param && =="a"}) as $perArg
+```
+
+:::tip **常用简写**
+当你只想表达“参数列表中存在某类参数”时，`a?(opcode:function)` 与 `a?(*?{opcode:function})` 等价。
+:::
+
+### 常见用法：按参数数量筛选调用
+
+```syntaxflow
+// 参数数量等于 2
+a?(*<len>==2) as $twoArgs
+
+// 等价写法：先取 len 再用 ?{==2} 过滤
+a?(*<len>?{==2}) as $twoArgs2
+```
 
 ## 实战中的注意事项
 
@@ -313,4 +399,3 @@ XMLReader.setFeature?( ,*?{=="http://xml.org/sax/features/external-general-entit
 **分析值的筛选过滤** 通过使用 `?{...}` 结构，赋予了 **SyntaxFlow** 更强大的数据流控制能力。它允许审计员根据复杂的条件表达式，精准地筛选出需要关注的审计值，从而聚焦于潜在的安全风险，提升审计的效率和准确性。
 
 结合实际案例的应用，本文展示了如何利用 **SyntaxFlow** 的过滤功能，发现和防范 XXE 漏洞等安全风险。通过掌握这些高级功能，您将能够更高效地进行代码审计和安全分析，确保代码的整体安全性与稳定性。
-

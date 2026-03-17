@@ -23,7 +23,7 @@ filterItemFirst
 
 filterItem
     : filterItemFirst                            #First
-    | '(' lines? actualParam? ')'                # FunctionCallFilter
+    | Question? '(' lines? actualParam? ')'      # FunctionCallFilter
     ;
 
 actualParam
@@ -33,10 +33,14 @@ actualParam
 
 actualParamFilter: singleParam ',' | ',';
 
-singleParam: ( '#>' | '#{' (recursiveConfig)? '}' )? filterStatement ;
+singleParam: ( '#>' | '#{' (recursiveConfig)? '}' )? (filterStatement | conditionExpression) ;
 ```
 
 这些规则定义了如何匹配函数调用及其参数，使得用户能够灵活地编写查询以满足不同的审计需求。
+
+:::tip **提示**
+当括号前带 `?`（例如 `setFeature?(...)`）时，含义是“按参数条件过滤调用”，而不是普通的参数捕获。用法与注意事项详见 [过滤器：`?{...}` 筛选审计结果](./sf-filter)。
+:::
 
 ## 具体案例解析
 
@@ -91,12 +95,26 @@ singleParam: ( '#>' | '#{' (recursiveConfig)? '}' )? filterStatement ;
 如果明确想要拿到第几个参数，这个使用就可以配合[NativeCall](./sf-nativecall)中的`slice`进行审计。
 例如：
 ```syntaxflow
-.parse(*<slice(index=1)> as $arg1) // 获取第一个参数
-.parse(*<slice(index=5)> as $arg2) // 获取第五参数
+.parse(*<slice(index=1)> as $arg1) // 获取第一个显式参数（成员方法调用通常从 index=1 开始）
+.parse(*<slice(index=5)> as $arg2) // 获取第5个显式参数（同上）
 ```
 另外，`slice`也能够使用参数`start`参数，实现和逗号一样的灵活性：
 ```syntaxflow
 .parse(*<slice(start=2)> as $args) // 获取第二个参数开始的所有参数
+```
+
+:::tip **关于索引与分组**
+- 一般来说，`<slice(index=...)>` 的下标从 `0` 开始。
+- 在成员方法调用（例如 `.parse(...)`）里，参数列表里通常会包含接收者对象，因此第一个**显式参数**经常从 `index=1` 开始对齐。
+- 当规则一次匹配到多个调用时，`<slice>` / `<len>` 会对每个调用的参数列表分别执行，不会把多次调用的参数拍平后再取下标/长度。
+:::
+
+### 补充：参数过滤不影响后续方法链
+
+有时我们希望在括号里“顺便”捕获某些参数（例如非常量参数），同时继续沿着方法链分析后续调用。括号内的捕获不会改变外层值，因此可以继续链式调用：
+
+```syntaxflow
+getTemplate?{<typeName>?{have:"freemarker"}}(,*?{!opcode: const} as $sink).process() as $call
 ```
 
 :::tip **提示**
