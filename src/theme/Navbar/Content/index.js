@@ -1,21 +1,28 @@
-import React from 'react';
-import {useThemeConfig, ErrorCauseBoundary} from '@docusaurus/theme-common';
+import React from "react";
+import Link from "@docusaurus/Link";
+import { useLocation } from "@docusaurus/router";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { useThemeConfig, ErrorCauseBoundary } from "@docusaurus/theme-common";
 import {
   splitNavbarItems,
   useNavbarMobileSidebar,
-} from '@docusaurus/theme-common/internal';
-import NavbarItem from '@theme/NavbarItem';
-import NavbarColorModeToggle from '@theme/Navbar/ColorModeToggle';
-import SearchBar from '@theme/SearchBar';
-import NavbarMobileSidebarToggle from '@theme/Navbar/MobileSidebar/Toggle';
-import NavbarLogo from '@theme/Navbar/Logo';
-import NavbarSearch from '@theme/Navbar/Search';
-import styles from './styles.module.css';
+} from "@docusaurus/theme-common/internal";
+import NavbarItem from "@theme/NavbarItem";
+import NavbarColorModeToggle from "@theme/Navbar/ColorModeToggle";
+import SearchBar from "@theme/SearchBar";
+import NavbarMobileSidebarToggle from "@theme/Navbar/MobileSidebar/Toggle";
+import NavbarLogo from "@theme/Navbar/Logo";
+import NavbarSearch from "@theme/Navbar/Search";
+import styles from "./styles.module.css";
+import {
+  academicNavbarItems,
+  isAcademicPath,
+} from "@site/src/components/docs/navigation";
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
   return useThemeConfig().navbar.items;
 }
-function NavbarItems({items}) {
+function NavbarItems({ items }) {
   return (
     <>
       {items.map((item, i) => (
@@ -26,16 +33,17 @@ function NavbarItems({items}) {
               `A theme navbar item failed to render.
 Please double-check the following navbar item (themeConfig.navbar.items) of your Docusaurus config:
 ${JSON.stringify(item, null, 2)}`,
-              {cause: error},
+              { cause: error },
             )
-          }>
+          }
+        >
           <NavbarItem {...item} />
         </ErrorCauseBoundary>
       ))}
     </>
   );
 }
-function NavbarContentLayout({left, right}) {
+function NavbarContentLayout({ left, right }) {
   return (
     <div className="navbar__inner">
       <div className="navbar__items">{left}</div>
@@ -45,9 +53,16 @@ function NavbarContentLayout({left, right}) {
 }
 export default function NavbarContent() {
   const mobileSidebar = useNavbarMobileSidebar();
-  const items = useNavbarItems();
+  const { pathname } = useLocation();
+  const { i18n } = useDocusaurusContext();
+  const academic = isAcademicPath(pathname);
+  const zh = i18n.currentLocale === "zh";
+  const configuredItems = useNavbarItems();
+  const items = academic
+    ? academicNavbarItems(configuredItems, zh)
+    : configuredItems;
   const [leftItems, rightItems] = splitNavbarItems(items);
-  const searchBarItem = items.find((item) => item.type === 'search');
+  const searchBarItem = items.find((item) => item.type === "search");
   return (
     <NavbarContentLayout
       left={
@@ -55,6 +70,11 @@ export default function NavbarContent() {
         <>
           {!mobileSidebar.disabled && <NavbarMobileSidebarToggle />}
           <NavbarLogo />
+          {academic && (
+            <Link to="/next#rules" className="navbar__item navbar__link">
+              {zh ? "规则库" : "Rules"}
+            </Link>
+          )}
           <NavbarItems items={leftItems} />
         </>
       }

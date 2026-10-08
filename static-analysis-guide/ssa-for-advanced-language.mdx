@@ -1,9 +1,17 @@
-# 第三章：高级语言的 SSA 构建（一）
+---
+title: "高级语言的 SSA 构建（一）"
+sidebar_label: "高级语言的 SSA 构建（一）"
+description: "研究高层语言结构如何进入统一表示，区分语法与分析模型。"
+read_minutes: 39
+chapter: "03.1"
+---
 
-import TOCInline from '@theme/TOCInline';
+# 高级语言的 SSA 构建（一）
+
+
 import Math, { InlineMath, BlockMath } from '@site/src/components/Math';
 
-<TOCInline toc={toc} />
+
 
 --- 
 
@@ -152,8 +160,8 @@ SSA TypeCast, SSA IR, 1
     
     Original -->|"SSA 转换"| SSA
     
-    style Original fill:#f9f9f9,stroke:#333,stroke-width:2px
-    style SSA fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style Original fill:#f0f0e6,stroke:#52604c,stroke-width:2px
+    style SSA fill:#f0f0e6,stroke:#52604c,stroke-width:2px
 ```
 
 
@@ -191,8 +199,8 @@ graph LR
   
   Original -->|"指令式 SSA IR 编译"| SSA
   
-  style Original fill:#f9f9f9,stroke:#333,stroke-width:2px
-  style SSA fill:#f9f9f9,stroke:#333,stroke-width:2px
+  style Original fill:#f0f0e6,stroke:#52604c,stroke-width:2px
+  style SSA fill:#f0f0e6,stroke:#52604c,stroke-width:2px
 ```
 
 ### 两种 SSA 形式的对比
@@ -1424,10 +1432,10 @@ graph TB
         C --> D
     end
     
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style D fill:#dce7dc,stroke:#52604c,stroke-width:2px
 ```
 
 根据定义域和我们一般的经验，IF 中一般会有 TRUE 和 FALSE 两个分支，在一般的块作用域系统中，TRUE 基本块和 FALSE 基本块分别对应了两个不同的作用域。
@@ -1490,7 +1498,7 @@ if.done-4: <- if.true-2 if.false-3
 
 ```mermaid
 graph TB
-    classDef codeBlock fill:#f9f9f9,stroke:#333,stroke-width:1px;
+    classDef codeBlock fill:#f0f0e6,stroke:#52604c,stroke-width:1px;
     
     subgraph "Control Flow Graph"
         A["entry-0<br><any> t3 = make any [nil, nil]"] --> B
@@ -1757,9 +1765,9 @@ graph LR
     
     Default --> Done["switch.done-7<br/>t27 = undefined-console.info<br/>t25 = undefined-console<br/>t28 = call t27(4)"]
     
-    style Entry fill:#9f6,stroke:#333
-    style Switch fill:#f96,stroke:#333
-    style Done fill:#f96,stroke:#333
+    style Entry fill:#dce7dc,stroke:#52604c
+    style Switch fill:#ece0cf,stroke:#52604c
+    style Done fill:#ece0cf,stroke:#52604c
 
 ```
 
@@ -1863,9 +1871,9 @@ graph LR
     Block2 -->|"break"| Done
     Default --> Done["switch.done-7<br/>t27 = undefined-console.info<br/>t25 = undefined-console<br/>t28 = call t27(2)"]
     
-    style Entry fill:#9f6,stroke:#333
-    style Switch fill:#f96,stroke:#333
-    style Done fill:#f96,stroke:#333
+    style Entry fill:#dce7dc,stroke:#52604c
+    style Switch fill:#ece0cf,stroke:#52604c
+    style Done fill:#ece0cf,stroke:#52604c
 
 ```
 
@@ -1994,9 +2002,9 @@ graph LR
     Block2 --> Done
     Default --> Done
     
-    style Entry fill:#9f6,stroke:#333
-    style Switch fill:#f96,stroke:#333
-    style Done fill:#f96,stroke:#333
+    style Entry fill:#dce7dc,stroke:#52604c
+    style Switch fill:#ece0cf,stroke:#52604c
+    style Done fill:#ece0cf,stroke:#52604c
 
 ```
 
@@ -2145,8 +2153,8 @@ graph LR
     True --> Done["if.done-4<br/>t30 = φ[t23, if.true-2][false, if.false-3]<br/>t31 = undefined-dump<br/>t32 = call t31(t30)"]
     False --> Done
     
-    style Entry fill:#9f6,stroke:#333
-    style Done fill:#f96,stroke:#333
+    style Entry fill:#dce7dc,stroke:#52604c
+    style Done fill:#ece0cf,stroke:#52604c
 
 ```
 

@@ -1,8 +1,12 @@
 ---
 sidebar_position: 4
+title: "AI Agent 工作流程"
+sidebar_label: "AI Agent 工作流程"
+description: "将编译、规则编写与结果复核串联到现有 Agent 的工作流程中。"
+read_minutes: 2
 ---
 
-# Skill（AI Agent 工作）
+# AI Agent 工作流程
 
 这个页面专门讲：怎么把 Yak 的 SSA/SyntaxFlow 能力接进 AI Agent，让 Agent 自动做代码扫描与审计。
 

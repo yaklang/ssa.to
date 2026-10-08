@@ -1,48 +1,32 @@
-# 第二章：详解静态单赋值形式
-
-我们在前面章节已经讨论了 SSA 形式在编译器技术中的重要性，以及 SSA 形式在现代编译器技术中的应用。
-
-那么，我们希望在接下来的章节中，更详细的介绍 SSA 的概念，以及在现代编程语言特性中的应用。
-
-------
-
-```mermaid
 ---
-config:
-  sankey:
-    showValues: false
+title: "静态单赋值形式"
+sidebar_label: "静态单赋值形式"
+description: "从变量版本、基本块与 Phi 节点理解 SSA 的定义及构建过程。"
+read_minutes: 21
+chapter: "02"
 ---
-sankey-beta
 
-Java AST,SSA IR,1
-PHP AST,SSA IR,1
-Golang AST, SSA IR,1
-Yaklang AST,SSA IR,1
-JavaScript(ES) AST, SSA IR,1
-"Any AST ...", SSA IR,1
+# 静态单赋值形式
 
-SSA IR,SyntaxFlow,4
-SSA IR,Database,2
-SyntaxFlow, Database, 4
-```
+SSA 将源程序中重复赋值的变量拆分为不同版本，使每个值的定义位置变得明确。本章从赋值、分支与基本块出发，解释 Phi 节点如何连接不同路径上的值，并逐步讨论 SSA 构建的过程。
 
-------
+阅读时，请区分源程序变量与 IR 中的值：源程序中的 `x` 可以被重复赋值，SSA 中的 `x₁`、`x₂` 则分别表示不同的定义。后面的示例采用教学表示，具体指令形态取决于编译器实现。
 
-import TOCInline from '@theme/TOCInline';
+import IRPipeline from '@site/src/components/docs/IRPipeline';
 
-<TOCInline toc={toc} />
+<IRPipeline />
 
 ## 术语介绍：
 
 本文开始，将会出现很多编译技术中的术语，我们希望在这里做一个简单的介绍，以便于大家理解。
 
 - **AST**：抽象语法树（Abstract Syntax Tree），是源代码的树形结构表示，每个节点代表一个语法结构。
-- **SSA IR**：静态单赋值形式中间表示（Static Single Assignment Form Intermediate Representation），是编译器中一种中间表示形式，每个变量只能被赋值一次。
-- **IR**：中间表示（Intermediate Representation），是编译器中一种中间表示形式，通常是SSA IR。
+- **SSA IR**：静态单赋值形式的中间表示。每个 SSA 值只有一个定义，源程序中的重复赋值通过不同的值版本表示。
+- **IR**：中间表示（Intermediate Representation），用于描述程序结构与语义。SSA 是组织 IR 的一种形式，IR 并不必然采用 SSA。
 - **左值**：可以出现在赋值符号左边的东西，通常是变量，指针，数组，结构体等。
 - **右值**：可以出现在赋值符号右边的值，通常是常量，变量，指针，数组，结构体等。
-- **Phi 函数或 `φ` 符号**：在 SSA 形式中，Phi 函数用于处理多路分支情况下的变量赋值，根据控制流图的不同路径，选择不同的赋值，在后续文章中的 `φ` 符号均表示 Phi 函数。
-- **基本块**：在编译器中，基本块是代码的连续执行序列，没有分支和跳转，通常是循环或条件语句的内部。
+- **Phi 节点或 `φ` 符号**：在控制流汇合处，根据实际进入的前驱基本块选择对应的输入值。它保留路径与值的关联，不表示对输入值求平均或把它们同时计算。
+- **基本块**：具有单一入口的直线执行序列。控制流只能从块入口进入，并在块末尾离开；块内不存在额外的控制转移。循环和条件分支通常由多个基本块组成。
 - **CFG: 控制流图**：在编译器中，控制流图是代码执行流程的图形化表示，每个节点代表一个基本块，边代表控制流关系。
 - **闭包**：在编译器中，闭包是指一个函数与其相关的环境（包括自由变量）一起被捕获和存储的组合。
 - **OOP**：面向对象编程（Object-Oriented Programming），是一种编程范式，通过类和对象来组织代码，实现代码的复用和抽象。
@@ -104,18 +88,18 @@ graph TB
         B1[x1 = 1] -->|传递值| B2[x2 = x1 + 1]
         B2 -->|传递值| B3[x3 = x2 * 2]
         
-        style B1 fill:#bbf,stroke:#333,stroke-width:2px
-        style B2 fill:#bbf,stroke:#333,stroke-width:2px
-        style B3 fill:#bbf,stroke:#333,stroke-width:2px
+        style B1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+        style B2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+        style B3 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
     end
 
     subgraph "原始代码"
         A1[x = 1] -->|覆盖原值| A2[x = x + 1]
         A2 -->|覆盖原值| A3[x = x * 2]
         
-        style A1 fill:#f9f,stroke:#333,stroke-width:2px
-        style A2 fill:#f9f,stroke:#333,stroke-width:2px
-        style A3 fill:#f9f,stroke:#333,stroke-width:2px
+        style A1 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+        style A2 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+        style A3 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
     end
 ```
 
@@ -197,10 +181,10 @@ graph TD
     MergePoint["x3 = φ(x1, x2)"] --> Block3[ y1 = x3 + 1 ]
     Block3 --> End(NodeEnd)
 
-    style Block1 fill:#bbf,stroke:#333,stroke-width:2px
-    style Block2 fill:#bbf,stroke:#333,stroke-width:2px
-    style MergePoint fill:#ff9,stroke:#333,stroke-width:2px
-    style Block3 fill:#bbf,stroke:#333,stroke-width:2px
+    style Block1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Block2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style MergePoint fill:#ff9,stroke:#52604c,stroke-width:2px
+    style Block3 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 在这个图中，`MergePoint` 节点表示控制流的合流点，Phi 函数在此处用于选择正确的 `x` 值。
@@ -284,9 +268,9 @@ graph TD
     LoopBack --> MergePoint
     Condition -->|False| End(NodeEnd)
 
-    style AssignI0 fill:#bbf,stroke:#333,stroke-width:2px
-    style MergePoint fill:#ff9,stroke:#333,stroke-width:2px
-    style UpdateI fill:#bbf,stroke:#333,stroke-width:2px
+    style AssignI0 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style MergePoint fill:#ff9,stroke:#52604c,stroke-width:2px
+    style UpdateI fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 在这个控制流图中，Phi 函数所在的 `MergePoint` 节点合并了初始值 `i0` 和循环后更新的 `i2`，以供下一次迭代或退出循环时使用。
@@ -388,12 +372,12 @@ graph TD
     C1 & C2 --> D["x5 = φ(x3, x4)"]
     D --> E[y1 = x5 + 3]
 
-    style A1 fill:#bbf,stroke:#333,stroke-width:2px
-    style A2 fill:#bbf,stroke:#333,stroke-width:2px
-    style C1 fill:#bbf,stroke:#333,stroke-width:2px
-    style C2 fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#ff9,stroke:#333,stroke-width:2px
-    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style A1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style A2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style D fill:#ff9,stroke:#52604c,stroke-width:2px
+    style E fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 在这个控制流图中：
@@ -485,17 +469,17 @@ graph TD
     G --> I[y1 = a4 + b6]
     H --> I
 
-    style A1 fill:#bbf,stroke:#333,stroke-width:2px
-    style A2 fill:#bbf,stroke:#333,stroke-width:2px
-    style C1 fill:#bbf,stroke:#333,stroke-width:2px
-    style C2 fill:#bbf,stroke:#333,stroke-width:2px
-    style E1 fill:#bbf,stroke:#333,stroke-width:2px
-    style E2 fill:#bbf,stroke:#333,stroke-width:2px
-    style F fill:#ff9,stroke:#333,stroke-width:2px
-    style F1 fill:#bbf,stroke:#333,stroke-width:2px
-    style G fill:#ff9,stroke:#333,stroke-width:2px
-    style H fill:#ff9,stroke:#333,stroke-width:2px
-    style I fill:#bbf,stroke:#333,stroke-width:2px
+    style A1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style A2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style E1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style E2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style F fill:#ff9,stroke:#52604c,stroke-width:2px
+    style F1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style G fill:#ff9,stroke:#52604c,stroke-width:2px
+    style H fill:#ff9,stroke:#52604c,stroke-width:2px
+    style I fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 在这个图中：
@@ -612,14 +596,14 @@ graph TD
     Cond2 -->|True| InternalTrue[内部 True 分支块] --> Final
     Cond2 -->|False| InternalFalse[内部 False 分支块] --> Final
 
-    style Entry fill:#bbf,stroke:#333,stroke-width:2px
-    style Cond1 fill:#f96,stroke:#333,stroke-width:2px
-    style TrueBranch fill:#bbf,stroke:#333,stroke-width:2px
-    style Cond2 fill:#f96,stroke:#333,stroke-width:2px
-    style InternalTrue fill:#bbf,stroke:#333,stroke-width:2px
-    style InternalFalse fill:#bbf,stroke:#333,stroke-width:2px
-    style ElseBranch fill:#bbf,stroke:#333,stroke-width:2px
-    style Final fill:#bbf,stroke:#333,stroke-width:2px
+    style Entry fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Cond1 fill:#ece0cf,stroke:#52604c,stroke-width:2px
+    style TrueBranch fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Cond2 fill:#ece0cf,stroke:#52604c,stroke-width:2px
+    style InternalTrue fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style InternalFalse fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style ElseBranch fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Final fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 #### IF 语句中 SSA 形式的基本块划分
@@ -660,15 +644,15 @@ graph TD
     MergeB --> Final
 
     %% 样式设置
-    style Entry fill:#bbf,stroke:#333,stroke-width:2px
-    style Cond1 fill:#f96,stroke:#333,stroke-width:2px
-    style TrueBranch fill:#bbf,stroke:#333,stroke-width:2px
-    style Cond2 fill:#f96,stroke:#333,stroke-width:2px
-    style InternalTrue fill:#bbf,stroke:#333,stroke-width:2px
-    style InternalFalse fill:#bbf,stroke:#333,stroke-width:2px
-    style MergeB fill:#ff9,stroke:#333,stroke-width:2px
-    style ElseBranch fill:#bbf,stroke:#333,stroke-width:2px
-    style Final fill:#ff9,stroke:#333,stroke-width:2px
+    style Entry fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Cond1 fill:#ece0cf,stroke:#52604c,stroke-width:2px
+    style TrueBranch fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Cond2 fill:#ece0cf,stroke:#52604c,stroke-width:2px
+    style InternalTrue fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style InternalFalse fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style MergeB fill:#ff9,stroke:#52604c,stroke-width:2px
+    style ElseBranch fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style Final fill:#ff9,stroke:#52604c,stroke-width:2px
 ```
 
 在上述 SSA 友好的基本块儿切割方案中，我们把 phi 插入在条件判断块的出口处紧接的代码块儿中，这样我们就可以在条件判断块的出口处插入 Phi 函数。
@@ -696,10 +680,10 @@ graph TB
         C --> D
     end
     
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style D fill:#dce7dc,stroke:#52604c,stroke-width:2px
 ```
 
 :::tip
@@ -732,11 +716,11 @@ graph TB
       D --> B
       B -->|条件为假| E[循环结束基本块]
       
-      style A fill:#f9f,stroke:#333,stroke-width:2px
-      style B fill:#bbf,stroke:#333,stroke-width:2px
-      style C fill:#dfd,stroke:#333,stroke-width:2px
-      style D fill:#fdd,stroke:#333,stroke-width:2px
-      style E fill:#ddd,stroke:#333,stroke-width:2px
+      style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+      style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+      style C fill:#dfd,stroke:#52604c,stroke-width:2px
+      style D fill:#fdd,stroke:#52604c,stroke-width:2px
+      style E fill:#ddd,stroke:#52604c,stroke-width:2px
 ```
 
 这个案例非常简单，我们不需要考虑复杂前驱后继关系，只需要考虑循环条件和循环体即可。
@@ -783,11 +767,11 @@ int main() {
       B -->|条件为假| E["循环结束基本块
       输出 sum 的值"]
       
-      style A fill:#f9f,stroke:#333,stroke-width:2px
-      style B fill:#bbf,stroke:#333,stroke-width:2px
-      style C fill:#dfd,stroke:#333,stroke-width:2px
-      style D fill:#fdd,stroke:#333,stroke-width:2px
-      style E fill:#ddd,stroke:#333,stroke-width:2px
+      style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+      style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+      style C fill:#dfd,stroke:#52604c,stroke-width:2px
+      style D fill:#fdd,stroke:#52604c,stroke-width:2px
+      style E fill:#ddd,stroke:#52604c,stroke-width:2px
 ```
 
 :::
@@ -834,7 +818,7 @@ break 和 continue 是循环中常用的语句，它们会改变循环的执行�
   %% 增加节点间的间距
   linkStyle default interpolate basis
 
-  classDef code fill:#f9f,stroke:#333,stroke-width:2px;
+  classDef code fill:#ebe3dd,stroke:#52604c,stroke-width:2px;
 ```
 
 
@@ -887,9 +871,9 @@ printf("%d", sum);
             G["Print Block (B7)<br>printf('%d', sum);"]
         end
 
-        classDef init fill:#f9f,stroke:#333,stroke-width:2px
-        classDef loop fill:#bbf,stroke:#333,stroke-width:2px
-        classDef exit fill:#bfb,stroke:#333,stroke-width:2px
+        classDef init fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+        classDef loop fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+        classDef exit fill:#dce7dc,stroke:#52604c,stroke-width:2px
         
         class A init
         class B,C,D,E loop
@@ -934,7 +918,7 @@ printf("%d", sum);
             X["Predecessor → Successor Relationships<br>================================<br>B1 → B2 (初始化到循环头)<br>B2 → B3, B6 (循环条件分支)<br>B3 → B4, B5 (偶数判断分支)<br>B4 → B5 (偶数处理到更新)<br>B5 → B2 (更新到循环头)"]
         end
 
-        classDef block fill:#f9f,stroke:#333,stroke-width:2px
+        classDef block fill:#ebe3dd,stroke:#52604c,stroke-width:2px
         classDef label fill:none,stroke:none
         class B1,B2,B3,B4,B5,B6 block
         class L1,L2,L3,L4,L5,L6 label
@@ -1022,8 +1006,8 @@ print("完成")
       
       B3 -->|"GOTO LABEL"| L
       
-      style L fill:#f9f,stroke:#333,stroke-width:2px
-      style B3 fill:#bbf,stroke:#333,stroke-width:2px
+      style L fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+      style B3 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 
@@ -1080,7 +1064,7 @@ L1:
       
       BB6 --> BB2
 
-      classDef phiStyle fill:#f9f,stroke:#333,stroke-width:2px;
+      classDef phiStyle fill:#ebe3dd,stroke:#52604c,stroke-width:2px;
       BB2:::phiStyle
 ```
 
@@ -1102,7 +1086,7 @@ L1:
       
       BB6 --> BB2
 
-      classDef phiStyle fill:#f9f,stroke:#333,stroke-width:2px;
+      classDef phiStyle fill:#ebe3dd,stroke:#52604c,stroke-width:2px;
       BB2:::phiStyle
 ```
 
@@ -1181,3 +1165,9 @@ BB2: x₃ = φ(x₁, x₂)  // 在 BB2 开始处插入
 import Giscus from '@site/src/components/Giscus';
 
 <Giscus />
+
+## 进一步阅读
+
+- [Cytron 等：SSA 构建与控制依赖图，1991](https://cs.brown.edu/research/pubs/techreports/reports/CS-91-21.html)。从支配边界理解 Phi 节点的放置。
+- [LLVM Language Reference：Phi 指令](https://llvm.org/docs/LangRef.html#phi-instruction)。查看前驱基本块与输入值的对应关系。
+- [控制流、支配与 Phi](./deep-dive-cfg)。继续阅读本教程中的具体构建示例。

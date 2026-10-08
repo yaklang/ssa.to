@@ -1,77 +1,59 @@
 ---
 sidebar_position: 1
+title: "文档导读"
+sidebar_label: "文档导读"
+description: "选择扫描、规则编写、图形界面审计或静态分析原理的阅读路径。"
+read_minutes: 3
 ---
 
-# 欢迎使用 SyntaxFlow 
+# 文档导读
 
-SyntaxFlow 是一个 Yaklang 出品的编译器级的高级静态分析语言。你可以使用 SyntaxFlow 分析被 Yaklang SSA 编译器编译后的程序（IrCode in Database）。
+SSA.to 的文档围绕同一个问题展开：如何从程序的语义结构出发，描述并验证一个安全分析问题。Yak SSA 将源程序编译为统一的中间表示，SyntaxFlow 在其上表达查询、过滤与数据流追踪，IRify 则提供图形化的分析工作环境。
 
-# !!DANGEROUS NOTICE
+## 选择你的阅读路径
 
-**SyntaxFlow 技术目前仅供技术交流使用，商业合作与授权二次开发请与 Yak Project 联系**
+| 你的目标 | 从这里开始 | 接下来阅读 |
+| --- | --- | --- |
+| 对一个项目执行扫描并导出报告 | [CLI 总览](./cli/overview) | [代码扫描与报告](./cli/scan) |
+| 编写规则并检查命中位置 | [SyntaxFlow 快速入门](/syntaxflow-guide/quick-start) | [规则文件结构](/syntaxflow-guide/rule-intro) |
+| 在图形界面中追踪分析结果 | [图形界面代码审计](./code_audit) | [图形界面代码扫描](./code_scan) |
+| 理解分析引擎的理论基础 | [编译与静态分析](/static-analysis-guide/intro) | [静态单赋值形式](/static-analysis-guide/compile-ssa-form) |
 
-**研发过程不代表最终品质呈现，如果想体验最新的技术与实现，请查阅 yaklang 项目源码** 
+初次使用时，建议先完成一次“编译 → 查询 → 复核”的闭环，再按实际遇到的问题查阅语言参考与原理章节。已有规则可以在[规则库](/next#rules)中检索和阅读。
 
+## 从源程序到分析结果
 
-##  SyntaxFlow 在线体验
-**无需安装yakit**  ，[在线启动代码审计](/codeAnalysis) ! 
-  
-全新风格平台，代码扫描启动！AI协助研判， 代码片段快速分析，误报漏报一键反馈  
-  
-![](./quest_start_gui_auditstatic/wechat2md-b60646245637afb65d5fd4d8b70df681.png)  
-  
-  
+1. **编译。** 将项目编译为 SSA IR，并以 Program 名称保存。后续查询使用同一个 Program。
+2. **查询。** 用 SyntaxFlow 定位调用、参数或成员，并沿定义链与使用链追踪值的关系。
+3. **复核。** 把结果映射回源码，检查输入来源、路径约束与相关防护逻辑。
+4. **记录。** 为需要关注的结果编写 `alert`，或使用扫描命令导出报告。
 
-## 支持特性
+查询匹配到的是分析模型中的证据。是否构成可利用的漏洞，还需要结合代码上下文与业务条件判断；没有匹配结果也不等于程序不存在风险。
 
-SyntaxFlow 支持各种静态分析中遇到的难题，并且在解决他们的过程中，可以抹除语言 AST 的特性，抹除赋值，编译分支与循环成为基本块和 Phi 的结构。
+## 三组文档的分工
 
-### SyntaxFlow 基础特性
+### 工具与实践
 
-1. 代码容错：可以针对不完整的代码进行审计；
-1. 支持精确搜索，模糊搜索，指定方法搜索；
-1. 支持 SSA 格式下的数据流分析；
-1. 支持 Phi 指令处理 IF For 循环等控制流程；
-1. 支持 OOP 编译成 SSA 格式后的搜索；
-1. 支持 Java 注解的追踪与 SSA 实例化，以适应各类注解入口的框架代码；
-1. 支持 Use-Def 链的运算符（向上递归寻找定义，向下递归寻找引用）
+[CLI 指南](./cli/overview)介绍项目编译、规则执行、扫描报告与 Program 管理。[图形界面指南](./code_audit)介绍项目打开、查询结果和数据流图的阅读方式。图形界面中的历史截图用于解释操作流程，界面名称和位置可能随版本变化。
 
-### SyntaxFlow 高级特性
+### SyntaxFlow 语言参考
 
-1. 通用语言架构：支持 Yaklang / Java / PHP(Alpha*) / JavaScript(ES) Alpha*;
-1. 自动跨过程，OOP 对象追踪，OOP 内方法跨过程，上下文敏感与函数栈敏感特性，可以支持复杂数据流分析；
-1. 编译产物符号化，构建 Sqlite 格式的标准化符号和 IrCode 表，支持中间表达的可视化。
-1. 支持跨过程与数据流可视化（根据 SF 分析过程自动生成），支持数据 Dot 格式的分析步骤图和数据流图
-![自动生成的分析过程回溯图：XXE 漏洞分析过程](./images/graphviz.svg)
+从[快速入门](/syntaxflow-guide/quick-start)进入，再按需查阅搜索、函数调用、变量、过滤、集合运算、数据流、NativeCall 与 SCA。每个专题围绕语法、例子与适用边界组织。
 
-## SyntaxFlow 相关资料：
+### 静态分析原理
 
-[SyntaxFlow 案例仓库](https://github.com/yaklang/syntaxflow)
+从 SSA、基本块与控制流开始，逐步讨论高级语言结构、闭包、对象、过程间数据流和支配关系。这里区分通用编译理论与 Yak SSA 的具体建模方式，避免把某个实现的选择当作所有 SSA 系统的共同约束。
 
+## 资料与项目
 
-<!-- ![](./quest_start_gui_auditstatic/wechat2md-2ae65ed92e788798b771b54dcc8f5594.png) -->
-  
+- [SyntaxFlow 示例与规则仓库](https://github.com/yaklang/syntaxflow)
+- [由浅入深的练习项目](https://github.com/yaklang/syntaxflow-zero-to-hero)
+- [Yaklang 源码](https://github.com/yaklang/yaklang)
+- [SyntaxFlow 离线手册](/cookbook)
+- [社区与联系方式](./community)
 
+## 使用与授权
 
-<!-- ![](./code_auditstatic/wechat2md-4351d566be6d0a44923f02b800937cf2.png)   -->
-  
-<!-- SyntaxFlow 是一个 Yaklang 出品的编译器级的高级静态分析语言。旨在分析被 Yaklang SSA 编译器编译后的程序。SyntaxFlow支持高级数据流分析、自动的跨过程分析和面向对象或闭包的抽象等高级特性。如果感兴趣的话，欢迎访问网站：ssa.to 了解更多。  
-   -->
-## SyntaxFlow 商业合作 
-**SyntaxFlow 技术目前仅供技术交流使用，商业合作与授权二次开发请与 Yak Project 联系**
+SyntaxFlow 技术目前仅供技术交流使用。商业合作与授权二次开发请联系 Yak Project；具体版本的能力与使用条件，以项目说明及实际发行版本为准。
 
-目前的YakRunner登陆的SyntaxFlow功能为技术预览版，接下来将会持续更新SyntaxFlow和YakSSA HIR的分析能力以及相关使用教程，欢迎持续关注。  
-  
-Yakit现分为企业版与社区版，**社区版始终坚持开源且免费**。相较社区版，企业版提供更为全面的功能及能力，更丰富的内置规则，还能够进行人员配置及权限管理，欢迎来询。  
-  
-  
-**企业版获取方式1:**  
-  
-
-公众号回复关键词“企业版”或“yakit企业版”，填写信息后，会有专人联系，提供企业版采购咨询及服务。  
-  
-**企业版获取方式2**  
-  
-填写[问卷](https://feishu-4dogs.feishu.cn/share/base/form/shrcnOEt7X4HQ12OvQOmDCnKocb)，会有专人联系，提供企业版采购咨询及服务。  
-  
-  ![微信公众号](./images/gzh.gif)
+如需企业版咨询，可以通过[社区渠道](./community)联系，或填写[咨询表单](https://feishu-4dogs.feishu.cn/share/base/form/shrcnOEt7X4HQ12OvQOmDCnKocb)。

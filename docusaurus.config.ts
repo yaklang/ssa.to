@@ -54,7 +54,7 @@ const config: Config = {
             {
                 docs: {
                     sidebarPath: "./sidebars.js",
-                    editUrl: 'https://github.com/yaklang/ssa.to/tree/main/docs/',
+                    editUrl: 'https://github.com/yaklang/ssa.to/edit/master/',
                     showLastUpdateTime: true,
                     showLastUpdateAuthor: true,
                     sidebarCollapsed: false,
@@ -74,10 +74,14 @@ const config: Config = {
         [
             "docusaurus-plugin-proxy",
             {
-                context: ["/api"],
-                target: process.env.REACT_APP_API_BASE_URL,
-                changeOrigin: true,
-                pathRewrite: { "^/api": "" },
+                proxy: [
+                    {
+                        context: ["/api"],
+                        target: process.env.REACT_APP_API_BASE_URL,
+                        changeOrigin: true,
+                        pathRewrite: { "^/api": "" },
+                    },
+                ],
             },
         ],
         [
@@ -106,7 +110,7 @@ const config: Config = {
               routeBasePath: 'syntaxflow-guide',
               sidebarPath: require.resolve('./syntaxflow-guide-sidebars.js'),
               // 添加其他配置
-              editUrl: 'https://github.com/yaklang/ssa.to/tree/main/syntaxflow-guide/',
+              editUrl: 'https://github.com/yaklang/ssa.to/edit/master/',
               showLastUpdateTime: true,
               sidebarCollapsed: false,
               showLastUpdateAuthor: true,
@@ -119,7 +123,7 @@ const config: Config = {
                 path: 'static-analysis-guide',
                 routeBasePath: 'static-analysis-guide',
                 sidebarPath: require.resolve('./static-analysis-guide-sidebars.js'),
-                editUrl: 'https://github.com/yaklang/ssa.to/tree/main/static-analysis-guide/',
+                editUrl: 'https://github.com/yaklang/ssa.to/edit/master/',
                 showLastUpdateTime: true,
                 sidebarCollapsed: false,
                 showLastUpdateAuthor: true,
@@ -140,6 +144,15 @@ const config: Config = {
     ],
 
     themeConfig: {
+        mermaid: {
+            theme: {light: 'base', dark: 'base'},
+            options: {fontFamily: 'SSA Document Serif, SSA Document CJK, Georgia, serif', themeVariables: {
+                primaryColor: '#e2e7d7', primaryTextColor: '#30362f', primaryBorderColor: '#8a997b',
+                secondaryColor: '#ebe7dc', tertiaryColor: '#f0f0e6', lineColor: '#77856c',
+                mainBkg: '#e2e7d7', clusterBkg: '#f0f0e6', clusterBorder: '#c3c9b9',
+                edgeLabelBackground: '#f8f6ef', fontSize: '14px'
+            }}
+        },
         image: "img/docusaurus-social-card.jpg",
         navbar: {
             title: "SSA.to",
@@ -170,11 +183,6 @@ const config: Config = {
                     docsPluginId: "syntaxflow-guide"
                 },
                 { to: "/cookbook", label: "SyntaxFlow 手册离线 PDF", position: "left" },
-                {
-                    to: "/codeAnalysis",
-                    label: "Code Analysis NOW!", 
-                    position: "left",
-                },
                 {
                     href: "https://github.com/yaklang/ssa.to",
                     label: "GitHub",

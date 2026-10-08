@@ -1,222 +1,102 @@
-# SyntaxFlow 快速入门指南
+---
+title: "第一次编译与查询"
+sidebar_label: "第一次编译与查询"
+description: "用 Java 示例完成从项目编译到数据流查询、再到源码复核的闭环。"
+read_minutes: 3
+---
 
-## 前置条件
+# 第一次编译与查询
 
-在开始使用 SyntaxFlow 之前，请确保您的系统上已安装 **Yaklang** 环境。设置此环境的最简单方法是使用 Yaklang 的预编译环境：
+本节用一个 Java 命令执行示例，完成从源程序到查询结果的最小流程。目标是定位 `Runtime.exec` 调用、追踪传入参数，并把结果映射回源码。
 
-```bash
-bash <(curl -sS -L http://oss.yaklang.io/install-latest-yak.sh)
-```
+## 准备环境与示例
 
-安装完成后，运行以下命令验证版本：
+先按照 [CLI 总览](/docs/cli/overview)安装 Yak，再检查本地版本：
 
 ```bash
 yak version
 ```
 
-要使用 SyntaxFlow 的最新功能，建议使用 **Yaklang 版本 1.3.7 或更高版本**。
+本文的命令与[编译与查询指南](/docs/cli/compile_query)使用同一套接口。具体版本支持的参数可以通过 `yak ssa-compile --help` 和 `yak ssa-query --help` 检查。
 
-虽然安装基本的执行环境是必要的，但拥有编程概念的基础知识也将大有裨益。熟悉 **PHP**、**JavaScript** 或 **Java** 等语言将有助于理解我们将要探讨的示例。
-
----
-
-## 开始使用
-
-假设您对 **SSA（静态单赋值形式）** 和 **SyntaxFlow** 的语法都不熟悉，让我们从最基础的开始。
-
-### 步骤 1：克隆项目仓库
-
-首先，将 `syntaxflow-zero-to-hero` 仓库克隆到您的本地机器上，并进入 `lesson-1-hello-world` 目录：
+克隆练习项目，进入第一课：
 
 ```bash
 git clone https://github.com/yaklang/syntaxflow-zero-to-hero
-cd syntaxflow-zero-to-hero/lesson-1-hello-world/
+cd syntaxflow-zero-to-hero/lesson-1-hello-world
 ```
 
-### 步骤 2：编译 Hello World 程序
+这个目录中，`HelloWorld.java` 是待分析程序，`lesson-1.sf` 是查询规则。先阅读源码，再运行分析，以便理解每个命中值对应的实际代码。
 
-与传统的编程语言中编写 `println("Hello World")` 不同，**SyntaxFlow** 的操作方式有所不同。要使用 SyntaxFlow，我们需要将要分析的代码编译成特定的 **SSA 格式**。
-
-在 `lesson-1-hello-world` 目录下，执行以下命令：
+## 编译为 Program
 
 ```bash
-yak ssa -t . --program lesson1
+yak ssa-compile -t . -p lesson1 -l java --re-compile
 ```
 
-**注意：** `--program lesson1` 选项将您的程序命名为 `lesson1`。在后续的命令中，您将引用此程序名称，因此请记住它。
+| 参数 | 作用 |
+| --- | --- |
+| `-t .` | 以当前目录为编译目标 |
+| `-p lesson1` | 将编译结果保存为名为 `lesson1` 的 Program |
+| `-l java` | 指定源程序语言 |
+| `--re-compile` | 允许重新编译同名 Program |
 
-执行后，您应看到显示编译过程的输出：
+编译完成后，检查输出中是否存在失败信息。Program 名称是后续查询的入口；它与源程序中的类名或项目目录名并不是同一个概念。
 
-```bash
-[INFO] 2024-06-25 22:57:36 [ssacli:131] start to compile file: .
-[INFO] ...（更多日志）...
-[INFO] 2024-06-25 22:57:37 [ssacli:162] finished compiling..., results: 1
-```
+## 阅读一条数据流查询
 
-消息 `finished compiling..., results: ...` 确认编译已成功完成。
+示例规则的核心表达式如下：
 
-#### 理解源码
-
-我们正在分析的源代码被有意设计得简单，以展示 SyntaxFlow 的功能：
-
-```java
-@Controller
-@RequestMapping("/home/rce")
-public class RuntimeExec {
-    @RequestMapping("/runtime")
-    public String RuntimeExec(@GetParam(value="id") String cmd, Model model) {
-        StringBuilder sb = new StringBuilder();
-        String line;
-
-        try {
-            var runtimeInstance = Runtime.getRuntime();
-            Process proc = runtimeInstance.exec(cmd);
-        } catch (IOException e) {
-            // 处理异常
-        }
-        return "basevul/rce/runtime";
-    }
-}
-```
-
-此代码片段表示一个可能根据用户输入执行系统命令的 Java 控制器。请注意，为了简化，一些典型的 Java 类组件（如 `import` 语句和包声明）被省略。尽管有这些省略，Yaklang SSA 编译器仍然可以处理该代码。
-
----
-
-## 执行 SyntaxFlow 规则
-
-现在我们已经编译了程序，接下来我们将执行一个 **SyntaxFlow 规则** 来分析它。在相同的目录下，有一个名为 `lesson-1.sf` 的规则文件，内容如下：
-
-```plaintext
-desc(title: "这是 SyntaxFlow 的 Hello World 示例，简单而有效！")
-
+```text title="lesson-1.sf · 查询部分"
 Runtime.getRuntime().exec(* #-> * as $source) as $sink;
 
-check $source then "找到命令执行参数来源（依赖）" else "未找到参数来源";
-check $sink then "找到命令执行点" else "未检测到命令执行";
+check $source then "找到命令执行参数来源" else "未找到参数来源";
+check $sink then "找到命令执行点" else "未找到命令执行点";
 ```
 
-此规则使用 SyntaxFlow 的查询语言来检测 Java 代码中的命令执行漏洞。它的重点是：
+从左到右阅读：
 
-1. 识别命令执行的 **源头**（用户输入）。
-2. 定位命令执行发生的 **位置**（汇点）。
+1. `Runtime.getRuntime().exec` 定位关注的调用。
+2. 括号内的匹配表达式选择调用参数。
+3. `#->` 沿定义链向上追踪影响参数的值。
+4. `as $source` 保存追踪结果；`as $sink` 保存调用匹配结果。
+5. `check` 根据命名结果是否存在输出说明。
 
-此规则的关键行是：
+这里的 `#->` 表达数据依赖追踪，不表示控制流图中的“支配者”。追踪方向和配置项可继续查阅[数据流运算](./statements/sf-dataflow)。
 
-```plaintext
-Runtime.getRuntime().exec(* #-> * as $source) as $sink;
-```
+## 执行规则
 
-### 理解 `#->` 运算符
-
-- `#->` 运算符用于追踪一个值的 **支配者**。
-- 它回答的问题是：**“是什么影响了这个特定的值？”**
-- 它遵循 **Use-Def 链**，帮助分析一个值的来源和使用方式。
-- 这对于理解数据流和识别潜在的安全问题至关重要。
-
-### 运行 SyntaxFlow 规则
-
-要执行规则，请运行：
+使用已经编译的 Program：
 
 ```bash
-yak sf --program lesson1 lesson-1.sf
+yak ssa-query -p lesson1 --sf lesson-1.sf
 ```
 
-确保 `--program` 参数与您在编译期间使用的名称（`lesson1`）一致。
+也可以使用同一查询接口的别名：
 
-执行后，您应看到类似以下的输出：
-
-```
-[INFO] 2024-06-25 23:35:24 [ssacli:221] start to use SyntaxFlow rule: lesson-1.sf
-[INFO] ...（更多日志）...
-[INFO] 2024-06-25 23:35:24 [ssacli:272] syntax flow query result:
-rule md5 hash: 389009d4257afd3ee509af4749936a3b
-rule preview: desc(title: "这是 SyntaxFlow 的 Hello World...then "找到命令执行点" else "未检测到命令执行";
-description: {title: "这是 SyntaxFlow 的 Hello World 示例，简单而有效！", $source: "找到命令执行参数来源（依赖）", $sink: "找到命令执行点"}
-Result Vars:
-  source:
-    t2612544: Parameter-cmd
-        HelloWorld.java:5:30 - 5:62
-  sink:
-    t2612569: Undefined-runtimeInstance.exec(valid)
-        HelloWorld.java:12:43 - 12:52
+```bash
+yak sf -p lesson1 --sf lesson-1.sf
 ```
 
----
+`-p lesson1` 必须与编译时的 Program 名称一致。修改源码后应重新编译；修改规则后则可以在已有 Program 上再次查询。
 
-## 分析结果
+## 从结果回到代码
 
-输出提供了有价值的信息：
+查询输出包含命名变量及其匹配的值。优先检查：
 
-1. **描述信息：**
-   - `"找到命令执行参数来源（依赖）"`
-   - `"找到命令执行点"`
+- **`$source`：** 是否指向示例中的方法参数 `cmd`，以及该参数来自何处。
+- **`$sink`：** 是否对应调用 `exec(cmd)` 的位置。
+- **源码范围：** 文件名与行列范围是否与本地练习项目一致。
 
-2. **结果变量：**
-   - **`$source`：** 指示潜在的危险输入来源于何处。
-   - **`$sink`：** 显示输入在关键操作（命令执行）中被使用的位置。
+输出中的 IR 编号和行列位置可能随版本与源码变化。它们是定位证据，不能仅凭某个编号或示例日志判断查询是否正确。
 
-### 将结果映射到代码
+:::note 从匹配到结论
 
-从输出中：
+找到调用与参数来源，说明规则发现了一条值得检查的数据依赖。是否存在可利用的命令注入，还需要确认参数是否可控、路径是否可达，以及输入是否经过有效约束。
 
-- **源（`$source`）：**
-  - 变量：`Parameter-cmd`
-  - 位置：`HelloWorld.java:5:30 - 5:62`
-  - 这指出了方法参数 `String cmd`，它来自用户输入。
+:::
 
-- **汇点（`$sink`）：**
-  - 操作：`runtimeInstance.exec(valid)`
-  - 位置：`HelloWorld.java:12:43 - 12:52`
-  - 这是用户输入在 `exec` 方法中被使用的地方，该方法执行系统命令。
+## 接下来的两个练习
 
-### 理解规则检查
-
-在规则文件中，我们有：
-
-```plaintext
-check $source then "找到命令执行参数来源（依赖）" else "未找到参数来源";
-check $sink then "找到命令执行点" else "未检测到命令执行";
-```
-
-这些检查基于是否找到 `$source` 和 `$sink` 来输出消息。
-
----
-
-## 总结
-
-在这个快速入门指南中，您已经学会了：
-
-1. **将代码编译为 SSA 形式：**
-   - 使用 `yak ssa -t ./project-path --program name`
-   - 为使用 SyntaxFlow 分析代码做好准备。
-
-2. **编写 SyntaxFlow 规则：**
-   - 创建包含特定查询和检查的 `rule.sf` 文件。
-   - 定义您希望在代码中检测的内容。
-
-3. **执行 SyntaxFlow 规则：**
-   - 运行 `yak sf --program name rule.sf`
-   - 执行分析并输出结果。
-
-### 关键要点
-
-- **SyntaxFlow** 是用于静态代码分析的强大工具，特别适用于安全审计。
-- 理解像 `#->` 这样的运算符对于追踪数据流和识别漏洞至关重要。
-- 该过程包括编译代码、编写规则和分析结果。
-- 即使是简单的示例也能发现关键的安全问题，例如命令注入漏洞。
-
----
-
-## 下一步
-
-现在您已经完成了本快速入门指南：
-
-- 探索更多 **SyntaxFlow** 的功能和运算符。
-- 编写您自己的规则来检测不同类型的漏洞。
-- 分析更复杂的代码库以获得更深入的见解。
-- 参考 **SyntaxFlow 文档** 以获取高级用法和最佳实践。
-
----
-
-通过遵循本指南，您已经迈出了利用 **SyntaxFlow** 进行有效代码分析和安全审计的第一步。继续尝试和学习，以进一步提升您的技能！
+1. 修改调用参数或增加一个中间变量，重新编译，观察 `$source` 的变化。
+2. 阅读[规则文件结构](./rule-intro)，为需要关注的结果增加 `alert`。如果希望直接生成扫描报告，转到[代码扫描与报告](/docs/cli/scan)。

@@ -1,23 +1,18 @@
-# 第六章：SSA 数据流与跨过程分析
-
-在对闭包和 OOP 的讨论结束后，我们基本可以知道现代编程语言的大部分语法和特性都是可以用 SSA 来表示的。前面的所有内容共同构成了我们后续讨论的基础。
-
-那么，接下来我们就会进一步讨论静态分析在 SSA 视角下将会变的多简单。
-
-:::tip 本章目标
-
-基本了解 SSA 视角下的数据流分析和跨过程分析。
-
-知道 Yak SSA 系统是如何实现数据流分析和跨过程分析，他们的表现如何。
-
-:::
-
-import TOCInline from '@theme/TOCInline';
-import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
-
-<TOCInline toc={toc} />
-
 ---
+title: "数据流与跨过程分析"
+sidebar_label: "数据流与跨过程分析"
+description: "从定义与使用关系出发，研究数据依赖如何跨越调用边界。"
+read_minutes: 4
+chapter: "06"
+---
+
+# 数据流与跨过程分析
+
+单个过程中的定义与使用关系，构成数据流分析的基础。当值进入函数参数、返回值、捕获环境或对象成员时，分析还需要把不同上下文之间的关系连接起来。
+
+本章讨论这些依赖如何跨越调用边界。阅读时应区分“数据依赖存在”“某条路径可执行”与“输入满足漏洞条件”三个问题；它们需要不同的证据，不能仅凭一条数据流边同时得出结论。
+
+import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
 ## 数据流基本概念
 
@@ -75,8 +70,8 @@ graph LR
   E -.->|c| G
   F -.->|e| G
   
-  classDef control fill:#f9f,stroke:#333,stroke-width:2px
-  classDef data fill:#bbf,stroke:#333,stroke-width:2px
+  classDef control fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+  classDef data fill:#e2e7d7,stroke:#52604c,stroke-width:2px
   class A,B,C,D,E,F,G control
 ```
 
@@ -113,8 +108,8 @@ graph BT
       F2 --> G2
   end
   
-  classDef control fill:#f9f,stroke:#333,stroke-width:2px
-  classDef data fill:#bbf,stroke:#333,stroke-width:2px
+  classDef control fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+  classDef data fill:#e2e7d7,stroke:#52604c,stroke-width:2px
   class B1,D1,E1,F1 control
   class A2,B2,C2,D2,E2,F2,G2 data
 ```

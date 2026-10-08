@@ -1,0 +1,6 @@
+{
+  "theme.SearchPage.documentsFound.plurals": {
+    "message": "共找到 {count} 条结果",
+    "description": "Number of matching search entries, including document sections"
+  }
+}

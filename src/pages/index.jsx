@@ -3,8 +3,6 @@ import Link from "@docusaurus/Link";
 import Layout from "@theme/Layout";
 import clsx from "clsx";
 import {OutlineArrowrightIcon} from "@site/src/assets/icons/outline";
-import codeAnalysis from "@site/static/img/code-analysis-bg.png";
-import codeAnalysisRightBottom from "@site/static/img/code-analysis-right-bottom.png";
 import 'katex/dist/katex.min.css';
 import styles from "./index.module.scss";
 import { useEffect, useState } from "react";
@@ -21,7 +19,7 @@ import {
   import {
     useMemoizedFn,
   } from "ahooks";
-  import { Dropdown, Menu, message } from "antd";
+  import { Dropdown, message } from "antd";
   
 function HomepageHeader() {
     const {siteConfig} = useDocusaurusContext();
@@ -52,11 +50,6 @@ function HomepageHeader() {
                     <TextScramble text={siteConfig.tagline} />
                 </h2>
                 <div className={styles["more-buttons"]}>
-                    <Link to="/codeAnalysis" target="_blank">
-                        <div className={clsx(styles["more-btn"], styles["start-for-free"])}>
-                            {isZh ? "免费开始" : "Start for free"}
-                        </div>
-                    </Link>
                     <Link to="/docs/intro">
                         <div className={clsx(styles["more-btn"], styles["know-more"])}>
                             {isZh ? "了解更多" : "Know more"}
@@ -883,11 +876,10 @@ function HomepageFeatures() {
               <div className={styles["guide-body-yakit-legacy-wrap"]}>
                 <Dropdown
                     className={styles["yakit-legacy-dropdown"]}
-                    visible={legacyVisible}
-                    destroyPopupOnHide={true}
-                    overlay={
-                      <Menu>
-                        {[
+                    open={legacyVisible}
+                    destroyOnHidden={true}
+                    menu={{
+                      items: [
                           {
                             name: "Windows",
                             desc: "支持Win7系统",
@@ -913,36 +905,34 @@ function HomepageFeatures() {
                             desc: "支持macOS 10.13和macOS 10.14",
                             url: "darwin-legacy-arm64.dmg",
                           },
-                        ].map((item) => {
-                          return (
-                              <Menu.Item key={item.name}>
-                                <div
-                                    className={styles["yakit-legacy-item"]}
-                                    onClick={() => {
-                                      onDownload(item.url);
-                                      setLegacyVisible(false);
-                                    }}
-                                >
-                                  <div className={styles["yakit-legacy-item-left"]}>
-                                    <div className={styles["yakit-legacy-item-name"]}>{
-                                        item.name
-                                    }</div>
-                                    <div className={styles["yakit-legacy-item-desc"]}>
-                                      {item.desc}（{version}）
-                                    </div>
-                                  </div>
-                                  <div className={styles["yakit-legacy-item-right"]}>
-                                    {DownloadIcon}
-                                  </div>
+                        ].map((item) => ({
+                          key: item.name,
+                          label: (
+                            <div
+                                className={styles["yakit-legacy-item"]}
+                                onClick={() => {
+                                  onDownload(item.url);
+                                  setLegacyVisible(false);
+                                }}
+                            >
+                              <div className={styles["yakit-legacy-item-left"]}>
+                                <div className={styles["yakit-legacy-item-name"]}>{
+                                    item.name
+                                }</div>
+                                <div className={styles["yakit-legacy-item-desc"]}>
+                                  {item.desc}（{version}）
                                 </div>
-                              </Menu.Item>
-                          );
-                        })}
-                      </Menu>
-                    }
+                              </div>
+                              <div className={styles["yakit-legacy-item-right"]}>
+                                {DownloadIcon}
+                              </div>
+                            </div>
+                          ),
+                        })),
+                    }}
                     trigger={["click"]}
                     placement="bottomCenter"
-                    onVisibleChange={(visible) => setLegacyVisible(visible)}
+                    onOpenChange={(visible) => setLegacyVisible(visible)}
                 >
                   <span className={styles["guide-body-yakit-legacy-btn"]}>
                     下载兼容版本
@@ -965,31 +955,6 @@ function HomepageFeatures() {
                     SyntaxFlow 已支持的（部分）规则列表
                 </h2>
                 <SyntaxFlowTable/>
-            </div>
-            <div className={styles["code-analysis"]}>
-                <h2 className={styles["code-analysis-title"]}>
-                    Advanced Analysis Techniques
-                </h2>
-                <div className={styles["code-analysis-cont"]}>
-                    <img src={codeAnalysis} width={"100%"}/>
-                    <div className={styles["start-for-free-wrapper"]}>
-                        <Link to="/codeAnalysis" target="_blank">
-                            <div
-                                className={clsx(
-                                    styles["start-for-free"],
-                                    styles["animation-btn"],
-                                    styles["animation-btn-white"]
-                                )}
-                            >
-                                Start for free
-                            </div>
-                        </Link>
-                    </div>
-                    <img
-                        src={codeAnalysisRightBottom}
-                        className={styles["codeAnalysisRightBottom"]}
-                    />
-                </div>
             </div>
         </div>
     );

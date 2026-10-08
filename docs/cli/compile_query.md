@@ -1,10 +1,14 @@
 ---
 sidebar_position: 2
+title: "编译与查询"
+sidebar_label: "编译与查询"
+description: "把示例项目保存为 Program，再执行 SyntaxFlow 规则并复核命中位置。"
+read_minutes: 3
 ---
 
 # 编译与查询
 
-这个页面对应“手动测试和规则编写测试”场景。
+本节面向规则开发与交互式验证：先保存一个可查询的 Program，再在同一编译结果上反复运行规则。源码变化需要重新编译；仅修改规则时，可以复用已有 Program。
 
 目标很简单：先把项目编译成 Program，再执行你自己的 SyntaxFlow 规则，看到明确的命中位置和数据流变量。
 

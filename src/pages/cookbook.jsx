@@ -1,54 +1,56 @@
-import React from 'react';
-import Layout from '@theme/Layout';
-
+import React from "react";
+import Layout from "@theme/Layout";
+import Link from "@docusaurus/Link";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 export default function Cookbook() {
+  const { i18n } = useDocusaurusContext();
+  const zh = i18n.currentLocale === "zh";
   return (
     <Layout
-      title="SyntaxFlow 语言手册" 
-      description="SyntaxFlow 语言的详细使用指南"
+      title={zh ? "SyntaxFlow 语言手册" : "The SyntaxFlow handbook"}
+      description={
+        zh
+          ? "SyntaxFlow 语言手册的在线阅读与 PDF 下载。"
+          : "Read the SyntaxFlow handbook online or download the PDF."
+      }
     >
-      <div className="container margin-vert--lg">
-        <div className="row">
-          <div className="col col--12">
-            <div className="pdf-viewer">
-              <div 
-                className="text-center" 
-                style={{ 
-                  marginBottom: '30px',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}
-              >
-                <a 
-                  href="/pdf/syntaxflow-cookbook.pdf"
-                  download
-                  className="button button--primary button--lg"
-                  style={{
-                    fontSize: '1.2rem',
-                    padding: '12px 36px'
-                  }}
-                >
-                  下载完整手册 PDF
-                </a>
-              </div>
-              <iframe
-                src="/pdf/syntaxflow-cookbook.pdf"
-                style={{
-                  width: 'calc(100% - 96px)', // 左右各留48px
-                  height: 'calc(100vh - 160px)', // 减少头部和按钮占用的空间
-                  border: '1px solid #eee',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  padding: '24px',
-                  margin: '0 48px',
-                  backgroundColor: '#fff'
-                }}
-                title="SyntaxFlow 语言手册"
-              />
-            </div>
-          </div>
+      <main className="academic-handbook">
+        <span className="handbook-meta">THE SYNTAXFLOW HANDBOOK / PDF</span>
+        <h1>{zh ? "SyntaxFlow 语言手册" : "The SyntaxFlow handbook"}</h1>
+        <p>
+          {zh
+            ? "一份适合连续阅读与离线查阅的语言手册。在线参考文档会随项目演进更新，PDF 保留其导出时的内容；具体命令与参数请同时参考当前 CLI 指南。"
+            : "A handbook for continuous reading and offline reference. The online documentation evolves with the project; the PDF reflects its exported edition. Consult the current CLI guide for commands and options."}
+        </p>
+        <div className="handbook-actions">
+          <a href="/pdf/syntaxflow-cookbook.pdf" download>
+            {zh ? "下载完整 PDF" : "Download the PDF"} ↓
+          </a>
+          <Link to="/syntaxflow-guide/intro">
+            {zh ? "在线语言参考" : "Online language reference"} →
+          </Link>
+          <a
+            href="/pdf/syntaxflow-cookbook.pdf"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {zh ? "在新窗口阅读" : "Open in a new window"} ↗
+          </a>
         </div>
-      </div>
+        <iframe
+          src="/pdf/syntaxflow-cookbook.pdf"
+          title={
+            zh
+              ? "SyntaxFlow 语言手册 PDF 阅读器"
+              : "SyntaxFlow handbook PDF reader"
+          }
+        />
+        <p className="handbook-caption">
+          {zh
+            ? "如果浏览器无法显示 PDF，可下载后使用本地阅读器打开。"
+            : "If the browser cannot display the PDF, download it and open it in a local reader."}
+        </p>
+      </main>
     </Layout>
   );
 }

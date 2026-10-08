@@ -1,10 +1,17 @@
-# 6. 数据流运算：追踪定义和使用
+---
+title: "数据流运算"
+sidebar_label: "数据流运算"
+description: "区分定义链与使用链，按方向和配置项追踪值的依赖关系。"
+read_minutes: 10
+---
+
+# 数据流运算
 
 在静态代码分析和安全审计中，**Use-Def 链**（Use-Definition Chain，简称 UD 链）和 **Def-Use 链**（Definition-Use Chain，简称 DU 链）的追踪是至关重要的技术。它们能够帮助审计员精准地追踪变量或函数的使用与定义关系，从而有效识别潜在的安全漏洞。**SyntaxFlow** 支持对 UD 链和 DU 链的追踪，充分利用 SSA（静态单赋值）形式的优势，实现对数据流的精确追踪。本文将详细介绍 **SyntaxFlow** 中 Use-Def 链追踪的运算定义、语法规则、使用实例以及实战中的注意事项。
 
-import TOCInline from '@theme/TOCInline';
 
-<TOCInline toc={toc} />
+
+
 
 
 ## 简介

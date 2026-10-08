@@ -1,0 +1,6 @@
+{
+  "theme.SearchPage.documentsFound.plurals": {
+    "message": "Found {count} result|Found {count} results",
+    "description": "Number of matching search entries, including document sections"
+  }
+}

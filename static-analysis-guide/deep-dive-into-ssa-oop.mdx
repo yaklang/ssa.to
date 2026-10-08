@@ -1,13 +1,21 @@
-# 第五章：SSA 中的 OOP 实现：无类系统与原型委托
+---
+title: "对象与成员建模"
+sidebar_label: "对象与成员建模"
+description: "讨论 Yak SSA 中对象、成员与方法的建模选择及分析问题。"
+read_minutes: 14
+chapter: "05"
+---
+
+# 对象与成员建模
 
 闭包话题我们在前面进行了非常深入的讨论，在这一章，本章将探讨如何在 SSA 框架下，通过无类系统和原型委托来建模 OOP 的核心概念，并最终实现 OOP 代码的编译和静态分析。
 
 我们在无类（Classless）系统构建的时候，需要用到闭包来存储生成的对象，并且在案例中也会涉及到闭包核心功能，所以我们把基于无类系统的 OOP 构建放在闭包讨论之后。
 
-import TOCInline from '@theme/TOCInline';
+
 import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
-<TOCInline toc={toc} />
+
 
 --- 
 
@@ -125,9 +133,9 @@ graph LR
     C -->|"包含引用"| A
     C -->|"实例成员"| E["field + objectMethod"]
     
-    style A fill:#f9f,stroke:#333,stroke-width:4px
-    style B fill:#bbf,stroke:#333,stroke-width:4px
-    style C fill:#bfb,stroke:#333,stroke-width:4px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:4px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:4px
+    style C fill:#dce7dc,stroke:#52604c,stroke-width:4px
 
 ```
 
@@ -370,9 +378,9 @@ graph LR
         C
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C fill:#dce7dc,stroke:#52604c,stroke-width:2px
 ```
 
 ### 对比“继承”和“原型委托”
@@ -391,10 +399,10 @@ graph TB
         D -->|"委托"| C
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#fbf,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style C fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style D fill:#fbf,stroke:#52604c,stroke-width:2px
 ```
 
 一般的语言中，如果要实现原型委托需要实现一个智能的 `lookup` 或者 `get` 函数，这个函数可以按照委托的算法来寻找真正的成员。在真实的过程中，这都是一个 “动态分派” 的过程。这个和传统 OOP 有很明显的区别。
@@ -674,10 +682,10 @@ flowchart LR
   C --> H[结束]
   G --> H
   
-  style A fill:#f9f,stroke:#333,stroke-width:2px
-  style H fill:#9ff,stroke:#333,stroke-width:2px
-  style B fill:#ff9,stroke:#333,stroke-width:2px
-  style D fill:#ff9,stroke:#333,stroke-width:2px
+  style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+  style H fill:#9ff,stroke:#52604c,stroke-width:2px
+  style B fill:#ff9,stroke:#52604c,stroke-width:2px
+  style D fill:#ff9,stroke:#52604c,stroke-width:2px
 ```
 
 #### 传统 OOP 对象成员调用分发流程
@@ -696,10 +704,10 @@ flowchart LR
   I --> J[结束]
   H --> J[结束]
 
-  style A fill:#f9f,stroke:#333,stroke-width:2px
-  style J fill:#9ff,stroke:#333,stroke-width:2px
-  style D fill:#ff9,stroke:#333,stroke-width:2px
-  style G fill:#ff9,stroke:#333,stroke-width:2px
+  style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+  style J fill:#9ff,stroke:#52604c,stroke-width:2px
+  style D fill:#ff9,stroke:#52604c,stroke-width:2px
+  style G fill:#ff9,stroke:#52604c,stroke-width:2px
 ```
 
 ### 形式化算法对比
@@ -787,12 +795,12 @@ graph LR
     F -->|"是"| G["返回原型值 (SSA版本5)"]
     F -->|"否"| H["返回undefined (SSA版本6)"]
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style F fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bfb,stroke:#333,stroke-width:2px
-    style G fill:#bfb,stroke:#333,stroke-width:2px
-    style H fill:#fbb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style C fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style F fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style D fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style G fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style H fill:#fbb,stroke:#52604c,stroke-width:2px
 ```
 
 在 SSA 形式中，这种查找过程可以表示为：
@@ -851,11 +859,11 @@ graph TB
         F --> I["构造SSA版本"]
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style G fill:#bfb,stroke:#333,stroke-width:2px
-    style H fill:#bfb,stroke:#333,stroke-width:2px
-    style I fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style G fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style H fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style I fill:#dce7dc,stroke:#52604c,stroke-width:2px
 ```
 
 ### 编译过程转换算法实现（伪代码）
@@ -971,14 +979,14 @@ graph TB
     
     V6 --> End["返回优化后的原型"]
     
-    style Start fill:#f9f,stroke:#333,stroke-width:2px
-    style End fill:#f9f,stroke:#333,stroke-width:2px
-    style V1 fill:#bbf,stroke:#333,stroke-width:2px
-    style V2 fill:#bbf,stroke:#333,stroke-width:2px
-    style V3 fill:#bbf,stroke:#333,stroke-width:2px
-    style V4 fill:#bfb,stroke:#333,stroke-width:2px
-    style V5 fill:#bfb,stroke:#333,stroke-width:2px
-    style V6 fill:#fbb,stroke:#333,stroke-width:2px
+    style Start fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style End fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style V1 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style V2 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style V3 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style V4 fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style V5 fill:#dce7dc,stroke:#52604c,stroke-width:2px
+    style V6 fill:#fbb,stroke:#52604c,stroke-width:2px
 
 ```
 

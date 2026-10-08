@@ -1,113 +1,58 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-import Admonition from '@theme/Admonition';
+---
+title: "SyntaxFlow 语言导读"
+sidebar_label: "SyntaxFlow 语言导读"
+description: "建立一个可验证的分析问题，按查询、过滤与数据流追踪查阅语法。"
+read_minutes: 3
+---
 
-# SyntaxFlow 简介
+# SyntaxFlow 语言导读
 
-SyntaxFlow 是 Yaklang 出品的编译器级高级静态分析语言。基于 Yaklang SSA 数据库的专用查询语言，静态代码行为分析的专用 DSL，为代码分析提供强大支持。
+SyntaxFlow 是 Yaklang 的程序分析查询语言。它面向已经编译为 SSA IR 的程序，在统一的值、调用与依赖关系上表达分析问题。规则既可以用于交互式查询，也可以作为扫描任务中可复用的分析逻辑。
 
-<Admonition type="info">
-  SyntaxFlow 致力于解决静态分析中的各类难题。通过抹除语言 AST 特性、赋值操作，将分支与循环编译为基本块和 Phi 结构，构建统一的分析模型。
-</Admonition>
+## 建立一个可验证的分析问题
 
-## 支持特性
+一个规则通常从“定位什么”开始：某个符号、成员或函数调用。随后描述“需要满足哪些条件”，并决定是否继续追踪参数来源或后续使用。最终将匹配结果命名，检查结果，并报告需要关注的值。
 
-<div className="container">
-  <div className="row" style={{ gap: '1.5rem', margin: '1rem 0' }}>
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>基础分析能力</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>不完整代码容错处理</li>
-            <li>精确/模糊/方法定向搜索</li>
-            <li>SSA 格式数据流分析</li>
-            <li>Use-Def 链递归分析</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+```text title="查询的基本结构"
+定位表达式 → 条件过滤 → 数据流追踪 → 命名结果 → 检查与报告
+```
 
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>控制流分析</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>Phi 指令处理控制流</li>
-            <li>分支与循环基本块转换</li>
-            <li>上下文敏感分析</li>
-            <li>函数栈敏感分析</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+这些步骤并非每条规则都必须包含。它们提供的是一种阅读和构建规则的方式，而非固定模板。
 
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>面向对象分析</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>OOP 到 SSA 格式转换</li>
-            <li>对象跨过程追踪</li>
-            <li>Java 注解语义分析</li>
-            <li>框架代码入口识别</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+## 按问题查阅语法
 
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>多语言架构</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>Yaklang/Java 生产级支持</li>
-            <li>PHP/JavaScript 实验支持</li>
-            <li>统一中间表示抽象</li>
-            <li>通用语言分析框架</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+| 分析问题 | 对应专题 |
+| --- | --- |
+| 在程序中寻找符号或调用 | [搜索与定位](./statements/sf-search) |
+| 检查调用的参数与返回值 | [函数调用](./statements/sf-func-call) |
+| 保存并复用中间结果 | [变量与命名](./statements/sf-variable) |
+| 检查成员访问与调用链 | [成员与链式调用](./statements/sf-dot-call-chain) |
+| 追踪一个值的来源或用途 | [数据流运算](./statements/sf-dataflow) |
+| 给匹配结果增加约束 | [条件过滤](./statements/sf-filter) |
+| 合并、排除或比较结果集 | [集合运算](./statements/sf-calc) |
+| 调用分析引擎的扩展能力 | [NativeCall](./statements/sf-nativecall) |
+| 检查第三方依赖及其版本 | [SCA 依赖检测](./statements/sf-sca) |
+| 在文件内容中寻找证据 | [文件过滤](./statements/sf_file_filter) |
 
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>过程间分析</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>复杂数据流追踪</li>
-            <li>跨过程调用分析</li>
-            <li>OOP 方法间分析</li>
-            <li>上下文敏感分析</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+## 理解两种追踪方向
 
-    <div className="col col--4 col--sm-12">
-      <div className="card" style={{ backgroundColor: '#f5f0ff', height: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div className="card__header">
-          <h3>分析结果展示</h3>
-        </div>
-        <div className="card__body">
-          <ul>
-            <li>Sqlite 符号表存储</li>
-            <li>IrCode 标准化表示</li>
-            <li>数据流 DOT 图导出</li>
-            <li>分析步骤可视化</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+**定义链追踪**回答“这个值来自哪里”。从调用参数向上追踪，可以看到影响该参数的定义与输入。
+
+**使用链追踪**回答“这个值被用在哪里”。从一个定义向下追踪，可以研究它如何参与后续的运算与调用。
+
+二者是数据依赖关系上的查询。控制流中的支配关系是另一种概念，需要在[控制流与支配](/static-analysis-guide/deep-dive-cfg)中单独讨论。
+
+## 分析能力与边界
+
+SSA IR 为不同语言提供统一的查询对象，但不同语言、框架和版本的建模覆盖范围可能不同。遇到不完整代码、动态调用、反射或外部依赖时，应结合编译诊断与具体样例检查分析结果。
+
+规则命中是一条可复核的证据。严谨的审计还需要确认数据来源是否可控、防护逻辑是否有效，以及相关执行路径是否满足业务条件。
+
+## 建议的练习顺序
+
+1. 完成[快速入门](./quick-start)，编译一个示例项目并运行规则。
+2. 阅读[规则文件结构](./rule-intro)，区分 `desc`、查询、`check` 与 `alert`。
+3. 对照[规则库](/next#rules)阅读真实规则，选择一个语法专题进行修改与验证。
+4. 继续阅读[NativeCall 用例](./nativecall-demos)与[数据流分析实战](./advanced/advanced-analyzing-dataflow)。
+
+需要离线阅读时，可以使用[完整语言手册](/cookbook)。

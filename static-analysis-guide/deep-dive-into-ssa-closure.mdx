@@ -1,4 +1,12 @@
-# 第四章：SSA 深水区 - 分析闭包函数
+---
+title: "闭包与捕获环境"
+sidebar_label: "闭包与捕获环境"
+description: "研究自由变量、环境捕获与副作用在 SSA 中的表示方式。"
+read_minutes: 21
+chapter: "04"
+---
+
+# 闭包与捕获环境
 
 :::tip 题外话
 
@@ -14,11 +22,11 @@
 
 这两大话题是 SSA 中非常具有实践意义的话题。
 
-import TOCInline from '@theme/TOCInline';
+
 import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
 ---
-<TOCInline toc={toc} />
+
 ---
 
 ## 术语解析
@@ -755,14 +763,14 @@ graph LR
     
     subgraph "Function Definition"
         C
-        style C fill:#f9f,stroke:#333,stroke-width:2px
+        style C fill:#ebe3dd,stroke:#52604c,stroke-width:2px
     end
     
     subgraph "Side Effect Materialization"
         D
         E
-        style D fill:#bbf,stroke:#333,stroke-width:2px
-        style E fill:#bbf,stroke:#333,stroke-width:2px
+        style D fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+        style E fill:#e2e7d7,stroke:#52604c,stroke-width:2px
     end
 ```
 
@@ -851,10 +859,10 @@ graph LR
     P -->|"apply"| E
     E --> D
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#ff9,stroke:#333,stroke-width:2px
-    style F fill:#9cf,stroke:#333,stroke-width:2px
-    style P fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style E fill:#ff9,stroke:#52604c,stroke-width:2px
+    style F fill:#9cf,stroke:#52604c,stroke-width:2px
+    style P fill:#dce7dc,stroke:#52604c,stroke-width:2px
 
 ```
 
@@ -909,9 +917,9 @@ graph LR
     F -->|"Trigger"| S1
     S3 -->|"Effect Application"| R
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style R fill:#ff9,stroke:#333,stroke-width:2px
-    style S3 fill:#bfb,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style R fill:#ff9,stroke:#52604c,stroke-width:2px
+    style S3 fill:#dce7dc,stroke:#52604c,stroke-width:2px
 
 ```
 
@@ -1125,8 +1133,8 @@ graph TB
     G -.->|"used in"| C
     H -.->|"used in"| B
     
-    style D fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style E fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 ```
 
 #### 分析要点
@@ -1184,7 +1192,7 @@ graph LR
     C --> D
     A -->|"unchanged"| D
     
-    style D fill:#f9f,stroke:#333,stroke-width:2px
+    style D fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 ```
 
 
@@ -1293,10 +1301,10 @@ graph TB
     F --> K
     F --> L
     
-    style C fill:#f9f,stroke:#333,stroke-width:2px
-    style I fill:#f9f,stroke:#333,stroke-width:2px
-    style K fill:#bbf,stroke:#333,stroke-width:2px
-    style L fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style I fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style K fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style L fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 
 ```
 

@@ -1,13 +1,21 @@
-# 第三章：高级语言的 SSA 构建（二）
+---
+title: "高级语言的 SSA 构建（二）"
+sidebar_label: "高级语言的 SSA 构建（二）"
+description: "继续讨论循环与控制结构的 SSA 建模及相关构建问题。"
+read_minutes: 13
+chapter: "03.2"
+---
+
+# 高级语言的 SSA 构建（二）
 
 在《第三章：高级语言的 SSA 构建（一）》中，我们讨论了 SSA 的基本概念和基本编译技术，并且详细分析和讨论了分支的 SSA 构建，接下来，我们将会继续未竟的话题，讨论循环的 SSA 构建和函数构建。
 
 ---
 
-import TOCInline from '@theme/TOCInline';
+
 import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
-<TOCInline toc={toc} />
+
 
 ---
 
@@ -31,9 +39,9 @@ graph LR
     D --> B
     D --> E["Exit"]
     
-    style B fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style E fill:#9f6,stroke:#333
+    style B fill:#ece0cf,stroke:#52604c
+    style A fill:#dce7dc,stroke:#52604c
+    style E fill:#dce7dc,stroke:#52604c
 
 ```
 
@@ -61,11 +69,11 @@ graph LR
     D --> B
     B --> E["[E] Exit"]
     
-    style B fill:#f96,stroke:#333
-    style D fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style C fill:#9f6,stroke:#333
-    style E fill:#9f6,stroke:#333
+    style B fill:#ece0cf,stroke:#52604c
+    style D fill:#ece0cf,stroke:#52604c
+    style A fill:#dce7dc,stroke:#52604c
+    style C fill:#dce7dc,stroke:#52604c
+    style E fill:#dce7dc,stroke:#52604c
 ```
 
 这个循环是非规约的，原因在于：
@@ -85,12 +93,12 @@ graph LR
     E --> C
     B --> F["[F] Exit"]
     
-    style B fill:#f96,stroke:#333
-    style C fill:#f96,stroke:#333
-    style D fill:#f96,stroke:#333
-    style E fill:#f96,stroke:#333
-    style A fill:#9f6,stroke:#333
-    style F fill:#9f6,stroke:#333
+    style B fill:#ece0cf,stroke:#52604c
+    style C fill:#ece0cf,stroke:#52604c
+    style D fill:#ece0cf,stroke:#52604c
+    style E fill:#ece0cf,stroke:#52604c
+    style A fill:#dce7dc,stroke:#52604c
+    style F fill:#dce7dc,stroke:#52604c
 
 ```
 
@@ -209,8 +217,8 @@ graph LR
 
     F["loop.exit-5"]
 
-    style C fill:#f9f,stroke:#333,stroke-width:2px
-    style E fill:#lightblue,stroke:#333,stroke-width:2px
+    style C fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style E fill:#lightblue,stroke:#52604c,stroke-width:2px
 ```
 
 我们会得到一个 phi 节点 `t33`，这个 phi 节点会根据前驱块的不同，选择不同的值。可能的选项为：
@@ -232,8 +240,8 @@ graph LR
         B
     end
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#lightblue,stroke:#333,stroke-width:2px
+    style A fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B fill:#lightblue,stroke:#52604c,stroke-width:2px
 ```
 
 :::tip
@@ -299,7 +307,7 @@ graph LR
         D
     end
 
-    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 ```
 
 对于循环中的变量，我们可以用以下形式化表示：
@@ -363,7 +371,7 @@ graph LR
     C --> B
     B --> D["Exit"]
 
-    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 ```
 
 形式化的变量依赖关系：
@@ -500,7 +508,7 @@ graph LR
         C["Body"]
     end
 
-    style B fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 
 ```
 

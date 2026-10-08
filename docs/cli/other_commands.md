@@ -1,8 +1,12 @@
 ---
 sidebar_position: 5
+title: "Program 与结果管理"
+sidebar_label: "Program 与结果管理"
+description: "管理已编译 Program，清理历史数据，检查保存的分析结果。"
+read_minutes: 2
 ---
 
-# 其他命令
+# Program 与结果管理
 
 这个页面先讲 3 个高频辅助命令：
 

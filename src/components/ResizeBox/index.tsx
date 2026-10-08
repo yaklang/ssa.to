@@ -265,12 +265,12 @@ export const ResizeBox: React.FC<ResizeBoxProps> = React.memo((props) => {
   const [bodyWidth, setBodyWidth] = useState<number>(0);
   const [bodyHeight, setBodyHeight] = useState<number>(0);
   let firstRenderRef = useRef<boolean>(true);
-  let perBodyWidth = useRef<number>();
-  let perBodyHeight = useRef<number>();
+  let perBodyWidth = useRef<number | undefined>(undefined);
+  let perBodyHeight = useRef<number | undefined>(undefined);
 
   // 拖拽时移动 缓存
-  const dragFirstSize = useRef<number>();
-  const dragSecondSize = useRef<number>();
+  const dragFirstSize = useRef<number | undefined>(undefined);
+  const dragSecondSize = useRef<number | undefined>(undefined);
 
   // 最小值（存在 firstMinSize + secondMinSize > 整个控件）对此特殊情况额外处理，按照比例直接分配
   const [FirstMinSize, setFirstMinSize] = useState<string | number>();

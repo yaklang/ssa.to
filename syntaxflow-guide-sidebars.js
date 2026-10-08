@@ -1,27 +1,23 @@
-/**
- * 侧边栏配置文件
- * 用于配置 SyntaxFlow 文档的侧边栏结构
- */
-
 // @ts-check
-
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
-const sidebars = {
-  // SyntaxFlow 指南侧边栏
+export default {
   syntaxflowGuideSidebar: [
-    'intro',
-    'quick-start',
-    'rule-intro',
     {
-      type: 'category',
-      label: '编写基础的 SyntaxFlow 规则',
+      type: "category",
+      label: "导读与规则结构",
+      collapsed: false,
       items: [
-        {
-          type: 'doc',
-          label: 'SytanxFlow 规则介绍',
-          id: 'rule-intro'
-        },
+        "intro",
+        "quick-start",
+        "rule-intro",
         "statements/intro-and-desc",
+      ],
+    },
+    {
+      type: "category",
+      label: "查询语言",
+      collapsed: false,
+      items: [
         "statements/sf-search",
         "statements/sf-func-call",
         "statements/sf-variable",
@@ -29,20 +25,19 @@ const sidebars = {
         "statements/sf-dataflow",
         "statements/sf-filter",
         "statements/sf-calc",
-        "statements/sf-nativecall",
-        "statements/sf-sca",
-        "statements/sf_file_filter"
-      ]
+      ],
     },
-      'nativecall-demos',
     {
-      type: 'category',
-      label: '高级静态代码分析实战',
+      type: "category",
+      label: "扩展与分析实践",
+      collapsed: false,
       items: [
+        "statements/sf-nativecall",
+        "nativecall-demos",
+        "statements/sf-sca",
+        "statements/sf_file_filter",
         "advanced/advanced-analyzing-dataflow",
-      ]
-    }
-  ]
+      ],
+    },
+  ],
 };
-
-export default sidebars;

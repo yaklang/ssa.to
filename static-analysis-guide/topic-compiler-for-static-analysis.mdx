@@ -1,4 +1,12 @@
-# 议题：编译技术驱动静态分析革新
+---
+title: "编译技术与分析方法"
+sidebar_label: "编译技术与分析方法"
+description: "讨论编译技术如何支撑程序分析，以及通用表示带来的方法变化。"
+read_minutes: 12
+chapter: "专题"
+---
+
+# 编译技术与分析方法
 
 :::note
 
@@ -7,10 +15,10 @@
 :::
 
 
-import TOCInline from '@theme/TOCInline';
+
 import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
-<TOCInline toc={toc} />
+
 
 ## 高级编译技术与静态分析
 
@@ -22,7 +30,7 @@ import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
 
 :::
 
-在20世纪80年代到90年代初期，编译器优化技术经历了一次革命性的发展。这个时期出现了一系列重要的优化技术，包括数据流分析（如到达定义分析、活跃变量分析）、经典优化技术（如常量折叠、死代码消除、公共子表达式消除）、基于控制流图的优化，以及过程间分析等。但最具革命性的突破是1991年静态单赋值形式（SSA Form）的引入。SSA形式的核心思想是：程序中的每个变量只能被赋值一次。这个看似简单的约束却带来了深远的影响。
+在20世纪80年代到90年代初期，编译器优化技术经历了一次革命性的发展。这个时期出现了一系列重要的优化技术，包括数据流分析（如到达定义分析、活跃变量分析）、经典优化技术（如常量折叠、死代码消除、公共子表达式消除）、基于控制流图的优化，以及过程间分析等。1991 年，Cytron 等人的工作系统阐述了 SSA 形式与控制依赖图的高效构建方法，成为这一领域的重要参考。SSA形式的核心思想是：程序中的每个变量只能被赋值一次。这个看似简单的约束却带来了深远的影响。
 
 ```mermaid
 timeline
@@ -46,7 +54,7 @@ timeline
                    : 公共子表达式消除
       控制流优化 : 基于控制流图的优化
                  : 过程间分析
-      1991年重大突破 : SSA Form引入
+      1991年代表性工作 : SSA 构建与控制依赖图
                      : 变量单次赋值原则
 ```
 
@@ -249,10 +257,10 @@ flowchart LR
         y3 -.->|"Override"| y1
     end
 
-    style e1 fill:#f9f,stroke:#333,stroke-width:2px
-    style x4 fill:#bbf,stroke:#333,stroke-width:2px
-    style y5 fill:#bbf,stroke:#333,stroke-width:2px
-    style y4 fill:#bbf,stroke:#333,stroke-width:2px
+    style e1 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style x4 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style y5 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style y4 fill:#e2e7d7,stroke:#52604c,stroke-width:2px
 
 ```
 
@@ -336,8 +344,8 @@ flowchart LR
     B2 --> Call
     Call --> B3
 
-    style Call fill:#bbf,stroke:#333,stroke-width:2px
-    style B2 fill:#f9f,stroke:#333,stroke-width:2px
+    style Call fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style B2 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 
 
 ```
@@ -382,9 +390,9 @@ flowchart LR
     B4 -.-> B3
     B4 --> B5[Exit]
 
-    style Call fill:#bbf,stroke:#333,stroke-width:2px
-    style B2 fill:#f9f,stroke:#333,stroke-width:2px
-    style B3 fill:#f9f,stroke:#333,stroke-width:2px
+    style Call fill:#e2e7d7,stroke:#52604c,stroke-width:2px
+    style B2 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
+    style B3 fill:#ebe3dd,stroke:#52604c,stroke-width:2px
 
 ```
 

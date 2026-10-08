@@ -1,152 +1,114 @@
-# 第八章：控制流中的支配关系与 SSA Phi 指令
+---
+title: "控制流、支配与 Phi"
+sidebar_label: "控制流、支配与 Phi"
+description: "通过分支示例区分控制流与数据流，理解支配边界及 Phi 的输入语义。"
+read_minutes: 4
+chapter: "07"
+---
 
-:::danger 未完成的章节
+# 控制流、支配与 Phi
 
-本章是一个未完成的章节，将会基本介绍控制流和支配的关系，并且会介绍 SSA 的 Phi 节点问题。
-
-:::
+数据依赖说明一个值来自哪里；控制流说明程序可以沿哪些路径执行。SSA 构建需要同时考虑二者：在存在多条进入路径的基本块中，如何为后续使用确定一个唯一的值定义？本章用一个分支示例说明基本块、支配关系、支配边界与 Phi 节点的联系。
 
 ## 控制流与基本块
 
-## 控制流中的支配关系
-
-import TOCInline from '@theme/TOCInline';
-import Math, { BlockMath, InlineMath } from '@site/src/components/Math';
-
-在接下来的内容中，我们重点将会讨论控制流中基本块之间的支配问题。
-
-控制流分析中，支配是一个非常重要的概念，他描述了基本块之间的依赖关系，我们以 <InlineMath math="Dom(x, y)" /> 来表示基本块 <InlineMath math="x" /> 支配基本块 <InlineMath math="y" />。
-
-<BlockMath math={`
-对于基本块\\ x\\ 和\\ y，如果：\\\\
-Dom(x,\\ y)\\ \\iff\\ \\text{所有到达\\ y\\ 的路径都必须经过\\ x}
-`} />
-
-我们可以进一步形式化定义支配关系：
-
-<BlockMath math={`
-Dom(x,\\ y)\\ =\\ \\begin{cases}
-true\\ &\\ \\text{若\\ x\\ 支配\\ y}\\ \\\\
-false\\ &\\ \\text{其他情况}
-\\end{cases}
-`} />
-
-其中：
-- <InlineMath math="x" /> 是支配者(dominator)
-- <InlineMath math="y" /> 是被支配者(dominee)
-
-### CFG 中的基本块支配边界
-
-在用户了解完支配问题之后，接下来我们提出一个问题，“一个数据节点的支配的范围有多大？”
-
-要回答这个问题，我们需要定义一个概念叫支配边界。考虑任何离开块 B 的路径。最初路径上的块由 B 支配。最终到达一个不由 B 支配的块。除非路径返回到 B，否则之后的所有块都不受 B 支配。不被 B 支配的第一个块是重要的，因为它指示了 B 支配的块的范围，并使用有关 B 中的计算的信息指示了优化的限制。考虑到所有路径，拥有该特征的块的集合称为支配 B 的边界。
-
-让我们首先给出支配边界的形式化定义：
-
-<BlockMath math={`
-DF(X) = \\{Y | \\exists Z \\in Dom(X) \\text{ such that } Y \\text{ is an immediate successor of } Z \\text{ and } X \\not\\in Dom(Y)\\}
-`} />
-
-其中：
-- <InlineMath math={"DF(X)"} /> 表示节点X的支配边界
-- <InlineMath math={"Dom(X)"} /> 表示被X支配的节点集合
-- Y是X的支配边界中的一个节点
-- Z是被X支配的某个节点
-- Y是Z的直接后继节点
-- X不支配Y
-
-让我们用一个具体的例子来说明：
+基本块是具有单一入口的直线执行序列，控制转移发生在块末尾。控制流图（CFG）以基本块为节点，以可能的控制转移为有向边。
 
 ```mermaid
-graph LR
-  subgraph cluster [" "]
-      style cluster fill:#E8E8E8,stroke:#CCCCCC
-      5 --> 6
-      6 --> 8
-      6 --> 7
-      7 --> 8
-  end
-  1 --> 2
-  2 --> 3
-  3 --> 4
-  4 --> 13
-  1 --> 5
-  8 --> 13
-  6 --> 4
-  7 --> 12
-  12 --> 13
-  1 --> 9
-  9 --> 10
-  10 --> 12
-  9 --> 11
-  11 --> 12
+flowchart TD
+  Entry[入口] --> Branch{条件}
+  Branch --> Left[左分支: x₁ = 1]
+  Branch --> Right[右分支: x₂ = 2]
+  Left --> Merge[汇合: x₃ = φ x₁, x₂]
+  Right --> Merge
+  Merge --> Use[使用 x₃]
 ```
 
-我们给出图中各节点的支配边界分析表格：
-| 节点 | 支配的节点集合 Dom(X) | 直接后继节点 | 支配边界 DF(X) |
-|-----|-------------------|------------|-------------|
-| 1 | \{1,2,3,4,5,6,7,8,9,10,11,12,13\} | \{2,5,9\} | ∅ |
-| 2 | \{2,3\} | \{3\} | \{4\} |
-| 3 | \{3\} | \{4\} | \{4\} |
-| 4 | \{4\} | \{13\} | \{13\} |
-| 5 | \{5,6,7,8\} | \{6\} | \{4,12,13\} |
-| 6 | \{6,7,8\} | \{4,7,8\} | \{4,12,13\} |
-| 7 | \{7\} | \{8,12\} | \{8,12\} |
-| 8 | \{8\} | \{13\} | \{13\} |
-| 9 | \{9,10,11\} | \{10,11\} | \{12\} |
-| 10 | \{10\} | \{12\} | \{12\} |
-| 11 | \{11\} | \{12\} | \{12\} |
-| 12 | \{12\} | \{13\} | \{13\} |
-| 13 | \{13\} | ∅ | ∅ |
+图中的左右分支分别定义一个值。在汇合块中，后续代码需要使用由进入路径决定的那个值；SSA 用新的定义 `x₃` 表达这一关系。
 
-给出支配边界计算算法的形式化表示：
+## 支配关系
 
-<BlockMath math={`
-\\begin{aligned}
-DF_{local}(X) &= \\{Y \\in succ(X) \\mid X \\not\\in Dom(Y)\\} \\\\
-DF_{up}(X) &= \\bigcup_{Z \\in DomTree_{children}(X)} \\{Y \\in DF(Z) \\mid X \\not\\in Dom(Y)\\} \\\\
-DF(X) &= DF_{local}(X) \\cup DF_{up}(X)
-\\end{aligned}
-`} />
+在具有入口节点的 CFG 中，如果从入口到基本块 B 的每一条路径都经过 A，则称 A **支配** B。根据这个定义，每个节点都支配自身；排除自身时称为**严格支配**。
 
-其中：
-- <InlineMath math={"DF_{local}(X)"} /> 表示节点X的局部支配边界
-- <InlineMath math={"DF_{up}(X)"} /> 表示从X的支配树子节点上传递来的支配边界
-- <InlineMath math={"succ(X)"} /> 表示X的直接后继节点集合
-- <InlineMath math={"DomTree_{children}(X)"} /> 表示X在支配树中的直接子节点集合
+在上图中，入口支配所有可达块。左右分支都不支配汇合块，因为存在一条经过另一个分支到达汇合块的路径。
 
-下面是计算支配边界的完整算法伪代码：
+### 直接支配者与支配树
 
-```javascript
-// 计算所有节点的支配边界
-function computeDominanceFrontiers(cfg) {
-    let DF = new Map()  // 存储每个节点的支配边界
-    
-    // 按照支配树的后序遍历节点
-    for (let X of postorderTraversal(cfg.domTree)) {
-        DF.set(X, new Set())  // 初始化空集
-        
-        // 计算局部支配边界
-        for (let Y of X.successors) {
-            if (X.immediateDominator !== Y.immediateDominator) {
-                DF.get(X).add(Y)
-            }
-        }
-        
-        // 计算来自子节点的支配边界
-        for (let Z of X.domTreeChildren) {
-            for (let Y of DF.get(Z)) {
-                if (!dominates(X, Y) || X === Y) {
-                    DF.get(X).add(Y)
-                }
-            }
-        }
+一个非入口块的**直接支配者**，是离它最近的严格支配者。将每个块与其直接支配者连接起来，便得到支配树。
+
+支配树提供的是“必经关系”。它不是 CFG 的另一种绘制方式，也不表示数据值的定义与使用关系。
+
+## 支配边界
+
+A 的支配边界由满足以下条件的块 B 构成：
+
+- A 支配 B 的至少一个前驱；
+- A 不严格支配 B。
+
+直观上，这是从 A 支配的区域到达一个可能与其他路径汇合的地方。在上图中，汇合块位于左右两个分支块的支配边界中。
+
+“非严格支配”这一条件需要保留：循环可能使一个块出现在自身的支配边界中。因此，简单地排除所有被 A 支配的节点，会漏掉某些循环情况。
+
+### 一个用于教学的计算过程
+
+下面的伪代码假设 CFG 的可达节点、前驱列表与直接支配者已经计算完成。`idom` 中入口节点的直接支配者为 `null`。
+
+```javascript title="沿支配树回溯，收集汇合块"
+function dominanceFrontiers(blocks, predecessors, idom) {
+  const frontier = new Map(blocks.map(block => [block, new Set()]));
+
+  for (const block of blocks) {
+    const incoming = predecessors.get(block) || [];
+    if (incoming.length < 2) continue;
+
+    for (const predecessor of incoming) {
+      let runner = predecessor;
+      while (runner != null && runner !== idom.get(block)) {
+        frontier.get(runner).add(block);
+        runner = idom.get(runner);
+      }
     }
-    return DF
-}
-
-// 判断X是否支配Y
-function dominates(X, Y) {
-    return Y.dominators.has(X)
+  }
+  return frontier;
 }
 ```
+
+这段代码用于解释支配边界的计算思路，不代表 Yak SSA 内部使用的具体实现。完整的 SSA 构建还需要变量定义信息与重命名过程。
+
+## Phi 节点如何连接路径与值
+
+对于在不同块中定义的同一源变量，可以从定义块的支配边界寻找 Phi 放置位置，并继续迭代处理新定义带来的汇合点。是否保留一个候选 Phi，还与采用的 SSA 构建方案及变量的活跃性有关。
+
+在分支示例中，教学表示如下：
+
+```text title="两个前驱，两个输入值，一个新的 SSA 定义"
+left:
+    x₁ = 1
+    goto merge
+
+right:
+    x₂ = 2
+    goto merge
+
+merge:
+    x₃ = φ(left: x₁, right: x₂)
+    use(x₃)
+```
+
+Phi 在语义上选择**刚刚执行的前驱基本块**对应的值。从左分支进入时，`x₃` 取 `x₁`；从右分支进入时取 `x₂`。它不是一次普通函数调用，也不是对两条路径的值同时求值。
+
+## 回到静态分析
+
+在审计中，看到某个值的多个上游来源时，应进一步检查这些来源关联的控制路径。某条数据依赖存在，并不能独立证明它在所有执行路径上都成立。
+
+阅读 [SSA 数据流与跨过程分析](./deep-dive-into-ssa-dataflow-and-cross-procedure) 时，可以用这两个问题区分概念：
+
+1. 这个值的定义与使用通过哪些依赖连接？
+2. 从入口到相关调用，哪些基本块必须经过？
+
+前者属于数据流问题，后者属于控制流与支配问题。
+
+## 参考资料
+
+- Cytron, Ferrante, Rosen, Wegman, Zadeck. *Efficiently Computing Static Single Assignment Form and the Control Dependence Graph*, 1991。[原始技术报告](https://cs.brown.edu/research/pubs/techreports/reports/CS-91-21.html)。
+- LLVM Language Reference Manual。[Phi 指令的输入与语义](https://llvm.org/docs/LangRef.html#phi-instruction)。
