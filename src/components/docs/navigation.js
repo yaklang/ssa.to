@@ -1,7 +1,3 @@
-export function isAcademicPath(pathname) {
-  return !/^\/(en\/?)?$/.test(pathname);
-}
-
 export function academicNavbarItems(items, zh) {
   const labels = {
     staticAnalysisGuideSidebar: zh ? "静态分析" : "Foundations",

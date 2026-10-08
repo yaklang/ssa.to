@@ -132,13 +132,7 @@ const config: Config = {
         [
             '@docusaurus/plugin-client-redirects',
             {
-                createRedirects: (path) => {
-                    console.info(path)
-                    if (path === '*') {
-                        return ['/'];
-                    }
-                    return undefined;
-                },
+                redirects: [{from: '/next', to: '/'}],
             },
         ],
     ],

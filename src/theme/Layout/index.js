@@ -9,16 +9,12 @@ import {
 import SkipToContent from "@theme/SkipToContent";
 import AnnouncementBar from "@theme/AnnouncementBar";
 import Navbar from "@theme/Navbar";
-import Footer from "@theme/Footer";
 import LayoutProvider from "@theme/Layout/Provider";
 import ErrorPageContent from "@theme/ErrorPageContent";
 import styles from "./styles.module.css";
-import { useLocation } from "@docusaurus/router";
 import AcademicFooter from "@site/src/components/docs/AcademicFooter";
 import "@site/src/css/academic-docs.scss";
 export default function Layout(props) {
-  const { pathname } = useLocation();
-  const academic = !/^\/(en\/?)?$/.test(pathname);
   const {
     children,
     noFooter,
@@ -31,7 +27,7 @@ export default function Layout(props) {
     <LayoutProvider>
       <PageMetadata title={title} description={description} />
 
-      <div className={academic ? "academic-site" : "legacy-site"}>
+      <div className="academic-site">
         <SkipToContent />
 
         <AnnouncementBar />
@@ -53,7 +49,7 @@ export default function Layout(props) {
           </ErrorBoundary>
         </div>
 
-        {!noFooter && (academic ? <AcademicFooter /> : <Footer />)}
+        {!noFooter && <AcademicFooter />}
       </div>
     </LayoutProvider>
   );

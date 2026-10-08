@@ -7,7 +7,7 @@ export default function HomeBreadcrumbItem() {
   return (
     <li className="breadcrumbs__item">
       <Link
-        to="/next"
+        to="/"
         className="breadcrumbs__link"
         aria-label={translate({
           id: "theme.docs.breadcrumbs.home",

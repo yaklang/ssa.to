@@ -8,7 +8,7 @@ export default function AcademicFooter() {
     <footer className="academic-footer">
       <div className="academic-footer-inner">
         <div>
-          <Link to="/next" className="academic-wordmark">
+          <Link to="/" className="academic-wordmark">
             ssa.to
           </Link>
           <p>
@@ -21,7 +21,7 @@ export default function AcademicFooter() {
           aria-label={zh ? "文档与项目链接" : "Documentation and project links"}
         >
           <Link to="/docs/intro">{zh ? "文档导读" : "Documentation"}</Link>
-          <Link to="/next#rules">{zh ? "规则库" : "Rule catalog"}</Link>
+          <Link to="/#rules">{zh ? "规则库" : "Rule catalog"}</Link>
           <a href="https://yaklang.io" target="_blank" rel="noreferrer">
             yaklang.io ↗
           </a>
@@ -38,7 +38,7 @@ export default function AcademicFooter() {
         </nav>
         <div className="academic-footer-bottom">
           <span>© {new Date().getFullYear()} SSA.to · Yak Project</span>
-          <Link to="/">{zh ? "原版首页" : "Original homepage"} →</Link>
+          <Link to="/">{zh ? "回到首页" : "Back to home"} →</Link>
         </div>
       </div>
     </footer>

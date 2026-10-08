@@ -417,8 +417,8 @@ export default function HomePage({ zh }: { zh: boolean }) {
             </div>
             <div className={styles.footerBottom}>
               <span>© {new Date().getFullYear()} SSA.to · Yak Project</span>
-              <Link to="/">
-                {zh ? "查看原版网站" : "View the original website"}
+              <Link to="/docs/intro">
+                {zh ? "阅读文档" : "Read the documentation"}
                 <ArrowRight size={12} />
               </Link>
             </div>
