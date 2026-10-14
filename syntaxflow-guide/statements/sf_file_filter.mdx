@@ -100,6 +100,22 @@ XPATH) as $result
 - `<<<XPATH ... XPATH` 是多HereDoc语法，用于编写复杂的 XPath 表达式。
 - xpath规则匹配所有包含 `passwd` 或 `password` 的元素，忽略大小写。
 
+## 在已有命中上继续搜索
+
+`.pattern_regex()` 与 `.re()` / `.regexp()` 是同一类正则。`source` 规则里，拿到一个命中之后，可以在它所在的文件里再匹配一次：
+
+```syntaxflow
+desc(mode: "source", language: "general", title: "secret in env")
+${*}.pattern_regex(/(?m)^env:/) as $block
+$block.pattern_regex(/secret/) as $hit
+```
+
+默认搜索该命中所在的整个文件。只在上一次命中自己的区间里搜时，加上 `scope: "region"`。
+
+`.pattern_regex_not()` 的第一个参数是要命中的正则，后面的参数是要排除的正则。链式写法 `$hit.pattern_regex_not(...)` 用前面的命中当候选，再去掉反模式。
+
+区间包含用 `inside` / `not_inside`，见 [条件过滤](./sf-filter)。这两种都只对源码命中有意义。
+
 ## 实战中注意事项
 
 在实际应用中，使用文件过滤功能时需要注意以下几点：

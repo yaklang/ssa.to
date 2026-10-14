@@ -1,9 +1,8 @@
 import React from "react";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { useUiZh } from "@site/src/components/docs/UiLocale";
 export default function AcademicFooter() {
-  const { i18n } = useDocusaurusContext();
-  const zh = i18n.currentLocale === "zh";
+  const zh = useUiZh();
   return (
     <footer className="academic-footer">
       <div className="academic-footer-inner">

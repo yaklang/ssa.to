@@ -181,10 +181,6 @@ const config: Config = {
                     href: "https://github.com/yaklang/ssa.to",
                     label: "GitHub",
                     position: "right",
-                },
-                {
-                    type: "localeDropdown",
-                    position: "right",
                 }
             ],
         },

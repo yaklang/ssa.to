@@ -1,11 +1,10 @@
 import React from "react";
 import OriginalContent from "@theme-original/DocItem/Content";
 import { useDoc } from "@docusaurus/plugin-content-docs/client";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { useUiZh } from "@site/src/components/docs/UiLocale";
 export default function DocItemContent(props) {
   const { metadata, frontMatter } = useDoc();
-  const { i18n } = useDocusaurusContext();
-  const zh = i18n.currentLocale === "zh";
+  const zh = useUiZh();
   const source = metadata.source || "";
   const section = source.includes("static-analysis-guide")
     ? ["静态分析原理", "FOUNDATIONS OF STATIC ANALYSIS"]

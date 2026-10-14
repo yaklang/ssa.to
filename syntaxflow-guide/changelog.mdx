@@ -1,0 +1,133 @@
+---
+title: "更新历史"
+sidebar_label: "更新历史"
+description: "按版本记录检测模式、SyntaxFlow 语法和可编译语言的变化。"
+read_minutes: 4
+---
+
+# 更新历史
+
+这里只记已经进入发行标签、并且能从命令行或规则里直接用到的变化。对照的代码线是 Yaklang `main`，当前标签为 **1.4.9-beta2**（2026-10-10）。
+
+未合并的实验分支不写在这里。
+
+## 1.4.9
+
+标签 `1.4.9-beta1`（2026-09-24）到 `1.4.9-beta2`（2026-10-10）。`yak code-scan` 在这一线上默认把三种检测都跑完。
+
+### 检测模式
+
+规则在 `desc` 里用 `mode` 声明自己走哪个后端。省略时按 `ssa`。
+
+| `mode` | 做什么 | 适合的问题 |
+| --- | --- | --- |
+| `source` | 不编译，直接在源码文本上匹配 | 硬编码密钥、危险配置、看形态就能判断的写法 |
+| `struct` | 每个编译单元编出骨架后立刻检查，不等整个项目 | 危险 API、包内就能定性的结构 |
+| `ssa` | 全项目 SSA 完成后再做跨函数、跨包的数据流 | SQL 注入、SSRF、需要追踪来源的污点 |
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/modes-depth.svg" alt="三种模式按分析深度排成三根柱：source 最矮，struct 居中，ssa 最高" />
+  <figcaption>柱高是分析深度，不是耗时。颜色和后面的阶段图一致：绿是 source，青是 struct，紫是 ssa。</figcaption>
+</figure>
+
+`yak code-scan` 默认三种都执行。只跑其中一部分时重复或逗号分隔 `--mode`：
+
+```bash
+yak code-scan -t ./target --mode source
+yak code-scan -t ./target --mode source --mode struct
+```
+
+`-t` 会检查本地文件、编译（struct 发生在编译过程中）、再加载 IR 做 SSA。`-p` 不编译：source 读已保存的源码，struct 在已有 Program 内检查，然后做 SSA。
+
+扫描过程按四个产品阶段汇报。没请求的阶段标成跳过，而不是空状态。
+
+| 阶段 ID | 界面名称 | 对应模式 |
+| --- | --- | --- |
+| `collect` | 收集代码 | 取出或打开项目树 |
+| `inspect` | 代码检测 | `source` |
+| `review` | 语义检测 | `struct` |
+| `analyze` | 深度分析 | `ssa` |
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/scan-stages.svg" alt="四个阶段从左到右：收集代码、代码检测、语义检测、深度分析" />
+  <figcaption>没请求的阶段会标成跳过。阶段上的风险数相加，不一定等于报告条数。</figcaption>
+</figure>
+
+同一问题若前后阶段都命中，最终报告保留后一阶段的结果。各阶段的风险计数相加不一定等于报告条数。
+
+语言对不上的内置规则会跳过，并在进度里标 `language mismatch`。
+
+### 源码规则可以继续收窄命中
+
+`source` 规则里，文件过滤除了 `.re()`，也可以写 `.pattern_regex()`（同一类正则）。拿到一个命中后，可以在它所在的文件里再搜一次。
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/source-region.svg" alt="文件里一块 env 区间，inside 只保留区间内的 secret，链式 pattern_regex 可以只搜这段" />
+  <figcaption>左边是同一份文件里的两处 secret。inside 和 scope: region 都只认区间，不看数据流。</figcaption>
+</figure>
+
+```syntaxflow
+desc(mode: "source", language: "general", title: "secret in env")
+${*}.pattern_regex(/(?m)^env:/) as $block
+$block.pattern_regex(/secret/) as $hit
+```
+
+默认搜索该命中所在的整个文件。把范围收成上一次命中自身的区间时，传 `scope: "region"`。
+
+`inside` / `not_inside` 判断的是源码命中区间的包含关系，不是 SSA 上的数据流：
+
+```syntaxflow
+$secret inside $block as $hit
+$socket not_inside $localhost as $hit
+```
+
+每条风险带来源文件、行号和代码片段，并带 `scan_mode`，用来区分它来自哪一种检测。
+
+### 大项目上的规则预算
+
+- `--rule-timeout`：单条规则的墙钟上限，默认 `4h`。`0` 表示关闭。
+- `--rule-work-limit`：单条规则可处理的扇出上限，默认 `50000`。超限时这条规则带着部分结果退出，避免边图无限涨。`0` 表示只受 `--rule-timeout` 约束。
+- `--debug <目录>`：写出 `ssadb.db`、日志、报告、`cmd.txt` 和 pprof。
+
+用法见 [代码扫描与报告](/docs/cli/scan)。
+
+## 1.4.8
+
+### 新增可编译语言：C#
+
+`1.4.8-beta18`（2026-09-11）起，C# / .NET 可以编译成 SSA。文件后缀是 `.cs`。`-l` 接受 `csharp`、`c#`、`cs`、`.net`、`dotnet`。
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/languages.svg" alt="可编译语言一览，C# 用绿色标成 1.4.8 新增" />
+  <figcaption>绿色是这一版新进语言列表的 C#。Python 的前端更早，在 2026-01。</figcaption>
+</figure>
+
+编译进 SSA 的语言目前是：
+
+| `-l` | 也接受 | 后缀 |
+| --- | --- | --- |
+| `yak` | `yaklang` | `.yak` |
+| `java` | | `.java` |
+| `php` | | `.php` |
+| `js` | `javascript`、`node` 等 | `.js` |
+| `ts` | `typescript` | `.ts` |
+| `golang` | `go` | `.go` |
+| `c` | `clang` | `.c` |
+| `python` | `py` | `.py` |
+| `csharp` | `c#`、`cs`、`.net`、`dotnet` | `.cs` |
+
+`python` 更早（2026-01）就有基础前端。1.4.8 新进语言列表的是 C#。
+
+### 新增源码区间语法
+
+`1.4.8-beta16`（2026-09-04）把 `inside`、`not_inside` 写进了 SyntaxFlow 语法。它们保留到 1.4.9，没有删除。说明见 [条件过滤](./statements/sf-filter)。
+
+同一时期，`desc` 增加 `mode`（别名 `engine`、`exec_mode`），用来选择 `source`、`struct` 或 `ssa`。说明见 [规则描述与元信息](./statements/intro-and-desc)。
+
+### 扫描可以按模式叠跑
+
+`1.4.8-beta19` 起，`--mode` 可以重复或用逗号叠成 `source`、`struct`、`ssa`。`code-scan` 不写 `--mode` 时三种都跑。底层的 ScanProject 在没给模式时只编译，不默认开检测。
+
+## 更早的行为
+
+2026-03 的扫描文档样例仍对应「编译后跑规则」这一条路径，日志里还没有四个阶段名。那些命令在当前版本可以继续用；阶段名和 `--mode` 以本页及 [代码扫描与报告](/docs/cli/scan) 为准。

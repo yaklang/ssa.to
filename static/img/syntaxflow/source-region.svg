@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" font-family="Noto Sans CJK SC, Source Han Sans SC, WenQuanYi Zen Hei, Noto Sans SC, sans-serif">
+  <rect width="1200" height="460" fill="#f8f6ef"/>
+  <text x="40" y="52" font-size="28" font-weight="700" fill="#1e241c">源码命中怎么收窄</text>
+  <text x="40" y="84" font-size="16" fill="#4e5548">inside 比较两段文本的区间。链式 pattern_regex 在已有命中上继续搜。</text>
+  <line x1="40" y1="106" x2="1160" y2="106" stroke="#d7dacd"/>
+
+  <rect x="40" y="140" width="520" height="250" fill="#f3f1e7" stroke="#d7dacd"/>
+  <text x="60" y="172" font-size="13" fill="#5c6156">一份文件</text>
+  <rect x="60" y="190" width="480" height="176" fill="#f8f6ef" stroke="#d7dacd"/>
+  <text x="80" y="222" font-size="15" fill="#6a7164">其他代码</text>
+  <rect x="80" y="238" width="440" height="78" fill="#e4ebdc" stroke="#52684c"/>
+  <text x="96" y="262" font-size="14" font-weight="700" fill="#52684c">$block · env 这段</text>
+  <text x="96" y="288" font-size="15" fill="#1e241c">secret = "..."</text>
+  <text x="80" y="344" font-size="15" fill="#6a7164">文件后部的另一个 secret，不在 $block 里</text>
+
+  <rect x="600" y="140" width="560" height="112" fill="#f3f1e7" stroke="#d7dacd"/>
+  <text x="620" y="172" font-size="13" fill="#52684c">inside</text>
+  <text x="620" y="204" font-size="18" font-weight="700" fill="#1e241c">$secret inside $block</text>
+  <text x="620" y="230" font-size="15" fill="#3a4036">只留下落在 env 区间内部的那条</text>
+
+  <rect x="600" y="268" width="560" height="122" fill="#f3f1e7" stroke="#d7dacd"/>
+  <text x="620" y="300" font-size="13" fill="#2a6f68">链式搜索</text>
+  <text x="620" y="332" font-size="18" font-weight="700" fill="#1e241c">$block.pattern_regex(/secret/)</text>
+  <text x="620" y="360" font-size="15" fill="#3a4036">默认搜整份文件。scope: "region" 只搜这段区间</text>
+
+  <text x="40" y="428" font-size="14" fill="#5c6156">这两步都只对 source 命中有意义，不能拿去过滤 SSA 上的值。</text>
+</svg>

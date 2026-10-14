@@ -4,6 +4,7 @@ import React, {
   Suspense,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import BrowserOnly from "@docusaurus/BrowserOnly";
@@ -13,6 +14,7 @@ import {
   ArrowDown,
   ArrowUpRight,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Code2,
@@ -24,6 +26,72 @@ import {
 } from "lucide-react";
 import { fetchCatalog, isSca, RULES_ROOT, type SyntaxFlowRule } from "./rules";
 import styles from "./home.module.scss";
+
+function FilterMenu({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  const current = options.find((item) => item.value === value) ?? options[0];
+  return (
+    <div className={styles.filterMenu} ref={root}>
+      <button
+        type="button"
+        className={styles.filterButton}
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((next) => !next)}
+      >
+        <span>{current.label}</span>
+        <ChevronDown size={14} />
+      </button>
+      {open && (
+        <ul className={styles.filterList} role="listbox" aria-label={label}>
+          {options.map((item) => (
+            <li key={item.value}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={item.value === value}
+                onClick={() => {
+                  onChange(item.value);
+                  setOpen(false);
+                }}
+              >
+                <Check size={14} />
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const RuleEditor = lazy(() => import("../SsaEditor/index.module"));
 const PAGE_SIZE = 12;
@@ -336,29 +404,34 @@ export default function RulesExplorer({ zh }: { zh: boolean }) {
                 }}
               />
             </div>
-            <select
-              aria-label={zh ? "规则类型" : "Rule type"}
+            <FilterMenu
+              label={zh ? "规则类型" : "Rule type"}
               value={kind}
-              onChange={(e) => {
-                setKind(e.target.value);
+              onChange={(next) => {
+                setKind(next);
                 resetPage();
               }}
-            >
-              <option value="all">{zh ? "全部类型" : "All types"}</option>
-              <option value="audit">{zh ? "审计规则" : "Audit rules"}</option>
-              <option value="lib">{zh ? "库规则" : "Library rules"}</option>
-            </select>
-            <select
-              aria-label={zh ? "威胁评分" : "Threat score"}
+              options={[
+                { value: "all", label: zh ? "全部类型" : "All types" },
+                { value: "audit", label: zh ? "审计规则" : "Audit rules" },
+                { value: "lib", label: zh ? "库规则" : "Library rules" },
+              ]}
+            />
+            <FilterMenu
+              label={zh ? "威胁评分" : "Threat score"}
               value={score}
-              onChange={(e) => {
-                setScore(e.target.value);
+              onChange={(next) => {
+                setScore(next);
                 resetPage();
               }}
-            >
-              <option value="all">{zh ? "全部评分" : "All scores"}</option>
-              <option value="high">{zh ? "高评分 ≥ 8" : "Score ≥ 8"}</option>
-            </select>
+              options={[
+                { value: "all", label: zh ? "全部评分" : "All scores" },
+                {
+                  value: "high",
+                  label: zh ? "高评分 ≥ 8" : "Score ≥ 8",
+                },
+              ]}
+            />
             <button
               className={styles.iconButton}
               aria-label={zh ? "刷新规则" : "Refresh rules"}

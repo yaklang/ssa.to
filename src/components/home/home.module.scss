@@ -101,8 +101,8 @@
 }
 .container,
 .heroInner {
-  width: calc(100% - 112px);
-  max-width: 1160px;
+  width: min(1200px, calc(100% - 96px));
+  max-width: none;
   min-width: 0;
   margin: 0 auto;
 }
@@ -420,13 +420,74 @@
   gap: 14px;
   align-items: center;
   padding: 22px 0;
-  select {
-    background: transparent;
-    border: 1px solid var(--line);
-    border-radius: 0;
-    padding: 8px 26px 8px 10px;
-    font-size: 12px;
-    max-width: 160px;
+  button,
+  input {
+    font-family: "SSA Serif", "SSA Serif CJK", Georgia, serif;
+    font-size: 13px;
+    font-weight: 400;
+    font-style: normal;
+    letter-spacing: normal;
+    line-height: 1.4;
+  }
+}
+.filterMenu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 148px;
+  height: 40px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  font-family: "SSA Serif", "SSA Serif CJK", Georgia, serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink);
+  svg {
+    color: var(--muted);
+  }
+}
+.filterList {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: none;
+    border: 0;
+    text-align: left;
+    font-family: "SSA Serif", "SSA Serif CJK", Georgia, serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink);
+    svg {
+      color: var(--accent);
+      opacity: 0;
+    }
+    &[aria-selected="true"] svg {
+      opacity: 1;
+    }
+    &:hover {
+      background: #eef0e4;
+    }
   }
 }
 .searchBox {
@@ -444,7 +505,9 @@
     border: 0;
     min-width: 0;
     width: 100%;
+    font-family: "SSA Serif", "SSA Serif CJK", Georgia, serif;
     font-size: 13px;
+    font-weight: 400;
     height: 26px;
     &::placeholder {
       color: #8a8e83;
@@ -1054,7 +1117,7 @@
 @media (max-width: 1050px) {
   .container,
   .heroInner {
-    width: calc(100% - 72px);
+    width: min(1200px, calc(100% - 64px));
   }
   .heroGrid {
     gap: 30px;
@@ -1089,7 +1152,7 @@
 @media (max-width: 800px) {
   .container,
   .heroInner {
-    width: calc(100% - 48px);
+    width: calc(100% - 40px);
   }
   .hero {
     padding-top: 30px;
@@ -1179,9 +1242,11 @@
   .searchBox {
     flex-basis: 100%;
   }
-  .ruleFilters select {
+  .filterMenu {
     flex: 1;
-    max-width: none;
+  }
+  .filterButton {
+    width: 100%;
   }
   .ruleTable {
     th:first-child {

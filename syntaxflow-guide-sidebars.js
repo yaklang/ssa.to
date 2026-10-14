@@ -8,6 +8,7 @@ export default {
       collapsed: false,
       items: [
         "intro",
+        "changelog",
         "quick-start",
         "rule-intro",
         "statements/intro-and-desc",

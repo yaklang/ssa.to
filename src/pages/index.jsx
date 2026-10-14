@@ -1,11 +1,10 @@
 import React from "react";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import { PageMetadata } from "@docusaurus/theme-common";
+import { useUiZh } from "@site/src/components/docs/UiLocale";
 import LayoutProvider from "@theme/Layout/Provider";
 import HomePage from "@site/src/components/home/HomePage";
 export default function Homepage() {
-  const { i18n } = useDocusaurusContext();
-  const zh = i18n.currentLocale === "zh";
+  const zh = useUiZh();
   return (
     <LayoutProvider>
       <PageMetadata
