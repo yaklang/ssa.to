@@ -3,6 +3,8 @@ export const RULES_ROOT = "https://aliyun-oss.yaklang.com/yak";
 export interface SyntaxFlowRule {
   id: string;
   rule: string;
+  title_en: string;
+  title_zh: string;
   detail: string;
   detail_en: string;
   code: string;
@@ -10,6 +12,16 @@ export interface SyntaxFlowRule {
   is_lib: boolean;
   score: number;
   sha256: string;
+}
+
+function extractTitles(code: string, fallback: string): { en: string; zh: string } {
+  if (!code) return { en: fallback, zh: fallback };
+  const titleM = code.match(/(?:^|[\r\n\s,])title\s*:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)')/);
+  const titleZhM = code.match(/(?:^|[\r\n\s,])title_zh\s*:\s*(?:"([^"\\]*(?:\\.[^"\\]*)*)"|'([^'\\]*(?:\\.[^'\\]*)*)')/);
+  const clean = (val?: string) => (val ? val.replace(/\\(["'\\])/g, "$1").trim() : "");
+  const en = clean(titleM ? (titleM[1] ?? titleM[2]) : "") || fallback;
+  const zh = clean(titleZhM ? (titleZhM[1] ?? titleZhM[2]) : "") || fallback;
+  return { en, zh };
 }
 
 export function normalizeRules(payload: unknown): {
@@ -32,13 +44,20 @@ export function normalizeRules(payload: unknown): {
       if (typeof r.rule !== "string" || !r.rule.trim()) return [];
       const string = (key: string) =>
         typeof r[key] === "string" ? (r[key] as string) : "";
+      const rawCode = string("code");
+      const fallbackRule = string("rule");
+      const extracted = extractTitles(rawCode, fallbackRule);
+      const title_en = string("title_en") || string("title") || extracted.en;
+      const title_zh = string("title_zh") || extracted.zh || fallbackRule;
       return [
         {
-          id: `${string("sha256") || string("rule")}-${index}`,
-          rule: string("rule"),
+          id: `${string("sha256") || fallbackRule}-${index}`,
+          rule: fallbackRule,
+          title_en,
+          title_zh,
           detail: string("detail"),
           detail_en: string("detail_en"),
-          code: string("code"),
+          code: rawCode,
           language: string("language").trim().toLowerCase() || "general",
           is_lib: r.is_lib === true,
           score:

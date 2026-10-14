@@ -253,9 +253,14 @@ export default function RulesExplorer({ zh }: { zh: boolean }) {
         (kind === "all" || (kind === "lib" ? r.is_lib : !r.is_lib)) &&
         (score === "all" || r.score >= 8) &&
         (!term ||
-          [r.rule, r.detail, r.detail_en, r.code].some((value) =>
-            value.toLowerCase().includes(term),
-          )),
+          [
+            r.rule,
+            r.title_en,
+            r.title_zh,
+            r.detail,
+            r.detail_en,
+            r.code,
+          ].some((value) => value && value.toLowerCase().includes(term))),
     );
   }, [catalog, language, query, kind, score]);
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -513,90 +518,95 @@ export default function RulesExplorer({ zh }: { zh: boolean }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {visible.map((rule) => (
-                    <Fragment key={rule.id}>
-                      <tr
-                        className={
-                          expanded === rule.id ? styles.expandedRow : ""
-                        }
-                      >
-                        <td>
-                          <button
-                            className={styles.ruleName}
-                            aria-expanded={expanded === rule.id}
-                            aria-controls={`source-${rule.id}`}
-                            onClick={() =>
-                              setExpanded(expanded === rule.id ? null : rule.id)
-                            }
-                          >
-                            {rule.rule}
-                          </button>
-                          <p>
-                            {(zh
-                              ? rule.detail
-                              : rule.detail_en || rule.detail) || "—"}
-                          </p>
-                        </td>
-                        <td>
-                          <span className={styles.languageBadge}>
-                            {languageNames[rule.language] || rule.language}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              rule.is_lib
-                                ? styles.libraryBadge
-                                : styles.auditBadge
-                            }
-                          >
-                            {rule.is_lib
-                              ? zh
-                                ? "库规则"
-                                : "Library"
-                              : zh
-                                ? "审计规则"
-                                : "Audit"}
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={
-                              rule.score >= 8
-                                ? styles.highScore
-                                : styles.normalScore
-                            }
-                          >
-                            {rule.score.toFixed(1)}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            className={styles.iconButton}
-                            aria-label={`${zh ? "查看规则源码：" : "View source: "}${rule.rule}`}
-                            aria-expanded={expanded === rule.id}
-                            aria-controls={`source-${rule.id}`}
-                            onClick={() =>
-                              setExpanded(expanded === rule.id ? null : rule.id)
-                            }
-                          >
-                            {expanded === rule.id ? (
-                              <X size={16} />
-                            ) : (
-                              <Code2 size={16} />
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                      {expanded === rule.id && (
-                        <tr id={`source-${rule.id}`}>
-                          <td colSpan={5}>
-                            <RuleSource rule={rule} zh={zh} />
+                  {visible.map((rule) => {
+                    const title = zh
+                      ? rule.title_zh || rule.rule
+                      : rule.title_en || rule.rule;
+                    return (
+                      <Fragment key={rule.id}>
+                        <tr
+                          className={
+                            expanded === rule.id ? styles.expandedRow : ""
+                          }
+                        >
+                          <td>
+                            <button
+                              className={styles.ruleName}
+                              aria-expanded={expanded === rule.id}
+                              aria-controls={`source-${rule.id}`}
+                              onClick={() =>
+                                setExpanded(expanded === rule.id ? null : rule.id)
+                              }
+                            >
+                              {title}
+                            </button>
+                            <p>
+                              {(zh
+                                ? rule.detail
+                                : rule.detail_en || rule.detail) || "—"}
+                            </p>
+                          </td>
+                          <td>
+                            <span className={styles.languageBadge}>
+                              {languageNames[rule.language] || rule.language}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={
+                                rule.is_lib
+                                  ? styles.libraryBadge
+                                  : styles.auditBadge
+                              }
+                            >
+                              {rule.is_lib
+                                ? zh
+                                  ? "库规则"
+                                  : "Library"
+                                : zh
+                                  ? "审计规则"
+                                  : "Audit"}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={
+                                rule.score >= 8
+                                  ? styles.highScore
+                                  : styles.normalScore
+                              }
+                            >
+                              {rule.score.toFixed(1)}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              className={styles.iconButton}
+                              aria-label={`${zh ? "查看规则源码：" : "View source: "}${title}`}
+                              aria-expanded={expanded === rule.id}
+                              aria-controls={`source-${rule.id}`}
+                              onClick={() =>
+                                setExpanded(expanded === rule.id ? null : rule.id)
+                              }
+                            >
+                              {expanded === rule.id ? (
+                                <X size={16} />
+                              ) : (
+                                <Code2 size={16} />
+                              )}
+                            </button>
                           </td>
                         </tr>
-                      )}
-                    </Fragment>
-                  ))}
+                        {expanded === rule.id && (
+                          <tr id={`source-${rule.id}`}>
+                            <td colSpan={5}>
+                              <RuleSource rule={rule} zh={zh} />
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
