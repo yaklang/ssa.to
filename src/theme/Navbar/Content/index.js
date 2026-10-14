@@ -14,27 +14,7 @@ import NavbarSearch from "@theme/Navbar/Search";
 import styles from "./styles.module.css";
 import { academicNavbarItems } from "@site/src/components/docs/navigation";
 import { useUiLocale } from "@site/src/components/docs/UiLocale";
-function LanguageSwitch() {
-  const { locale, setLocale } = useUiLocale();
-  return (
-    <div className="academic-locale" role="group" aria-label="Language">
-      <button
-        type="button"
-        aria-pressed={locale === "zh"}
-        onClick={() => setLocale("zh")}
-      >
-        中文
-      </button>
-      <button
-        type="button"
-        aria-pressed={locale === "en"}
-        onClick={() => setLocale("en")}
-      >
-        EN
-      </button>
-    </div>
-  );
-}
+import LanguageMenu from "@site/src/components/docs/LanguageMenu";
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
   return useThemeConfig().navbar.items;
@@ -93,7 +73,7 @@ export default function NavbarContent() {
         // Ask the user to add the respective navbar items => more flexible
         <>
           <NavbarItems items={rightItems} />
-          <LanguageSwitch />
+          <LanguageMenu />
           <NavbarColorModeToggle className={styles.colorModeToggle} />
           {!searchBarItem && (
             <NavbarSearch>

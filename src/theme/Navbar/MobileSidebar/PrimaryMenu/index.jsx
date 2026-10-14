@@ -4,6 +4,7 @@ import { useUiZh } from "@site/src/components/docs/UiLocale";
 import { useNavbarMobileSidebar } from "@docusaurus/theme-common/internal";
 import NavbarItem from "@theme/NavbarItem";
 import { academicNavbarItems } from "@site/src/components/docs/navigation";
+import LanguageMenu from "@site/src/components/docs/LanguageMenu";
 
 export default function NavbarMobilePrimaryMenu() {
   const mobileSidebar = useNavbarMobileSidebar();
@@ -23,6 +24,9 @@ export default function NavbarMobilePrimaryMenu() {
           onClick={() => mobileSidebar.toggle()}
         />
       ))}
+      <li className="menu__list-item academic-locale-mobile">
+        <LanguageMenu onChange={() => mobileSidebar.toggle()} />
+      </li>
     </ul>
   );
 }
