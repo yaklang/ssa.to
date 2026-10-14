@@ -627,12 +627,6 @@
       font-size: 13px;
       line-height: 1.35;
       color: var(--doc-ink);
-      span {
-        display: block;
-        margin-top: 2px;
-        font-size: 11px;
-        color: var(--doc-muted);
-      }
     }
   }
   .academic-toc {
@@ -652,19 +646,9 @@
       text-decoration: none;
       font-size: 13px;
       line-height: 1.4;
-      small {
-        display: block;
-        margin-top: 1px;
-        font-size: 11px;
-        line-height: 1.35;
-        color: #8a8f84;
-      }
     }
     a.is-active {
       color: var(--doc-accent);
-      small {
-        color: var(--doc-accent);
-      }
     }
   }
   .academic-doc-toc-unused {
