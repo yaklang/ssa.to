@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" font-family="Noto Sans CJK SC, Source Han Sans SC, WenQuanYi Zen Hei, Noto Sans SC, sans-serif">
+  <rect width="1200" height="420" fill="#f8f6ef"/>
+  <text x="36" y="52" font-size="28" font-weight="700" fill="#1e241c">扫描的四个阶段</text>
+  <text x="36" y="82" font-size="16" fill="#4e5548">每段单独汇报规则、风险和耗时。没请求的阶段标成跳过。</text>
+  <line x1="36" y1="104" x2="1164" y2="104" stroke="#d7dacd"/>
+
+  <rect x="36" y="132" width="250" height="210" fill="#f3f1e7" stroke="#d7dacd"/>
+  <rect x="36" y="132" width="250" height="6" fill="#6a7164"/>
+  <circle cx="64" cy="168" r="14" fill="#6a7164"/>
+  <text x="64" y="173" font-size="12" font-weight="700" fill="#f8f6ef" text-anchor="middle">01</text>
+  <text x="86" y="173" font-size="13" fill="#5c6156">collect</text>
+  <text x="56" y="214" font-size="22" font-weight="700" fill="#1e241c">收集代码</text>
+  <text x="56" y="246" font-size="15" fill="#3a4036">打开目录、仓库或压缩包</text>
+  <line x1="56" y1="268" x2="266" y2="268" stroke="#d7dacd"/>
+  <text x="56" y="298" font-size="14" fill="#4e5548">文件数、行数、体积</text>
+  <text x="56" y="320" font-size="14" fill="#4e5548">还不跑检测规则</text>
+
+  <path d="M294 230 L308 238 L294 246 Z" fill="#b7bead"/>
+
+  <rect x="320" y="132" width="250" height="210" fill="#f3f1e7" stroke="#d7dacd"/>
+  <rect x="320" y="132" width="250" height="6" fill="#52684c"/>
+  <circle cx="348" cy="168" r="14" fill="#52684c"/>
+  <text x="348" y="173" font-size="12" font-weight="700" fill="#f8f6ef" text-anchor="middle">02</text>
+  <text x="370" y="173" font-size="13" fill="#5c6156">inspect</text>
+  <text x="340" y="214" font-size="22" font-weight="700" fill="#1e241c">代码检测</text>
+  <text x="340" y="246" font-size="15" fill="#3a4036">source · 源码文本</text>
+  <line x1="340" y1="268" x2="550" y2="268" stroke="#d7dacd"/>
+  <text x="340" y="298" font-size="14" fill="#4e5548">密钥、配置、明显写法</text>
+  <text x="340" y="320" font-size="14" fill="#4e5548">可以不依赖编译</text>
+
+  <path d="M578 230 L592 238 L578 246 Z" fill="#b7bead"/>
+
+  <rect x="604" y="132" width="250" height="210" fill="#f3f1e7" stroke="#d7dacd"/>
+  <rect x="604" y="132" width="250" height="6" fill="#2a6f68"/>
+  <circle cx="632" cy="168" r="14" fill="#2a6f68"/>
+  <text x="632" y="173" font-size="12" font-weight="700" fill="#f8f6ef" text-anchor="middle">03</text>
+  <text x="654" y="173" font-size="13" fill="#5c6156">review</text>
+  <text x="624" y="214" font-size="22" font-weight="700" fill="#1e241c">语义检测</text>
+  <text x="624" y="246" font-size="15" fill="#3a4036">struct · 编译单元内</text>
+  <line x1="624" y1="268" x2="834" y2="268" stroke="#d7dacd"/>
+  <text x="624" y="298" font-size="14" fill="#4e5548">危险调用、包内结构</text>
+  <text x="624" y="320" font-size="14" fill="#4e5548">不等整个项目编完</text>
+
+  <path d="M862 230 L876 238 L862 246 Z" fill="#b7bead"/>
+
+  <rect x="888" y="132" width="276" height="210" fill="#f3f1e7" stroke="#d7dacd"/>
+  <rect x="888" y="132" width="276" height="6" fill="#5c5278"/>
+  <circle cx="916" cy="168" r="14" fill="#5c5278"/>
+  <text x="916" y="173" font-size="12" font-weight="700" fill="#f8f6ef" text-anchor="middle">04</text>
+  <text x="938" y="173" font-size="13" fill="#5c6156">analyze</text>
+  <text x="908" y="214" font-size="22" font-weight="700" fill="#1e241c">深度分析</text>
+  <text x="908" y="246" font-size="15" fill="#3a4036">ssa · 全项目数据流</text>
+  <line x1="908" y1="268" x2="1136" y2="268" stroke="#d7dacd"/>
+  <text x="908" y="298" font-size="14" fill="#4e5548">跨函数污点与注入</text>
+  <text x="908" y="320" font-size="14" fill="#4e5548">后一阶段覆盖前一阶段</text>
+
+  <text x="36" y="386" font-size="14" fill="#5c6156">阶段计数相加不一定等于最终报告。同一问题保留更后面、更精确的那条。</text>
+</svg>

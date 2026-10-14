@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" font-family="Noto Sans CJK SC, Source Han Sans SC, WenQuanYi Zen Hei, Noto Sans SC, sans-serif">
+  <rect width="1200" height="360" fill="#f8f6ef"/>
+  <text x="40" y="52" font-size="28" font-weight="700" fill="#1e241c">可编译进 SSA 的语言</text>
+  <text x="40" y="84" font-size="16" fill="#4e5548">1.4.8 新进列表的是 C#。其余语言更早就可以编译。</text>
+  <line x1="40" y1="106" x2="1160" y2="106" stroke="#d7dacd"/>
+
+  <g font-size="16" font-weight="700" fill="#1e241c">
+    <rect x="40" y="136" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="56" y="168">Java</text>
+    <text x="56" y="190" font-size="13" font-weight="400" fill="#4e5548">.java</text>
+
+    <rect x="216" y="136" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="232" y="168">Go</text>
+    <text x="232" y="190" font-size="13" font-weight="400" fill="#4e5548">.go · golang</text>
+
+    <rect x="392" y="136" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="408" y="168">PHP</text>
+    <text x="408" y="190" font-size="13" font-weight="400" fill="#4e5548">.php</text>
+
+    <rect x="568" y="136" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="584" y="168">Python</text>
+    <text x="584" y="190" font-size="13" font-weight="400" fill="#4e5548">.py · 2026-01</text>
+
+    <rect x="744" y="136" width="200" height="72" fill="#52684c"/>
+    <text x="760" y="168" fill="#f8f6ef">C# / .NET</text>
+    <text x="760" y="190" font-size="13" font-weight="400" fill="#e7eee2">.cs · 1.4.8 新增</text>
+
+    <rect x="960" y="136" width="200" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="976" y="168">C</text>
+    <text x="976" y="190" font-size="13" font-weight="400" fill="#4e5548">.c · clang</text>
+  </g>
+
+  <g font-size="16" font-weight="700" fill="#1e241c">
+    <rect x="40" y="224" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="56" y="256">JavaScript</text>
+    <text x="56" y="278" font-size="13" font-weight="400" fill="#4e5548">.js</text>
+
+    <rect x="216" y="224" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="232" y="256">TypeScript</text>
+    <text x="232" y="278" font-size="13" font-weight="400" fill="#4e5548">.ts</text>
+
+    <rect x="392" y="224" width="160" height="72" fill="#f3f1e7" stroke="#d7dacd"/>
+    <text x="408" y="256">Yak</text>
+    <text x="408" y="278" font-size="13" font-weight="400" fill="#4e5548">.yak</text>
+
+    <rect x="568" y="224" width="592" height="72" fill="#eef0e4" stroke="#d7dacd"/>
+    <text x="588" y="256">对不上语言的内置规则会跳过</text>
+    <text x="588" y="278" font-size="13" font-weight="400" fill="#4e5548">进度里标 language mismatch，不在无关语言上空跑。</text>
+  </g>
+</svg>

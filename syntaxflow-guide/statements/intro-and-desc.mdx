@@ -192,6 +192,26 @@ TEXT
 - **type**: 规则的类型，这里是 `Config`，表示这是一个检测配置的规则。
 - **risk**: 规则的风险类型，这里是 `信息泄露`。
 
+### 扫描模式 `mode`
+
+`desc` 用 `mode` 声明这条规则跑在哪个检测后端。`engine` 和 `exec_mode` 是同一个键。省略时按 `ssa`。
+
+| 值 | 后端 |
+| --- | --- |
+| `source` | 不编译，在源码文本上匹配 |
+| `struct` | 当前编译单元里的 SSA，包内即可判断 |
+| `ssa` | 全项目 SSA 上的数据流 |
+
+```sf
+desc(
+    mode: "source",
+    language: "general",
+    title: "hardcoded secret",
+)
+```
+
+`yak code-scan` 默认三种后端都会跑，也可以用 `--mode` 只开其中几种。阶段名称和版本对照见 [更新历史](../changelog) 与 [代码扫描与报告](/docs/cli/scan)。
+
 #### 编写教程
 
 编写有效的 `desc` 语句时，请遵循以下最佳实践：

@@ -8,9 +8,9 @@ read_minutes: 3
 
 # 代码扫描与报告
 
-`yak code-scan` 将目标编译、规则执行与报告导出连接为一次任务。本节重点解释如何选择规则、观察任务状态，以及区分执行失败、规则跳过和风险发现。
+`yak code-scan` 把收集代码、规则执行和报告导出连成一次任务。不写 `--mode` 时，会依次跑 **source**、**struct**、**ssa** 三种检测。`-t` 会先编译再扫描；`-p` 只扫描已经编译好的 Program。
 
-它会把“编译 + 扫描 + 报告导出”串成一条命令。
+本节说明如何选择模式、阅读阶段状态，以及区分执行失败、规则跳过和风险发现。版本对照见 [SyntaxFlow 更新历史](/syntaxflow-guide/changelog)。
 
 > 实测说明（2026-03-04）：本页命令和输出示例已在 `syntaxflow-zero-to-hero` 项目实测。
 
@@ -61,6 +61,8 @@ Scan Summary
 
 首次运行时还会出现大量 `sync embed rule` 日志，这是内置规则同步过程，属于正常现象。
 
+上面的日志摘自 2026-03-04 的实测。1.4.8-beta19 之后，同一条命令会按阶段打印「收集代码 / 代码检测 / 语义检测 / 深度分析」，见下一节。
+
 你可以这样判断：
 
 - `status=done progress=100.00%`：本次扫描结束
@@ -73,9 +75,41 @@ Scan Summary
 ls -lh lesson1-keyword.sarif
 ```
 
-## 2. 其他常用扫描方式
+## 2. 三种检测模式与四个阶段
 
-### 2.1 扫描已编译 Program
+三种模式互补，不是三选一。规则在 `desc` 里用 `mode` 声明自己走哪个后端；省略时按 `ssa`。
+
+| 模式 | 阶段 | 做什么 |
+| --- | --- | --- |
+| `source` | 代码检测（`inspect`） | 不编译，在源码文本上匹配。适合硬编码密钥、危险配置这类看形态就能判断的问题 |
+| `struct` | 语义检测（`review`） | 每个编译单元的骨架编出来就检查，不等整个项目。适合包内就能定性的 API 或结构 |
+| `ssa` | 深度分析（`analyze`） | 全项目 SSA 完成后，做跨函数、跨包的数据流。适合必须追踪来源的问题 |
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/modes-depth.svg" alt="三种模式按分析深度排成三根柱：source 最矮，struct 居中，ssa 最高" />
+  <figcaption>柱高是分析深度。code-scan 默认三种都跑，也可以用 --mode 只开其中几种。</figcaption>
+</figure>
+
+<figure className="doc-figure">
+  <img src="/img/syntaxflow/scan-stages.svg" alt="四个阶段从左到右：收集代码、代码检测、语义检测、深度分析" />
+  <figcaption>收集代码在前。后面三段分别对应 source、struct、ssa。</figcaption>
+</figure>
+
+扫描还会先报一个「收集代码」阶段（`collect`）：打开本地目录、仓库或压缩包。只请求了部分模式时，没跑的阶段会标成跳过。
+
+只做源码检测：
+
+```bash
+yak code-scan -t ./your-project --mode source --format sarif -o source-only
+```
+
+语言对不上的内置规则会跳过，进度里出现 `language mismatch`。同一问题若被前后两个阶段都命中，最终报告保留后一阶段的那条；各阶段的风险计数相加，不一定等于报告条数。
+
+规则怎么写 `mode`、`inside` 和 `.pattern_regex()`，见 [SyntaxFlow 更新历史](/syntaxflow-guide/changelog)。
+
+## 3. 其他常用扫描方式
+
+### 3.1 扫描已编译 Program
 
 如果你想复用已编译 Program，建议先用一个“唯一名称”编译，避免名称模糊匹配：
 
@@ -98,13 +132,13 @@ Scan Summary
 | Total Rules | 227 |
 ```
 
-### 2.2 指定规则文件或目录
+### 3.2 指定规则文件或目录
 
 ```bash
 yak code-scan -t ./your-project -l java --sf ./rules/ -o result.sarif
 ```
 
-### 2.3 使用规则组筛选
+### 3.3 使用规则组筛选
 
 ```bash
 yak code-scan \
@@ -115,15 +149,15 @@ yak code-scan \
   -o result.sarif
 ```
 
-## 3. 配置文件模式（AI Agent / 自动化推荐）
+## 4. 配置文件模式（AI Agent / 自动化推荐）
 
-### 3.1 使用配置文件
+### 4.1 使用配置文件
 
 ```bash
 yak code-scan --config ./scan-config.json
 ```
 
-### 3.2 CLI 覆盖配置
+### 4.2 CLI 覆盖配置
 
 ```bash
 yak code-scan --config ./scan-config.json -o override.sarif --format sarif
@@ -131,9 +165,9 @@ yak code-scan --config ./scan-config.json -o override.sarif --format sarif
 
 这个模式适合 AI Agent、工作流引擎、CI pipeline 固定参数执行。
 
-## 4. 输出格式
+## 5. 输出格式
 
-### 4.1 SARIF（默认）
+### 5.1 SARIF（默认）
 
 ```bash
 yak code-scan -t ./your-project -o result.sarif --format sarif
@@ -141,7 +175,7 @@ yak code-scan -t ./your-project -o result.sarif --format sarif
 
 适合接入 GitHub/GitLab 等平台，以及通用安全平台。
 
-### 4.2 IRify / IRify-Full
+### 5.2 IRify / IRify-Full
 
 ```bash
 yak code-scan \
@@ -158,7 +192,7 @@ IRify Schema：
 
 - https://github.com/yaklang/yaklang/blob/main/common/yak/ssaapi/sfreport/irify_report_schema.json
 
-## 5. CI 批量扫描（参考现有流水线）
+## 6. CI 批量扫描（参考现有流水线）
 
 参考示例：
 
@@ -166,7 +200,7 @@ IRify Schema：
 
 常见做法是“先生成差异文件快照，再扫描快照”。
 
-### 5.1 增量扫描模板（PR Diff）
+### 6.1 增量扫描模板（PR Diff）
 
 ```bash
 yak sync-rule
@@ -184,21 +218,21 @@ yak code-scan \
   --exclude-file "**/vendor/**,vendor/**,**/classes/**,**/target/**,**include/**,**caches/**,**cache/**,**tmp/**,**alipay/**,**includes/**,**temp/**,**zh_cn/**,**zh_en/**,**plugins/**,**PHPExcel/**,*.pb.go,*_test.go,**vulinbox/**"
 ```
 
-### 5.2 在 CI 里建议固定的点
+### 6.2 在 CI 里建议固定的点
 
 - 规则同步步骤固定化（`yak sync-rule`）
 - 排除目录模式固定化（`--exclude-file`）
 - 输出格式固定化（SARIF 或 IRify）
 - 扫描结果作为构建产物保存，便于后续平台或 AI 二次处理
 
-## 6. 参数详细说明
+## 7. 参数详细说明
 
 输入与编译：
 
 - `--config, -c <file>`：JSON 配置文件
 - `--target, -t <path>`：扫描目标路径
 - `--program, -p <name>`：已编译 Program 名称
-- `--language, -l <lang>`：目标语言
+- `--language, -l <lang>`：目标语言。可编译的值：`yak`、`java`、`php`、`js`、`ts`、`golang`、`c`、`python`、`csharp`。省略时按文件推断
 - `--memory, --mem`：内存模式
 - `--database, --db <path>`：数据库路径
 - `--exclude-file <glob[,glob...]>`：排除文件/目录
@@ -209,6 +243,7 @@ yak code-scan \
 - `--rule-keyword, --rk, --kw <keyword>`：关键词筛选规则
 - `--rule-group, --rg <name>`：按规则组筛选（可多次）
 - `--syntaxflow, --sf <path-or-rule>`：指定规则文件/目录/内联规则
+- `--mode <source|struct|ssa>`：要跑的检测阶段，可重复或逗号分隔。`code-scan` 省略时三种都跑
 - `--rule-perf-log`：规则级性能日志
 
 输出：
@@ -220,5 +255,8 @@ yak code-scan \
 
 运行：
 
+- `--rule-timeout <duration>`：单条规则的墙钟上限，默认 `4h`。`0` 关闭
+- `--rule-work-limit <n>`：单条规则的扇出上限，默认 `50000`。超限后这条规则带着部分结果退出。`0` 关闭，只受 `--rule-timeout` 约束
+- `--debug <dir>`：把 `ssadb.db`、日志、报告、`cmd.txt` 和 pprof 写到该目录
 - `--pprof <file>`：pprof 文件
 - `--log-level, --loglevel <debug|info|warn|error>`：日志等级
