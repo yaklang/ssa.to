@@ -55,14 +55,16 @@ export default function DocTOC() {
   if (items.length === 0) return null;
 
   return (
-    <aside className="academic-doc-toc" aria-label={zh ? "本页内容" : "On this page"}>
-      <p>
-        {zh ? "本页内容" : "On this page"}
-        {zh && <span>On this page</span>}
-      </p>
+    <aside
+      className="academic-doc-toc"
+      aria-label={zh ? "本页内容" : "On this page"}
+    >
+      <p>{zh ? "本页内容" : "On this page"}</p>
       <ul className="academic-toc">
         {items.map((item) => {
-          const english = zh ? englishHeading[item.value] : "";
+          const text = !zh && englishHeading[item.value]
+            ? englishHeading[item.value]
+            : item.value;
           return (
             <li
               key={item.id}
@@ -72,8 +74,7 @@ export default function DocTOC() {
                 href={`#${item.id}`}
                 className={item.id === activeId ? "is-active" : undefined}
               >
-                <span>{item.value}</span>
-                {english && <small>{english}</small>}
+                <span>{text}</span>
               </a>
             </li>
           );
