@@ -8,14 +8,13 @@ read_minutes: 3
 
 # 文档导读
 
-SSA.to 的文档围绕同一个问题展开：如何从程序的语义结构出发，描述并验证一个安全分析问题。Yak SSA 把源程序编译成统一的中间表示，SyntaxFlow 在其上做查询、过滤和数据流追踪。不经过编译、直接匹配源码文本的是 `source` 模式。图形界面在桌面端 IRify / Yakit 里，不在本网站。
+SSA.to 的文档围绕同一个问题展开：如何从程序的语义结构出发，描述并验证一个安全分析问题。Yak SSA 把源程序编译成统一的中间表示，SyntaxFlow 在其上做查询、过滤和数据流追踪。图形界面在桌面端 IRify / Yakit 里，不在本网站。
 
 ## 选择你的阅读路径
 
 | 你的目标 | 从这里开始 | 接下来阅读 |
 | --- | --- | --- |
 | 对一个项目执行扫描并导出报告 | [CLI 总览](./cli/overview) | [代码扫描与报告](./cli/scan) |
-| 查看检测模式、语法和语言的版本变化 | [SyntaxFlow 更新历史](/syntaxflow-guide/changelog) | [条件过滤](/syntaxflow-guide/statements/sf-filter) |
 | 编写规则并检查命中位置 | [SyntaxFlow 快速入门](/syntaxflow-guide/quick-start) | [规则文件结构](/syntaxflow-guide/rule-intro) |
 | 在图形界面中追踪分析结果 | [图形界面代码审计](./code_audit) | [图形界面代码扫描](./code_scan) |
 | 理解分析引擎的理论基础 | [编译与静态分析](/static-analysis-guide/intro) | [静态单赋值形式](/static-analysis-guide/compile-ssa-form) |
@@ -24,7 +23,7 @@ SSA.to 的文档围绕同一个问题展开：如何从程序的语义结构出�
 
 ## 从源程序到分析结果
 
-1. **编译。** 要做 `struct` 或 `ssa` 检测时，先把项目编译为 SSA IR，并以 Program 名称保存。后续查询使用同一个 Program。`source` 检测不经过这一步。
+1. **编译。** 将项目编译为 SSA IR，并以 Program 名称保存。后续查询使用同一个 Program。
 2. **查询。** 用 SyntaxFlow 定位调用、参数或成员，并沿定义链与使用链追踪值的关系。
 3. **复核。** 把结果映射回源码，检查输入来源、路径约束与相关防护逻辑。
 4. **记录。** 为需要关注的结果编写 `alert`，或使用扫描命令导出报告。
@@ -35,7 +34,7 @@ SSA.to 的文档围绕同一个问题展开：如何从程序的语义结构出�
 
 ### 工具与实践
 
-[CLI 指南](./cli/overview)介绍项目编译、规则执行、扫描报告与 Program 管理。[图形界面指南](./code_audit)介绍桌面端里打开项目、读查询结果和数据流图的方式。截图是早期桌面版，按钮名称可能已经变了。本网站上原先的在线审计页（`/codeAnalysis`）已在 2026-10 的改版里撤下，不再提供粘贴代码即可扫描的入口。
+[CLI 指南](./cli/overview)介绍项目编译、规则执行、扫描报告与 Program 管理。[图形界面指南](./code_audit)介绍项目打开、查询结果和数据流图的阅读方式。图形界面中的历史截图用于解释操作流程，界面名称和位置可能随版本变化。
 
 ### SyntaxFlow 语言参考
 
