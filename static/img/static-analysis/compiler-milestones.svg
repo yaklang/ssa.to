@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="340" viewBox="0 0 1200 340" font-family="Noto Serif SC, Source Han Serif SC, Noto Sans CJK SC, serif">
+  <rect width="1200" height="340" fill="#f8f6ef"/>
+
+  <line x1="24" y1="22" x2="1148" y2="22" stroke="#52684c" stroke-width="2"/>
+  <polygon points="1172,22 1148,12 1148,32" fill="#52684c"/>
+
+  <rect x="24" y="40" width="300" height="32" fill="#52684c"/>
+  <rect x="340" y="40" width="300" height="32" fill="#5d7356"/>
+  <rect x="656" y="40" width="492" height="32" fill="#3f523b"/>
+  <text x="174" y="61" font-size="15" fill="#f8f6ef" text-anchor="middle">1960年代</text>
+  <text x="490" y="61" font-size="15" fill="#f8f6ef" text-anchor="middle">1970年代</text>
+  <text x="902" y="61" font-size="15" fill="#f8f6ef" text-anchor="middle">1980–1990年代</text>
+
+  <line x1="332" y1="88" x2="332" y2="312" stroke="#e3e6da"/>
+  <line x1="648" y1="88" x2="648" y2="312" stroke="#e3e6da"/>
+
+  <g fill="#1e241c" font-size="15" font-weight="600">
+    <rect x="40" y="100" width="8" height="8" fill="#52684c"/>
+    <text x="56" y="109">编译器技术早期</text>
+    <text x="56" y="136" font-size="14" font-weight="400" fill="#4e5548">主要关注前端和后端</text>
+
+    <rect x="40" y="168" width="8" height="8" fill="#52684c"/>
+    <text x="56" y="177">前端技术</text>
+    <text x="56" y="204" font-size="14" font-weight="400" fill="#4e5548">词法分析</text>
+    <text x="56" y="226" font-size="14" font-weight="400" fill="#4e5548">语法分析</text>
+
+    <rect x="40" y="258" width="8" height="8" fill="#52684c"/>
+    <text x="56" y="267">后端技术</text>
+    <text x="56" y="294" font-size="14" font-weight="400" fill="#4e5548">代码生成</text>
+  </g>
+
+  <g fill="#1e241c" font-size="15" font-weight="600">
+    <rect x="356" y="100" width="8" height="8" fill="#5d7356"/>
+    <text x="372" y="109">中端概念形成</text>
+    <text x="372" y="136" font-size="14" font-weight="400" fill="#4e5548">IR 概念引入</text>
+
+    <rect x="356" y="176" width="8" height="8" fill="#5d7356"/>
+    <text x="372" y="185">早期 IR 形式</text>
+    <text x="372" y="212" font-size="14" font-weight="400" fill="#4e5548">三地址码</text>
+    <text x="372" y="234" font-size="14" font-weight="400" fill="#4e5548">四元式</text>
+  </g>
+
+  <g fill="#1e241c" font-size="15" font-weight="600">
+    <rect x="672" y="100" width="8" height="8" fill="#3f523b"/>
+    <text x="688" y="109">优化技术革命</text>
+    <text x="688" y="136" font-size="14" font-weight="400" fill="#4e5548">数据流分析</text>
+    <text x="688" y="158" font-size="14" font-weight="400" fill="#4e5548">到达定义分析</text>
+    <text x="688" y="180" font-size="14" font-weight="400" fill="#4e5548">活跃变量分析</text>
+
+    <rect x="672" y="212" width="8" height="8" fill="#3f523b"/>
+    <text x="688" y="221">控制流优化</text>
+    <text x="688" y="248" font-size="14" font-weight="400" fill="#4e5548">基于控制流图的优化</text>
+    <text x="688" y="270" font-size="14" font-weight="400" fill="#4e5548">过程间分析</text>
+
+    <rect x="940" y="100" width="8" height="8" fill="#3f523b"/>
+    <text x="956" y="109">经典优化技术</text>
+    <text x="956" y="136" font-size="14" font-weight="400" fill="#4e5548">常量折叠</text>
+    <text x="956" y="158" font-size="14" font-weight="400" fill="#4e5548">死代码消除</text>
+    <text x="956" y="180" font-size="14" font-weight="400" fill="#4e5548">公共子表达式消除</text>
+
+    <rect x="940" y="212" width="8" height="8" fill="#3f523b"/>
+    <text x="956" y="221">1991年代表性工作</text>
+    <text x="956" y="248" font-size="14" font-weight="400" fill="#4e5548">SSA 构建与控制依赖图</text>
+    <text x="956" y="270" font-size="14" font-weight="400" fill="#4e5548">变量单次赋值原则</text>
+  </g>
+</svg>
