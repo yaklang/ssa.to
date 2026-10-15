@@ -10,6 +10,8 @@ read_minutes: 3
 
 本节面向规则开发与交互式验证：先保存一个可查询的 Program，再在同一编译结果上反复运行规则。源码变化需要重新编译；仅修改规则时，可以复用已有 Program。
 
+支持的语言有 `yak`、`java`、`php`、`js`、`ts`、`golang`、`c`、`python`、`csharp`。编译时用 `-l` 加上语言名来指定使用哪一种，例如 `-l java`。
+
 目标很简单：先把项目编译成 Program，再执行你自己的 SyntaxFlow 规则，看到明确的命中位置和数据流变量。
 
 > 实测说明（2026-03-04）：本页命令和输出示例已在 `syntaxflow-zero-to-hero/lesson-1-hello-world` 跑通。

@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import { useThemeConfig, ErrorCauseBoundary } from "@docusaurus/theme-common";
 import {
   splitNavbarItems,
@@ -14,6 +13,8 @@ import NavbarLogo from "@theme/Navbar/Logo";
 import NavbarSearch from "@theme/Navbar/Search";
 import styles from "./styles.module.css";
 import { academicNavbarItems } from "@site/src/components/docs/navigation";
+import { useUiLocale } from "@site/src/components/docs/UiLocale";
+import LanguageMenu from "@site/src/components/docs/LanguageMenu";
 function useNavbarItems() {
   // TODO temporary casting until ThemeConfig type is improved
   return useThemeConfig().navbar.items;
@@ -49,8 +50,7 @@ function NavbarContentLayout({ left, right }) {
 }
 export default function NavbarContent() {
   const mobileSidebar = useNavbarMobileSidebar();
-  const { i18n } = useDocusaurusContext();
-  const zh = i18n.currentLocale === "zh";
+  const zh = useUiLocale().locale !== "en";
   const configuredItems = useNavbarItems();
   const items = academicNavbarItems(configuredItems, zh);
   const [leftItems, rightItems] = splitNavbarItems(items);
@@ -73,6 +73,7 @@ export default function NavbarContent() {
         // Ask the user to add the respective navbar items => more flexible
         <>
           <NavbarItems items={rightItems} />
+          <LanguageMenu />
           <NavbarColorModeToggle className={styles.colorModeToggle} />
           {!searchBarItem && (
             <NavbarSearch>

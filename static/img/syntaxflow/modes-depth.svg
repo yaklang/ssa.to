@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" font-family="Noto Sans CJK SC, Source Han Sans SC, WenQuanYi Zen Hei, Noto Sans SC, sans-serif">
+  <rect width="1200" height="460" fill="#f8f6ef"/>
+  <text x="48" y="56" font-size="28" font-weight="700" fill="#1e241c">三种扫描模式</text>
+  <text x="48" y="88" font-size="16" fill="#4e5548">柱高是分析深度。越深越慢，三种可以叠在同一次 code-scan 里。</text>
+  <line x1="48" y1="112" x2="1152" y2="112" stroke="#d7dacd"/>
+  <text x="1152" y="88" font-size="14" fill="#5c6156" text-anchor="end">深度：浅 → 深</text>
+
+  <!-- Level guides -->
+  <line x1="72" y1="150" x2="1152" y2="150" stroke="#e3e6da" stroke-dasharray="4 6"/>
+  <text x="60" y="154" font-size="13" fill="#6a7164" text-anchor="end">全项目</text>
+
+  <line x1="72" y1="240" x2="1152" y2="240" stroke="#e3e6da" stroke-dasharray="4 6"/>
+  <text x="60" y="244" font-size="13" fill="#6a7164" text-anchor="end">编译单元</text>
+
+  <line x1="72" y1="310" x2="1152" y2="310" stroke="#e3e6da" stroke-dasharray="4 6"/>
+  <text x="60" y="314" font-size="13" fill="#6a7164" text-anchor="end">源码文本</text>
+
+  <line x1="72" y1="370" x2="1152" y2="370" stroke="#c5cbbd" stroke-width="1.5"/>
+
+  <!-- Column 1: source -->
+  <rect x="120" y="280" width="280" height="90" fill="#52684c"/>
+  <text x="144" y="316" font-size="22" font-weight="700" fill="#f8f6ef">source</text>
+  <text x="144" y="342" font-size="15" fill="#e7eee2">源码检测 · 不编译</text>
+  <text x="144" y="362" font-size="13" fill="#d5e0cc">密钥、危险配置、语法形态</text>
+
+  <!-- Column 2: struct -->
+  <rect x="460" y="200" width="280" height="170" fill="#2a6f68"/>
+  <text x="484" y="238" font-size="22" font-weight="700" fill="#f8f6ef">struct</text>
+  <text x="484" y="266" font-size="15" fill="#e4f1ef">结构检测 · 编译单元刚完成</text>
+  <text x="484" y="296" font-size="13.5" fill="#d4e6e3">包内危险调用</text>
+  <text x="484" y="320" font-size="13.5" fill="#d4e6e3">不安全的语言结构</text>
+
+  <!-- Column 3: ssa -->
+  <rect x="800" y="140" width="280" height="230" fill="#5c5278"/>
+  <text x="824" y="178" font-size="22" font-weight="700" fill="#f8f6ef">ssa</text>
+  <text x="824" y="206" font-size="15" fill="#ece8f4">语义检测 · 全项目编译之后</text>
+  <text x="824" y="238" font-size="13.5" fill="#ddd6ea">跨函数、跨包的数据流</text>
+  <text x="824" y="262" font-size="13.5" fill="#ddd6ea">污点链与敏感值追踪</text>
+
+  <!-- Speed labels aligned with columns -->
+  <g transform="translate(260, 404)">
+    <text x="-32" y="14" font-size="14" fill="#5c6156" text-anchor="end">速度</text>
+    <rect x="-24" y="-4" width="48" height="26" rx="3" fill="#52684c"/>
+    <text x="0" y="14" font-size="14" font-weight="700" fill="#f8f6ef" text-anchor="middle">快</text>
+  </g>
+
+  <g transform="translate(600, 404)">
+    <text x="-40" y="14" font-size="14" fill="#5c6156" text-anchor="end">速度</text>
+    <rect x="-32" y="-4" width="64" height="26" rx="3" fill="#2a6f68"/>
+    <text x="0" y="14" font-size="14" font-weight="700" fill="#f8f6ef" text-anchor="middle">中等</text>
+  </g>
+
+  <g transform="translate(940, 404)">
+    <text x="-32" y="14" font-size="14" fill="#5c6156" text-anchor="end">速度</text>
+    <rect x="-24" y="-4" width="48" height="26" rx="3" fill="#5c5278"/>
+    <text x="0" y="14" font-size="14" font-weight="700" fill="#f8f6ef" text-anchor="middle">慢</text>
+  </g>
+</svg>

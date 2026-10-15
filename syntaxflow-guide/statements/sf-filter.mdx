@@ -83,6 +83,16 @@ read_minutes: 9
       <td><code>$vars?\{version_in:(1.2.3,2.3.4]\} as $vulnVersion</code></td>
     </tr>
     <tr>
+      <td><strong>Inside</strong></td>
+      <td>源码命中区间包含：只保留落在另一个命中内部的结果。不是 SSA 数据流运算符</td>
+      <td><code>$secret inside $block as $hit</code></td>
+    </tr>
+    <tr>
+      <td><strong>NotInside</strong></td>
+      <td>源码命中区间排除：去掉落在另一个命中内部的结果</td>
+      <td><code>$socket not_inside $localhost as $hit</code></td>
+    </tr>
+    <tr>
       <td><strong>比较运算</strong></td>
       <td>对当前值或中间表达式结果进行比较（<code>==</code>/<code>!=</code>/<code>&gt;=</code>/<code>&lt;=</code> 等）</td>
       <td><code>$vars?\{==2\} as $new</code></td>
@@ -129,6 +139,21 @@ conditionExpression
 
 - **`?{conditionExpression}`**：用于定义过滤条件，包含在 `{}` 内的条件表达式。
 - **`conditionExpression`**：支持多种条件逻辑，包括嵌套、操作码检查、字符串包含等。
+
+## 源码命中的区间：`inside` / `not_inside`
+
+这两个关键字从 1.4.8-beta16 起进入语法，1.4.9 仍然保留，没有删除。它们只比较 `source` 模式里两次文本命中的区间，不追踪 SSA 上的定义或使用。
+
+```syntaxflow
+desc(mode: "source", language: "general", title: "secret inside env")
+${*}.pattern_regex(/(?m)^env:/) as $block
+${*}.pattern_regex(/secret/) as $secret
+$secret inside $block as $hit
+```
+
+`$secret not_inside $block` 则丢掉落在 `$block` 里面的命中。两个名字都必须已经是源码命中；拿去过滤普通 SSA 值不会得到包含关系。
+
+文件内继续搜索、以及 `scope: "region"`，写在 [文件内容过滤](./sf_file_filter)。
 
 ## 关键语义：条件是“按值求值”的
 

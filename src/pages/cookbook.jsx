@@ -1,10 +1,9 @@
 import React from "react";
 import Layout from "@theme/Layout";
 import Link from "@docusaurus/Link";
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { useUiZh } from "@site/src/components/docs/UiLocale";
 export default function Cookbook() {
-  const { i18n } = useDocusaurusContext();
-  const zh = i18n.currentLocale === "zh";
+  const zh = useUiZh();
   return (
     <Layout
       title={zh ? "SyntaxFlow 语言手册" : "The SyntaxFlow handbook"}

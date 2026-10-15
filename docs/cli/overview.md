@@ -14,7 +14,7 @@ read_minutes: 2
 
 - `yak ssa-compile`：把项目编译成可查询的 Program
 - `yak ssa-query`（或 `yak sf`）：对 Program 跑 SyntaxFlow 查询
-- `yak code-scan`：一条命令完成编译 + 扫描 + 报告导出
+- `yak code-scan`：一条命令完成编译、检测和报告导出
 
 ## 1. 先安装 Yak
 
