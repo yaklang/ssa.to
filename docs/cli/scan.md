@@ -8,9 +8,9 @@ read_minutes: 3
 
 # 代码扫描与报告
 
-`yak code-scan` 把收集代码、规则执行和报告导出连成一次任务。不写 `--mode` 时，会依次跑 **source**、**struct**、**ssa** 三种检测。`-t` 会先编译再扫描；`-p` 只扫描已经编译好的 Program。
+`yak code-scan` 把收集代码、规则执行和报告导出连成一次任务。
 
-本节说明如何选择模式、阅读阶段状态，以及区分执行失败、规则跳过和风险发现。版本对照见 [SyntaxFlow 更新历史](/syntaxflow-guide/changelog)。
+本节说明如何选择模式、阅读阶段状态，以及区分执行失败、规则跳过和风险发现。
 
 > 实测说明（2026-03-04）：本页命令和输出示例已在 `syntaxflow-zero-to-hero` 项目实测。
 
@@ -105,7 +105,7 @@ yak code-scan -t ./your-project --mode source --format sarif -o source-only
 
 语言对不上的内置规则会跳过，进度里出现 `language mismatch`。同一问题若被前后两个阶段都命中，最终报告保留后一阶段的那条；各阶段的风险计数相加，不一定等于报告条数。
 
-规则怎么写 `mode`、`inside` 和 `.pattern_regex()`，见 [SyntaxFlow 更新历史](/syntaxflow-guide/changelog)。
+规则怎么写 `mode`、`inside` 和 `.pattern_regex()`，见 [条件过滤](/syntaxflow-guide/statements/sf-filter) 与 [文件内容过滤](/syntaxflow-guide/statements/sf_file_filter)。
 
 ## 3. 其他常用扫描方式
 
@@ -147,6 +147,36 @@ yak code-scan \
   --rule-keyword sql \
   --rule-group default \
   -o result.sarif
+```
+
+### 3.4 扫描过程可观测与调试（--debug）
+
+在排查扫描卡顿、单条规则耗时、内存占用峰值，或需要离线复核编译产物时，可以使用 `--debug <dir>` 指定调试输出目录。扫描任务会向该目录输出结构化的诊断与分析数据：
+
+```bash
+yak code-scan -t ./your-project --debug ./debug-output
+```
+
+生成的调试目录包含完整的运行上下文与性能采样：
+
+```text
+debug-output/
+├── ssadb.db              # 编译生成的 SSA 数据库（可离线加载复查）
+├── log                   # 扫描执行日志
+├── report.sarif          # 标准 SARIF 格式扫描报告
+├── cmd.txt               # 本次执行的完整命令与参数，便于复现
+├── cpu-pprof/            # CPU 性能采样（用于分析耗时热点）
+├── memory-pprof/         # 内存采样（用于排查内存峰值与泄漏）
+├── goroutine-pprof/      # Goroutine 采样（用于排查并发与死锁）
+├── db-stats/             # 数据库操作统计
+└── runtime-stats/        # 运行时各阶段耗时与系统资源统计
+```
+
+如果扫描仅用于生成报告，不希望向主系统数据库写入风险记录，可以搭配 `--no-save-risk` 参数：
+
+```bash
+# 只保留报告与调试产物，不向主数据库持久化风险
+yak code-scan -t ./your-project --debug ./debug-output --no-save-risk
 ```
 
 ## 4. 配置文件模式（AI Agent / 自动化推荐）
@@ -257,6 +287,7 @@ yak code-scan \
 
 - `--rule-timeout <duration>`：单条规则的墙钟上限，默认 `4h`。`0` 关闭
 - `--rule-work-limit <n>`：单条规则的扇出上限，默认 `50000`。超限后这条规则带着部分结果退出。`0` 关闭，只受 `--rule-timeout` 约束
-- `--debug <dir>`：把 `ssadb.db`、日志、报告、`cmd.txt` 和 pprof 写到该目录
+- `--debug <dir>`：把结构化调试产物（`ssadb.db`、日志、报告、`cmd.txt` 与 pprof 采样等）写入指定目录，用于复现与排查
+- `--no-save-risk`：风险结果只输出到报告与调试文件，不向系统数据库持久化
 - `--pprof <file>`：pprof 文件
 - `--log-level, --loglevel <debug|info|warn|error>`：日志等级

@@ -62,7 +62,9 @@ export default function Downloads({ zh }: { zh: boolean }) {
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <div>
-            <span className={styles.eyebrow}>IV. TOOLS FOR PRACTICE</span>
+            <span id="tools" className={styles.eyebrow}>
+              IV. TOOLS FOR PRACTICE
+            </span>
             <h2 id="download-title">
               {zh ? "以工具，展开实践。" : "An instrument for exploration."}
             </h2>
