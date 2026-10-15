@@ -8,9 +8,9 @@ read_minutes: 3
 
 # 编译与查询
 
-本节面向规则开发与交互式验证：先保存一个可查询的 Program，再在同一编译结果上反复运行规则。源码变化需要重新编译；仅修改规则时，可以复用已有 Program。这一页只覆盖 SSA 查询。`source` / `struct` / `ssa` 扫描见 [代码扫描与报告](./scan)。
+本节面向规则开发与交互式验证：先保存一个可查询的 Program，再在同一编译结果上反复运行规则。源码变化需要重新编译；仅修改规则时，可以复用已有 Program。
 
-`-l` 目前接受 `yak`、`java`、`php`、`js`、`ts`、`golang`、`c`、`python`、`csharp`。
+支持的语言有 `yak`、`java`、`php`、`js`、`ts`、`golang`、`c`、`python`、`csharp`。编译时用 `-l` 加上语言名来指定使用哪一种，例如 `-l java`。
 
 目标很简单：先把项目编译成 Program，再执行你自己的 SyntaxFlow 规则，看到明确的命中位置和数据流变量。
 
