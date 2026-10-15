@@ -392,7 +392,7 @@
     width: 100%;
     padding: 32px 28px 72px 40px !important;
   }
-  main[class*="docMainContainer"] .row {
+  main[class*="docMainContainer"] > .container > .row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 248px;
     column-gap: 64px;
@@ -403,7 +403,7 @@
     width: auto;
     min-width: 0;
   }
-  .row > .col.col--3 {
+  main[class*="docMainContainer"] > .container > .row > .col.col--3 {
     width: auto;
     max-width: none;
   }
@@ -689,6 +689,49 @@
     border: 0;
     border-top: 1px solid var(--doc-line);
   }
+  /* Category generated index page and DocCards */
+  [class*="generatedIndexPage"] {
+    max-width: 920px;
+    margin: 0 auto;
+    padding-bottom: 48px;
+    header h1 {
+      font-size: 38px;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+    header p {
+      font-size: 17px;
+      color: var(--doc-muted);
+      line-height: 1.6;
+    }
+  }
+  .theme-doc-card-container,
+  [class*="cardContainer"] {
+    background: var(--doc-paper) !important;
+    border: 1px solid var(--doc-line) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+    padding: 22px 24px !important;
+    margin-bottom: 20px !important;
+    &:hover {
+      border-color: var(--doc-accent) !important;
+      background: #fbfaf6 !important;
+    }
+    h2 {
+      font-family: var(--ifm-font-family-base) !important;
+      font-size: 18px !important;
+      font-weight: 600 !important;
+      color: var(--doc-ink) !important;
+      margin-bottom: 8px !important;
+    }
+    p {
+      font-size: 14px !important;
+      color: var(--doc-muted) !important;
+      line-height: 1.6 !important;
+      margin: 0 !important;
+    }
+  }
   .markdown img {
     display: block;
     max-width: 100%;
@@ -950,7 +993,7 @@
     main[class*="docMainContainer"] > .container {
       padding: 36px 32px 80px 48px !important;
     }
-    main[class*="docMainContainer"] .row {
+    main[class*="docMainContainer"] > .container > .row {
       grid-template-columns: minmax(0, 1fr) 220px;
       column-gap: 72px;
     }
@@ -979,7 +1022,7 @@
     main[class*="docMainContainer"] > .container {
       padding: 28px 20px 55px 28px !important;
     }
-    main[class*="docMainContainer"] .row {
+    main[class*="docMainContainer"] > .container > .row {
       grid-template-columns: minmax(0, 1fr) 180px;
       column-gap: 36px;
     }
